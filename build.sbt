@@ -30,6 +30,8 @@ logBuffered := false
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
 
+fork in run := true
+
 //assembly settings
 assemblyJarName in assembly := s"waves-all-${version.value}.jar"
 assemblyMergeStrategy in assembly := {
@@ -90,7 +92,9 @@ inConfig(Linux)(Seq(
   packageDescription := "Waves node"
 ))
 
-val network = Def.setting { Network(sys.props.get("network")) }
+val network = SettingKey[Network]("network")
+network := { Network(sys.props.get("network")) }
+
 normalizedName := network.value.name
 
 javaOptions in Universal ++= Seq(

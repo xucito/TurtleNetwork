@@ -86,7 +86,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     val time: Time = NTP
     val establishedConnections = new ConcurrentHashMap[Channel, PeerInfo]
     val allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
-    val utxStorage = new UtxPoolImpl(time, stateReader, history, feeCalculator, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
+    val utxStorage = new UtxPoolImpl(time, stateReader, history, featureProvider, feeCalculator, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
     val knownInvalidBlocks = new InvalidBlockStorageImpl(settings.synchronizationSettings.invalidBlocksStorage)
     val miner = if (settings.minerSettings.enable)
       new MinerImpl(allChannels, blockchainUpdater, checkpointService, history, featureProvider, stateReader, settings, time, utxStorage, wallet)
@@ -148,7 +148,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         AssetsApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, stateReader, time),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, history, featureProvider),
         AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-        LeaseApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
+        LeaseApiRoute(settings.restAPISettings, wallet, stateReader, utxStorage, allChannels, time),
         LeaseBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
         AliasApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time, stateReader),
         AliasBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels)
