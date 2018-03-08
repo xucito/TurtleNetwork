@@ -5,10 +5,10 @@ import com.wavesplatform.network.RxExtensionLoader.LoaderState.WithPeer
 import com.wavesplatform.network.RxScoreObserver.{ChannelClosedAndSyncWith, SyncWith}
 import io.netty.channel._
 import monix.eval.{Coeval, Task}
+import monix.execution.CancelableFuture
 import monix.execution.schedulers.SchedulerService
-import monix.execution.{CancelableFuture, Scheduler}
-import monix.reactive.Observable
-import monix.reactive.subjects.ConcurrentSubject
+import monix.reactive.subjects.{ConcurrentSubject, Subject}
+import monix.reactive.{Observable, Observer}
 import scorex.block.Block
 import scorex.block.Block.BlockId
 import scorex.transaction.History.BlockchainScore
@@ -29,17 +29,19 @@ object RxExtensionLoader extends ScorexLogging {
             blocks: Observable[(Channel, Block)],
             signatures: Observable[(Channel, Signatures)],
             syncWithChannelClosed: Observable[ChannelClosedAndSyncWith],
-            scheduler: SchedulerService = Scheduler.singleThread("rx-extension-loader"))
-           (extensionApplier: (Channel, ExtensionBlocks) => Task[ApplyExtensionResult]): (Observable[(Channel, Block)], Coeval[State]) = {
+            scheduler: SchedulerService,
+            timeoutSubject: Subject[Channel, Channel])
+           (extensionApplier: (Channel, ExtensionBlocks) => Task[ApplyExtensionResult]): (Observable[(Channel, Block)], Coeval[State], RxExtensionLoaderShutdownHook) = {
 
     implicit val schdlr = scheduler
 
-    val extensions = ConcurrentSubject.publish[(Channel, ExtensionBlocks)]
-    val simpleBlocks = ConcurrentSubject.publish[(Channel, Block)]
+    val extensions: ConcurrentSubject[(Channel, ExtensionBlocks), (Channel, ExtensionBlocks)] = ConcurrentSubject.publish[(Channel, ExtensionBlocks)]
+    val simpleBlocks: ConcurrentSubject[(Channel, Block), (Channel, Block)] = ConcurrentSubject.publish[(Channel, Block)]
     @volatile var s: State = State(LoaderState.Idle, ApplierState.Idle)
     val lastSyncWith: Coeval[Option[SyncWith]] = lastObserved(syncWithChannelClosed.map(_.syncWith))
 
     def scheduleBlacklist(ch: Channel, reason: String): Task[Unit] = Task {
+      timeoutSubject.onNext(ch)
       peerDatabase.blacklistAndClose(ch, reason)
     }.delayExecution(syncTimeOut)
 
@@ -185,6 +187,7 @@ object RxExtensionLoader extends ScorexLogging {
 
     def appliedExtensions: Observable[(Channel, ExtensionBlocks, ApplyExtensionResult)] = {
       def apply(x: (Channel, ExtensionBlocks)): Task[ApplyExtensionResult] = Function.tupled(extensionApplier)(x)
+
       extensions.mapTask { x =>
         apply(x)
           .asyncBoundary(scheduler)
@@ -207,7 +210,7 @@ object RxExtensionLoader extends ScorexLogging {
       .logErr
       .subscribe()
 
-    (simpleBlocks, Coeval.eval(s))
+    (simpleBlocks, Coeval.eval(s), RxExtensionLoaderShutdownHook(extensions, simpleBlocks))
   }
 
   sealed trait LoaderState
@@ -234,6 +237,14 @@ object RxExtensionLoader extends ScorexLogging {
         s"received=${received.size}, expected=${if (expected.size == 1) expected.head.trim else expected.size})"
     }
 
+  }
+
+  case class RxExtensionLoaderShutdownHook(extensionChannel: Observer[(Channel, ExtensionBlocks)],
+                                           simpleBlocksChannel: Observer[(Channel, Block)]) {
+    def shutdown(): Unit = {
+      extensionChannel.onComplete()
+      simpleBlocksChannel.onComplete()
+    }
   }
 
   case class ExtensionBlocks(blocks: Seq[Block]) {

@@ -12,9 +12,6 @@ import org.scalatest.words.ShouldVerb
 import org.scalatest.{FunSuite, Matchers}
 import scorex.block.Block
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
 class BlockchainUpdaterTest extends FunSuite with Matchers with HistoryTest with ShouldVerb with WithDB {
 
   private val ApprovalPeriod = 100
@@ -34,27 +31,6 @@ class BlockchainUpdaterTest extends FunSuite with Matchers with HistoryTest with
       doubleFeaturesPeriodsAfterHeight = 300
     )
   ))
-
-  ignore("concurrent access to lastBlock doesn't throw any exception") {
-    val (h, _, _, bu, _) = StorageFactory(db, WavesSettings).get._1()
-
-    bu.processBlock(genesisBlock)
-
-    (1 to 1000).foreach { _ =>
-      bu.processBlock(getNextTestBlock(h))
-    }
-
-    @volatile var failed = false
-
-    (1 to 1000).foreach { _ =>
-      Future(bu.processBlock(getNextTestBlock(h))).recover[Any] { case e => e.printStackTrace(); failed = true }
-      Future(bu.removeAfter(h.lastBlockIds(2).last)).recover[Any] { case e => e.printStackTrace(); failed = true }
-    }
-
-    Thread.sleep(1000)
-
-    failed shouldBe false
-  }
 
   def appendBlock(block: Block, blockchainUpdater: BlockchainUpdater): Unit = {
     blockchainUpdater.processBlock(block)
@@ -219,7 +195,7 @@ class BlockchainUpdaterTest extends FunSuite with Matchers with HistoryTest with
     fp.featureStatus(1, h.height()) shouldBe BlockchainFeatureStatus.Approved
   }
 
-  test("block processing should fail if unimplemented feature was activated on blockchaing when autoShutdownOnUnsupportedFeature = yes and exit with code 38") {
+  test("block processing should fail if unimplemented feature was activated on blockchain when autoShutdownOnUnsupportedFeature = yes and exit with code 38") {
     val signal = new Semaphore(1)
     signal.acquire()
 
