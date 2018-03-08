@@ -40,7 +40,7 @@ class NarrowTransactionGenerator(settings: Settings,
   def generate(n: Int): Seq[Transaction] = {
     val issueTransactionSender = randomFrom(accounts).get
     val tradeAssetIssue = IssueTransaction.create(issueTransactionSender, "TRADE".getBytes,
-      "Waves DEX is the best exchange ever".getBytes, 100000000, 2, reissuable = false,
+      "TurtleNode DEX is the best exchange ever".getBytes, 100000000, 2, reissuable = false,
       100000000L + r.nextInt(100000000), System.currentTimeMillis()).right.get
 
     val tradeAssetDistribution = {

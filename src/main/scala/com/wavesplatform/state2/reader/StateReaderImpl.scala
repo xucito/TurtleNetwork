@@ -21,10 +21,10 @@ class StateReaderImpl(p: StateStorage, val synchronizationToken: ReentrantReadWr
   }
 
   override def accountPortfolio(a: Address): Portfolio = read { implicit l =>
-    val waves = sp().getWavesBalance(a).map { case (b, li, lo) => Portfolio(b, LeaseInfo(li, lo), Map.empty) }.orEmpty
+    val TN = sp().getWavesBalance(a).map { case (b, li, lo) => Portfolio(b, LeaseInfo(li, lo), Map.empty) }.orEmpty
     val assets = sp().getAssetBalanceMap(a).map { f => Portfolio(0, LeaseInfo.empty, f) }.orEmpty
 
-    Monoid.combine(waves, assets)
+    Monoid.combine(TN, assets)
   }
 
   override def assetInfo(id: ByteStr): Option[AssetInfo] = read { implicit l =>

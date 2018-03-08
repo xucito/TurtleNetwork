@@ -23,9 +23,9 @@ case class NodeApiRoute(settings: RestAPISettings, heights: Coeval[(HeightInfo, 
   }
 
   @Path("/version")
-  @ApiOperation(value = "Version", notes = "Get Waves node version", httpMethod = "GET")
+  @ApiOperation(value = "Version", notes = "Get TN node version", httpMethod = "GET")
   @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Json Waves node version")
+    new ApiResponse(code = 200, message = "Json TN node version")
   ))
   def version: Route = (get & path("version")) {
     complete(Json.obj("version" -> Constants.AgentName))

@@ -43,7 +43,7 @@ object Node {
 
     def publicKeyStr = Base58.encode(n.publicKey.publicKey)
 
-    def fee(txValue: TransactionType.Value, asset: String = "WAVES"): Long
+    def fee(txValue: TransactionType.Value, asset: String = "TurtleNode"): Long
      = n.settings.feesSettings.fees(txValue.id).find(_.asset == asset).get.fee
 
     def blockDelay: FiniteDuration = n.settings.blockchainSettings.genesisSettings.averageBlockDelay

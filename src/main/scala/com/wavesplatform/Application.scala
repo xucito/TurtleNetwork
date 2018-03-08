@@ -313,7 +313,7 @@ object Application extends ScorexLogging {
       // application config needs to be resolved wrt both system properties *and* user-supplied config.
       case Some(file) =>
         val cfg = ConfigFactory.parseFile(file)
-        if (!cfg.hasPath("waves")) {
+        if (!cfg.hasPath("TN")) {
           log.error("Malformed configuration file was provided! Aborting!")
           log.error("Please, read following article about configuration file format:")
           log.error("https://github.com/wavesplatform/Waves/wiki/Waves-Node-configuration-file")

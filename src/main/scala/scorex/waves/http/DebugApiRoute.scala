@@ -55,7 +55,7 @@ case class DebugApiRoute(settings: RestAPISettings,
 
   private lazy val configStr = configRoot.render(ConfigRenderOptions.concise().setJson(true).setFormatted(true))
   private lazy val fullConfig: JsValue = Json.parse(configStr)
-  private lazy val wavesConfig: JsObject = Json.obj("waves" -> (fullConfig \ "waves").get)
+  private lazy val wavesConfig: JsObject = Json.obj("TN" -> (fullConfig \ "TN").get)
 
   override lazy val route: Route = pathPrefix("debug") {
     blocks ~ state ~ info ~ stateWaves ~ rollback ~ rollbackTo ~ blacklist ~ portfolios ~ minerInfo ~ historyInfo ~ configInfo ~ print
@@ -151,12 +151,12 @@ case class DebugApiRoute(settings: RestAPISettings,
     }
   }
 
-  @Path("/stateWaves/{height}")
+  @Path("/stateTN/{height}")
   @ApiOperation(value = "State at block", notes = "Get state at specified height", httpMethod = "GET")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "height", value = "height", required = true, dataType = "integer", paramType = "path")
   ))
-  def stateWaves: Route = (path("stateWaves" / IntNumber) & get & withAuth) { height =>
+  def stateWaves: Route = (path("stateTN" / IntNumber) & get & withAuth) { height =>
     val s = stateReader()
     val result = s.accountPortfolios.keys
       .map(acc => acc.stringRepr -> s.balanceAtHeight(acc, height))

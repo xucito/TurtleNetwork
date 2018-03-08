@@ -41,10 +41,10 @@ object FunctionalitySettings {
     allowUnissuedAssetsUntil = 1479416400000L,
     allowInvalidReissueInSameBlockUntilTimestamp = 1492768800000L,
     allowMultipleLeaseCancelTransactionUntilTimestamp = 1492768800000L,
-    resetEffectiveBalancesAtHeight = 462000,
-    blockVersion3AfterHeight = 795000,
+    resetEffectiveBalancesAtHeight = 1,
+    blockVersion3AfterHeight = 0,
     preActivatedFeatures = Map.empty,
-    doubleFeaturesPeriodsAfterHeight = 810000)
+    doubleFeaturesPeriodsAfterHeight = 0)
 
   val TESTNET = apply(
     featureCheckBlocksPeriod = 3000,
@@ -77,15 +77,10 @@ case class GenesisSettings(
                             averageBlockDelay: FiniteDuration)
 
 object GenesisSettings {
-  val MAINNET = GenesisSettings(1460678400000L, 1465742577614L, Constants.UnitsInWave * Constants.TotalWaves,
+  val MAINNET = GenesisSettings(1517503972000L, 1517503972000L, Constants.UnitsInWave * Constants.TotalWaves,
     ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption,
     List(
-      GenesisTransactionSettings("3PAWwWa6GbwcJaFzwqXQN5KQm7H96Y7SHTQ", Constants.UnitsInWave * Constants.TotalWaves - 5 * Constants.UnitsInWave),
-      GenesisTransactionSettings("3P8JdJGYc7vaLu4UXUZc1iRLdzrkGtdCyJM", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PAGPDPqnGkyhcihyjMHe9v36Y4hkAh9yDy", Constants.UnitsInWave),
-      GenesisTransactionSettings("3P9o3ZYwtHkaU1KxsKkFjJqJKS3dLHLC9oF", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PJaDyprvekvPXPuAtxrapacuDJopgJRaU3", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PBWXDFUc86N2EQxKJmW8eFco65xTyMZx6J", Constants.UnitsInWave)),
+      GenesisTransactionSettings("3P8FjeNpPDHX5PvLvdgoLqyDYS1qZYwc1FM", Constants.UnitsInWave * Constants.TotalWaves),),
     153722867L, 60.seconds)
 
   val TESTNET = GenesisSettings(1460678400000L, 1478000000000L, Constants.UnitsInWave * Constants.TotalWaves,

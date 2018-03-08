@@ -68,7 +68,7 @@ object LeaseTransaction {
              recipient: AddressOrAlias,
              signature: ByteStr): Either[ValidationError, LeaseTransaction] = {
     if (amount <= 0) {
-      Left(ValidationError.NegativeAmount(amount, "waves"))
+      Left(ValidationError.NegativeAmount(amount, "TN"))
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
       Left(ValidationError.OverflowError)
     } else if (fee <= 0) {
