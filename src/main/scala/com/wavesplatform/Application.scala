@@ -340,7 +340,7 @@ object Application extends ScorexLogging {
     val config = readConfig(args.headOption)
 
     // DO NOT LOG BEFORE THIS LINE, THIS PROPERTY IS USED IN logback.xml
-    System.setProperty("waves.directory", config.getString("waves.directory"))
+    System.setProperty("TN.directory", config.getString("TN.directory"))
     log.info("Starting...")
     sys.addShutdownHook {
       SystemInformationReporter.report(config)

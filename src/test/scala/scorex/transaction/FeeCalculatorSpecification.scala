@@ -14,32 +14,32 @@ import scorex.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
   private val configString =
-    """waves {
+    """TN {
       |  fees {
       |    payment {
-      |      WAVES = 100000
+      |      TN = 100000
       |    }
       |    issue {
-      |      WAVES = 100000000
+      |      TN = 100000000
       |    }
       |    transfer {
-      |      WAVES = 100000
+      |      TN = 100000
       |      "JAudr64y6YxTgLn9T5giKKqWGkbMfzhdRAxmNNfn6FJN" = 2
       |    }
       |    reissue {
-      |      WAVES = 200000
+      |      TN = 200000
       |    }
       |    burn {
-      |      WAVES = 300000
+      |      TN = 300000
       |    }
       |    lease {
-      |      WAVES = 400000
+      |      TN = 400000
       |    }
       |    lease-cancel {
-      |      WAVES = 500000
+      |      TN = 500000
       |    }
       |    create-alias {
-      |      WAVES = 600000
+      |      TN = 600000
       |    }
       |  }
       |}""".stripMargin

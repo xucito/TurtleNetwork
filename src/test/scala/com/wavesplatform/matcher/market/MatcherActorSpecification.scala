@@ -185,7 +185,7 @@ class MatcherActorSpecification extends TestKit(ActorSystem.apply("MatcherTest2"
 
   "GetMarketsResponse" should {
     "serialize to json" in {
-      val waves = "WAVES"
+      val waves = "TN"
       val a1Name = "BITCOIN"
       val a1 = strToSomeAssetId(a1Name)
 

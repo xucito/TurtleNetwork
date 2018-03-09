@@ -17,7 +17,7 @@ import scala.util.Random
 class RollbackSpecSuite extends FreeSpec with ScalaFutures with IntegrationPatience
   with Matchers with TransferSending with WaitForHeight2 with NodesFromDocker {
   // there are nodes with big and small balances to reduce the number of forks
-  private val nonGeneratingNodesConfig = ConfigFactory.parseString("waves.miner.enable = no")
+  private val nonGeneratingNodesConfig = ConfigFactory.parseString("TN.miner.enable = no")
 
   override protected val nodeConfigs: Seq[Config] = Seq(
     NodeConfigs.Default.last,
@@ -71,12 +71,12 @@ class RollbackSpecSuite extends FreeSpec with ScalaFutures with IntegrationPatie
 
     val f = for {
       startHeight <- Future.traverse(nodes)(_.height).map(_.max)
-      aliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.waves).map(_.id)
+      aliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
       _ <- Future.traverse(nodes)(_.waitForTransaction(aliasTxId))
       _ <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
       _ <- Future.traverse(nodes)(_.rollback(startHeight - 1, returnToUTX = false))
       _ <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
-      secondAliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.waves).map(_.id)
+      secondAliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
       _ <- Future.traverse(nodes)(_.waitForTransaction(secondAliasTxId))
     } yield succeed
 

@@ -18,7 +18,7 @@ class NetworkUniqueConnectionsTestSuite extends FreeSpec with Matchers with Dock
       secondNode = {
         // Helps to do an incoming connection: second -> first (1)
         val peersConfig = ConfigFactory.parseString(
-          s"""waves.network.known-peers = [
+          s"""TN.network.known-peers = [
              |  "${firstNode.containerNetworkAddress.getHostName}:${firstNode.containerNetworkAddress.getPort}"
              |]""".stripMargin
         )

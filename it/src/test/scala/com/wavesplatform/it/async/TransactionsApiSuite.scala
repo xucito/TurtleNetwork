@@ -19,7 +19,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
 
   test("height should always be reported for transactions") {
     val f = for {
-      txId <- sender.transfer(firstAddress, secondAddress, 1.waves, fee = 1.waves).map(_.id)
+      txId <- sender.transfer(firstAddress, secondAddress, 1.TN, fee = 1.TN).map(_.id)
       _ <- nodes.waitForHeightAraiseAndTxPresent(txId)
 
       jsv1 <- sender.get(s"/transactions/info/$txId").as[JsValue]
@@ -93,27 +93,27 @@ class TransactionsApiSuite extends BaseTransactionSuite {
     val issueId = signAndBroadcast(Json.obj(
       "type" -> 3,
       "name" -> "Gigacoin",
-      "quantity" -> 100.waves,
+      "quantity" -> 100.TN,
       "description" -> "Gigacoin",
       "sender" -> firstAddress,
       "decimals" -> 8,
       "reissuable" -> true,
-      "fee" -> 1.waves))
+      "fee" -> 1.TN))
 
     signAndBroadcast(Json.obj(
       "type" -> 5,
-      "quantity" -> 200.waves,
+      "quantity" -> 200.TN,
       "assetId" -> issueId,
       "sender" -> firstAddress,
       "reissuable" -> false,
-      "fee" -> 1.waves))
+      "fee" -> 1.TN))
 
     signAndBroadcast(Json.obj(
       "type" -> 6,
-      "quantity" -> 100.waves,
+      "quantity" -> 100.TN,
       "assetId" -> issueId,
       "sender" -> firstAddress,
-      "fee" -> 1.waves))
+      "fee" -> 1.TN))
 
     signAndBroadcast(Json.obj(
       "type" -> 4,
@@ -121,7 +121,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
       "recipient" -> secondAddress,
       "fee" -> 100000,
       "assetId" -> issueId,
-      "amount" -> 1.waves,
+      "amount" -> 1.TN,
       "attachment" -> Base58.encode("asset transfer".getBytes)))
   }
 
@@ -131,7 +131,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
       "sender" -> firstAddress,
       "recipient" -> secondAddress,
       "fee" -> 100000,
-      "amount" -> 1.waves,
+      "amount" -> 1.TN,
       "attachment" -> Base58.encode("falafel".getBytes)))
   }
 
@@ -139,7 +139,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
     signAndBroadcast(Json.obj(
       "type" -> 11,
       "sender" -> firstAddress,
-      "transfers" -> Json.toJson(Seq(Transfer(secondAddress, 1.waves), Transfer(thirdAddress, 2.waves))),
+      "transfers" -> Json.toJson(Seq(Transfer(secondAddress, 1.TN), Transfer(thirdAddress, 2.TN))),
       "fee" -> 200000,
       "attachment" -> Base58.encode("masspay".getBytes)),
     usesProofs = true)
@@ -149,7 +149,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
     val leaseId = signAndBroadcast(Json.obj(
       "type" -> 8,
       "sender" -> firstAddress,
-      "amount" -> 1.waves,
+      "amount" -> 1.TN,
       "recipient" -> secondAddress,
       "fee" -> 100000))
 
@@ -189,7 +189,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
   }
 
   test("reporting MassTransfer transactions") {
-    val transfers = List(Transfer(firstAddress, 5.waves), Transfer(secondAddress, 2.waves), Transfer(thirdAddress, 3.waves))
+    val transfers = List(Transfer(firstAddress, 5.TN), Transfer(secondAddress, 2.TN), Transfer(thirdAddress, 3.TN))
     val f = for {
       txId <- sender.massTransfer(firstAddress, transfers, 250000).map(_.id)
       _ <- nodes.waitForHeightAraiseAndTxPresent(txId)
@@ -202,7 +202,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
       txSender <- sender.get(s"/transactions/address/$firstAddress/limit/1").as[JsArray].map(_.apply(0)(0))
       _ = assert(txSender.as[MassTransferRequest].transfers.size == 3)
       _ = assert((txSender \ "transferCount").as[Int] == 3)
-      _ = assert((txSender \ "totalAmount").as[Long] == 10.waves)
+      _ = assert((txSender \ "totalAmount").as[Long] == 10.TN)
       transfersAfterTrans = txSender.as[MassTransferRequest].transfers
 
       _ = assert((transfers.equals(transfersAfterTrans)))
@@ -211,7 +211,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
       txRecipient <- sender.get(s"/transactions/address/$secondAddress/limit/1").as[JsArray].map(_.apply(0)(0))
       _ = assert(txRecipient.as[MassTransferRequest].transfers.size == 1)
       _ = assert((txRecipient \ "transferCount").as[Int] == 3)
-      _ = assert((txRecipient \ "totalAmount").as[Long] == 10.waves)
+      _ = assert((txRecipient \ "totalAmount").as[Long] == 10.TN)
       transferToSecond = txRecipient.as[MassTransferRequest].transfers.head
 
       _ = assert(transfers contains transferToSecond)

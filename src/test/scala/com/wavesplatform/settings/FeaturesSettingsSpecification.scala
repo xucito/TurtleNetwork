@@ -10,7 +10,7 @@ class FeaturesSettingsSpecification extends FlatSpec with Matchers {
   "FeaturesSettings" should "read values" in {
     val config = ConfigFactory.parseString(
       """
-        |waves {
+        |TN {
         |  features {
         |    auto-shutdown-on-unsupported-feature = yes
         |    supported = [123,124,135]
@@ -18,7 +18,7 @@ class FeaturesSettingsSpecification extends FlatSpec with Matchers {
         |}
       """.stripMargin).resolve()
 
-    val settings = config.as[FeaturesSettings]("waves.features")
+    val settings = config.as[FeaturesSettings]("TN.features")
 
     settings.autoShutdownOnUnsupportedFeature should be(true)
     settings.supported shouldEqual List(123,124,135)

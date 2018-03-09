@@ -16,13 +16,13 @@ class TransferTransactionSuite extends BaseTransactionSuite with TransferSending
 
   private val waitCompletion = 2.minutes
   private val defaultAssetQuantity = 100000
-  private val transferAmount = 5.waves
-  private val leasingAmount = 5.waves
-  private val leasingFee = 0.003.waves
-  private val transferFee = 0.002.waves
-  private val issueFee = 5.waves
+  private val transferAmount = 5.TN
+  private val leasingAmount = 5.TN
+  private val leasingFee = 0.003.TN
+  private val transferFee = 0.002.TN
+  private val issueFee = 5.TN
 
-  test("asset transfer changes sender's and recipient's asset balance; issuer's.waves balance is decreased by fee") {
+  test("asset transfer changes sender's and recipient's asset balance; issuer's.TN balance is decreased by fee") {
     val f = for {
       ((firstBalance, firstEffBalance), (secondBalance, secondEffBalance)) <- notMiner.accountBalances(firstAddress)
         .zip(notMiner.accountBalances(secondAddress))
@@ -43,7 +43,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with TransferSending
     Await.result(f, waitCompletion)
   }
 
-  test("waves transfer changes waves balances and eff.b.") {
+  test("TN transfer changes TN balances and eff.b.") {
     val f = for {
       ((firstBalance, firstEffBalance), (secondBalance, secondEffBalance)) <- notMiner.accountBalances(firstAddress)
         .zip(notMiner.accountBalances(secondAddress))
@@ -57,14 +57,14 @@ class TransferTransactionSuite extends BaseTransactionSuite with TransferSending
     Await.result(f, waitCompletion)
   }
 
-  test("invalid signed waves transfer should not be in UTX or blockchain") {
+  test("invalid signed TN transfer should not be in UTX or blockchain") {
     def invalidByTsTx(ts: Long) = TransferTransaction.create(None,
       sender.privateKey,
       AddressOrAlias.fromString(sender.address).right.get,
       1,
       ts,
       None,
-      1.waves,
+      1.TN,
       Array.emptyByteArray
     ).right.get
 
@@ -107,14 +107,14 @@ class TransferTransactionSuite extends BaseTransactionSuite with TransferSending
   }
 
 
-  test("can not make transfer without having enough of waves") {
+  test("can not make transfer without having enough of TN") {
     val f = for {
       fb <- traverse(nodes)(_.height).map(_.min)
 
       ((firstBalance, firstEffBalance), (secondBalance, secondEffBalance)) <- notMiner.accountBalances(firstAddress)
         .zip(notMiner.accountBalances(secondAddress))
 
-      transferFailureAssertion <- assertBadRequest(sender.transfer(secondAddress, firstAddress, secondBalance + 1.waves, transferFee))
+      transferFailureAssertion <- assertBadRequest(sender.transfer(secondAddress, firstAddress, secondBalance + 1.TN, transferFee))
 
       _ <- traverse(nodes)(_.waitForHeight(fb + 2))
 
@@ -149,7 +149,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with TransferSending
     Await.result(f, waitCompletion)
   }
 
-  test("can not make transfer without having enough of your own waves") {
+  test("can not make transfer without having enough of your own TN") {
     val f = for {
       fb <- traverse(nodes)(_.height).map(_.min)
 

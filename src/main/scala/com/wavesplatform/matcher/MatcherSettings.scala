@@ -34,7 +34,7 @@ case class MatcherSettings(enable: Boolean,
 
 
 object MatcherSettings {
-  val configPath: String = "waves.matcher"
+  val configPath: String = "TN.matcher"
 
   def fromConfig(config: Config): MatcherSettings = {
     val enabled = config.as[Boolean](s"$configPath.enable")

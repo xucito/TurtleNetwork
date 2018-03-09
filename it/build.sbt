@@ -19,16 +19,16 @@ val yourKitRedistDir = Def.setting(baseDirectory.value / ".." / "third-party" / 
 inTask(docker)(Seq(
   dockerfile := {
     val configTemplate = (Compile / resourceDirectory).value / "template.conf"
-    val startWaves = sourceDirectory.value / "container" / "start-waves.sh"
+    val startWaves = sourceDirectory.value / "container" / "start-TN.sh"
     val profilerAgent = yourKitRedistDir.value / "libyjpagent.so"
 
     new Dockerfile {
       from("anapsix/alpine-java:8_server-jre")
-      add((assembly in LocalProject("node")).value, "/opt/waves/waves.jar")
-      add(Seq(configTemplate, startWaves, profilerAgent), "/opt/waves/")
-      add(profilerAgent, "/opt/waves/")
-      run("chmod", "+x", "/opt/waves/start-waves.sh")
-      entryPoint("/opt/waves/start-waves.sh")
+      add((assembly in LocalProject("node")).value, "/opt/TN/TN.jar")
+      add(Seq(configTemplate, startWaves, profilerAgent), "/opt/TN/")
+      add(profilerAgent, "/opt/TN/")
+      run("chmod", "+x", "/opt/TN/start-TN.sh")
+      entryPoint("/opt/TN/start-TN.sh")
       expose(10001)
     }
   },
@@ -78,9 +78,9 @@ lazy val itTestsCommonSettings: Seq[Def.Setting[_]] = Seq(
         bootJars = Vector.empty[java.io.File],
         workingDirectory = Option(baseDirectory.value),
         runJVMOptions = Vector(
-          "-Dwaves.it.logging.appender=FILE",
-          s"-Dwaves.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}",
-          s"-Dwaves.profiling.yourKitDir=$yourKitRedistDirValue"
+          "-DTN.it.logging.appender=FILE",
+          s"-DTN.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}",
+          s"-DTN.profiling.yourKitDir=$yourKitRedistDirValue"
         ) ++ javaOptionsValue,
         connectInput = false,
         envVars = envVarsValue

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo Options: $WAVES_OPTS
-java $WAVES_OPTS -jar /opt/waves/waves.jar /opt/waves/template.conf
+echo Options: $TN_OPTS
+java $TN_OPTS -jar /opt/TN/TN.jar /opt/TN/template.conf

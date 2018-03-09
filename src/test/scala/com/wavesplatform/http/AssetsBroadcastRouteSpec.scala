@@ -88,7 +88,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
     "transfer transaction" in forAll(broadcastTransferReq) { tr =>
       def posting[A: Writes](v: A): RouteTestResult = Post(routePath("transfer"), v) ~> route
 
-      forAll(nonPositiveLong) { q => posting(tr.copy(amount = q)) should produce(NegativeAmount(s"$q of waves")) }
+      forAll(nonPositiveLong) { q => posting(tr.copy(amount = q)) should produce(NegativeAmount(s"$q of TN")) }
       forAll(invalidBase58) { pk => posting(tr.copy(senderPublicKey = pk)) should produce(InvalidAddress) }
       forAll(invalidBase58) { a => posting(tr.copy(recipient = a)) should produce(InvalidAddress) }
       forAll(invalidBase58) { a => posting(tr.copy(assetId = Some(a))) should produce(CustomValidationError("invalid.assetId")) }

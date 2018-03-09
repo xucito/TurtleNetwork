@@ -128,12 +128,12 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
     // Alice checks that she sold some assets
     waitForAssetBalance(aliceNode, aliceAsset, 800)
 
-    // Bob checks that he spent some Waves
+    // Bob checks that he spent some TN
     val updatedBobBalance = getBalance(bobNode)
     updatedBobBalance._1 shouldBe (bobBalance._1 - 2 * Waves * 200 - MatcherFee)
     bobBalance = updatedBobBalance
 
-    // Alice checks that she received some Waves
+    // Alice checks that she received some TN
     val updatedAliceBalance = getBalance(aliceNode)
     updatedAliceBalance._1 shouldBe (aliceBalance._1 + 2 * Waves * 200 - (MatcherFee * 200.0 / 500.0).toLong)
     aliceBalance = updatedAliceBalance
@@ -237,7 +237,7 @@ class MatcherTestSuite extends FreeSpec with Matchers with BeforeAndAfterAll wit
   }
 
   "request order book for blacklisted pair" in {
-    val f = matcherNode.matcherGetStatusCode(s"/matcher/orderbook/$ForbiddenAssetId/WAVES", 404)
+    val f = matcherNode.matcherGetStatusCode(s"/matcher/orderbook/$ForbiddenAssetId/TN", 404)
 
     val result = Await.result(f, 1.minute)
     result.message shouldBe s"Invalid Asset ID: $ForbiddenAssetId"
@@ -307,17 +307,17 @@ object MatcherTestSuite {
 
   private val matcherConfig = ConfigFactory.parseString(
     s"""
-       |waves.matcher {
+       |TN.matcher {
        |  enable=yes
        |  account="3Hm3LGoNPmw1VTZ3eRA2pAfeQPhnaBm6YFC"
        |  bind-address="0.0.0.0"
        |  order-match-tx-fee = 300000
        |  blacklisted-assets = [$ForbiddenAssetId]
        |}
-       |waves.miner.enable=no
+       |TN.miner.enable=no
       """.stripMargin)
 
-  private val nonGeneratingPeersConfig = ConfigFactory.parseString("waves.miner.enable=no")
+  private val nonGeneratingPeersConfig = ConfigFactory.parseString("TN.miner.enable=no")
 
   val AssetQuantity: Long = 1000
 

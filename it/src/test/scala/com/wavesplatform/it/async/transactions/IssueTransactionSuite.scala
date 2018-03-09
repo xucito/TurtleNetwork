@@ -11,9 +11,9 @@ class IssueTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
 
   private val waitCompletion = 2.minutes
   private val defaultQuantity = 100000
-  private val assetFee = 5.waves
+  private val assetFee = 5.TN
 
-  test("asset issue changes issuer's asset balance; issuer's waves balance is decreased by fee") {
+  test("asset issue changes issuer's asset balance; issuer's TN balance is decreased by fee") {
     val assetName = "myasset"
     val assetDescription = "my asset description"
     val f = for {
@@ -58,10 +58,10 @@ class IssueTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
     val f = for {
 
       firstAddressEffectiveBalance <- notMiner.accountEffectiveBalance(firstAddress)
-      bigAssetFee = firstAddressEffectiveBalance + 1.waves
+      bigAssetFee = firstAddressEffectiveBalance + 1.TN
 
       _ <- assertBadRequestAndMessage(sender.issue(firstAddress, assetName, assetDescription, defaultQuantity, 2, reissuable = false, bigAssetFee),
-        "negative waves balance")
+        "negative TN balance")
     } yield succeed
 
     Await.result(f, waitCompletion)

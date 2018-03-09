@@ -22,7 +22,7 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
   private val HeightPrefix = "state-height".getBytes(Charset)
   private val TransactionsPrefix = "txs".getBytes(Charset)
   private val AccountTransactionsLengthsPrefix = "acc-txs-len".getBytes(Charset)
-  private val WavesBalancePrefix = "waves-bal".getBytes(Charset)
+  private val WavesBalancePrefix = "TN-bal".getBytes(Charset)
   private val AddressesIndexPrefix = "add-idx".getBytes(Charset)
   private val AssetBalancePrefix = "asset-bal".getBytes(Charset)
   private val AddressAssetsPrefix = "address-assets".getBytes(Charset)

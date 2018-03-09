@@ -10,9 +10,9 @@ class ReissueTransactionSuite extends BaseTransactionSuite {
 
   private val waitCompletion = 2.minutes
   private val defaultQuantity = 100000
-  private val issueFee = 3.waves
+  private val issueFee = 3.TN
 
-  test("asset reissue changes issuer's asset balance; issuer's waves balance is decreased by fee") {
+  test("asset reissue changes issuer's asset balance; issuer's TN balance is decreased by fee") {
     val f = for {
       (balance, effectiveBalance) <- notMiner.accountBalances(firstAddress)
 
@@ -53,14 +53,14 @@ class ReissueTransactionSuite extends BaseTransactionSuite {
   test("not able to reissue if cannot pay fee - insufficient funds") {
     val f = for {
       (balance, effectiveBalance) <- notMiner.accountBalances(firstAddress)
-      reissueFee = effectiveBalance + 1.waves
+      reissueFee = effectiveBalance + 1.TN
 
       issuedAssetId <- sender.issue(firstAddress, "name3", "description3", defaultQuantity, decimals = 2, reissuable = true, issueFee).map(_.id)
 
       _ <- nodes.waitForHeightAraiseAndTxPresent(issuedAssetId)
 
       _ <- assertBadRequestAndMessage(
-        sender.reissue(firstAddress, issuedAssetId, defaultQuantity, reissuable = true, fee = reissueFee), "negative waves balance")
+        sender.reissue(firstAddress, issuedAssetId, defaultQuantity, reissuable = true, fee = reissueFee), "negative TN balance")
       _ <- nodes.waitForHeightAraise()
 
       _ <- notMiner.assertAssetBalance(firstAddress, issuedAssetId, defaultQuantity)

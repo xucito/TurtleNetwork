@@ -37,7 +37,7 @@ class BlockHeadersTestSuite extends FreeSpec with Matchers with BeforeAndAfterAl
 
     def requests(n: Int): Future[Unit] = Future
       .sequence {
-        (1 to n).map { _ => notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).waves, fee) }
+        (1 to n).map { _ => notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).TN, fee) }
       }
       .map(_ => ())
 
@@ -58,7 +58,7 @@ class BlockHeadersTestSuite extends FreeSpec with Matchers with BeforeAndAfterAl
   "blockAt content should be equal to blockHeaderAt, except transactions info" in {
     val f = for {
       baseHeight <- traverse(nodes)(_.height).map(_.max)
-      _ <- txRequestsGen(30, 2.waves)
+      _ <- txRequestsGen(30, 2.TN)
       _ <- traverse(nodes)(_.waitForHeight(baseHeight + 3))
       blocks <- traverse(nodes)(_.blockAt(baseHeight + 1))
       blocksHeaders <- traverse(nodes)(_.blockHeadersAt(baseHeight + 1))
@@ -71,7 +71,7 @@ class BlockHeadersTestSuite extends FreeSpec with Matchers with BeforeAndAfterAl
   "lastBlock content should be equal to lastBlockHeader, except transactions info" in {
     val f = for {
       baseHeight <- traverse(nodes)(_.height).map(_.max)
-      _ <- txRequestsGen(30, 2.waves)
+      _ <- txRequestsGen(30, 2.TN)
       _ <- traverse(nodes)(_.waitForHeight(baseHeight + 1))
       blocks <- traverse(nodes)(_.lastBlock)
       blocksHeaders <- traverse(nodes)(_.lastBlockHeaders)
@@ -85,7 +85,7 @@ class BlockHeadersTestSuite extends FreeSpec with Matchers with BeforeAndAfterAl
   "blockSeq content should be equal to blockHeaderSeq, except transactions info" in {
     val f = for {
       baseHeight <- traverse(nodes)(_.height).map(_.max)
-      _ <- txRequestsGen(30, 2.waves)
+      _ <- txRequestsGen(30, 2.TN)
       _ <- nodes.waitForSameBlocksAt(3.seconds, baseHeight + 3)
       blocks <- nodes.head.blockSeq(baseHeight + 1, baseHeight + 3)
       blockHeaders <- nodes.head.blockHeadersSeq(baseHeight + 1, baseHeight + 3)

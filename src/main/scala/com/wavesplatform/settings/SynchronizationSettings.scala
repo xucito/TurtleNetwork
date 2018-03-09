@@ -32,7 +32,7 @@ object SynchronizationSettings {
                                      maxBufferSize: Int,
                                      maxBufferTime: FiniteDuration)
 
-  val configPath: String = "waves.synchronization"
+  val configPath: String = "TN.synchronization"
 
   def fromConfig(config: Config): SynchronizationSettings = {
     val maxRollback = config.as[Int](s"$configPath.max-rollback")

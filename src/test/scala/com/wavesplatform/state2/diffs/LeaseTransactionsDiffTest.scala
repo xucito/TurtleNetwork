@@ -23,7 +23,7 @@ class LeaseTransactionsDiffTest extends PropSpec
 
   def total(l: LeaseInfo): Long = l.leaseIn - l.leaseOut
 
-  property("can lease/cancel lease preserving waves invariant") {
+  property("can lease/cancel lease preserving TN invariant") {
 
     val sunnyDayLeaseLeaseCancel: Gen[(GenesisTransaction, LeaseTransaction, LeaseCancelTransaction)] = for {
       master <- accountGen

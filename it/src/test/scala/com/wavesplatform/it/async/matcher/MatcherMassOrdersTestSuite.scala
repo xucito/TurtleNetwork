@@ -154,7 +154,7 @@ object MatcherMassOrdersTestSuite {
 
   private val matcherConfig = ConfigFactory.parseString(
     s"""
-       |waves.matcher {
+       |TN.matcher {
        |  enable=yes
        |  account="3Hm3LGoNPmw1VTZ3eRA2pAfeQPhnaBm6YFC"
        |  bind-address="0.0.0.0"
@@ -163,19 +163,19 @@ object MatcherMassOrdersTestSuite {
        |  order-cleanup-interval = 20s
        |  rest-order-limit=$orderLimit
        |}
-       |waves.rest-api {
+       |TN.rest-api {
        |    enable = yes
        |    api-key-hash = 7L6GpLHhA5KyJTAVc8WFHwEcyTY8fC8rRbyMCiFnM4i
        |}
-       |waves.miner.enable=no
+       |TN.miner.enable=no
       """.stripMargin)
 
   private val nonGeneratingPeersConfig = ConfigFactory.parseString(
     """
-      |waves.matcher {
+      |TN.matcher {
       | order-cleanup-interval = 30s
       |}
-      |waves.miner.enable=no
+      |TN.miner.enable=no
     """.stripMargin
   )
 

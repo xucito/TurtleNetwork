@@ -8,7 +8,7 @@ class LeaseTransactionSuite extends BaseTransactionSuite {
 
   private val defaultQuantity = 100000
   private val decimals: Byte = 2
-  private val defaultFee = 1.waves
+  private val defaultFee = 1.TN
 
   test("can't lease more than you have") {
     val (balance, _) = notMiner.accountBalances(firstAddress)

@@ -22,7 +22,7 @@ class VoteForFeatureByDefaultTestSuite extends FreeSpec with Matchers with Cance
 
   override protected def nodeConfigs: Seq[Config] = NodeConfigs.newBuilder
     .overrideBase(_.raw(
-      s"""waves {
+      s"""TN {
          |  blockchain.custom {
          |    functionality {
          |      pre-activated-features = {}
@@ -39,12 +39,12 @@ class VoteForFeatureByDefaultTestSuite extends FreeSpec with Matchers with Cance
          |      ]
          |    }
          |  }
-         |  waves.features.supported=[$defaultVotingFeatureNum]
+         |  TN.features.supported=[$defaultVotingFeatureNum]
          |  miner.quorum = 3
          |}""".stripMargin
     ))
     .withDefault(3)
-    .withSpecial(_.raw(s"waves.features.supported=[$nonVotingFeatureNum]"))
+    .withSpecial(_.raw(s"TN.features.supported=[$nonVotingFeatureNum]"))
     .buildNonConflicting()
 
   private def supportedNodes = nodes.init

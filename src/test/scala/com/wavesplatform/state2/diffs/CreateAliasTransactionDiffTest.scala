@@ -28,7 +28,7 @@ class CreateAliasTransactionDiffTest extends PropSpec
     anotherAliasTx = CreateAliasTransaction.create(master, alias2, fee + 3, ts).right.get
   } yield (genesis, aliasTx, sameAliasTx, sameAliasOtherSenderTx, anotherAliasTx)
 
-  property("can create and resolve aliases preserving waves invariant") {
+  property("can create and resolve aliases preserving TN invariant") {
     forAll(preconditionsAndAliasCreations) { case (gen, aliasTx, _, _, anotherAliasTx) =>
       assertDiffAndState(db, Seq(TestBlock.create(Seq(gen, aliasTx))), TestBlock.create(Seq(anotherAliasTx))) { case (blockDiff, newState) =>
         val totalPortfolioDiff = Monoid.combineAll(blockDiff.txsDiff.portfolios.values)

@@ -24,7 +24,7 @@ class AssetTransactionsDiffTest extends PropSpec
   } yield ((genesis, issue), (reissue, burn))
 
 
-  property("Issue+Reissue+Burn do not break waves invariant and updates state") {
+  property("Issue+Reissue+Burn do not break TN invariant and updates state") {
     forAll(issueReissueBurnTxs(isReissuable = true)) { case (((gen, issue), (reissue, burn))) =>
       assertDiffAndState(db, Seq(TestBlock.create(Seq(gen, issue))), TestBlock.create(Seq(reissue, burn))) { case (blockDiff, newState) =>
         val totalPortfolioDiff = Monoid.combineAll(blockDiff.txsDiff.portfolios.values)

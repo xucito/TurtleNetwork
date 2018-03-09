@@ -21,7 +21,7 @@ class BlockConstrantsSuite extends FreeSpec with Matchers with TransferSending w
          |  request-timeout = 60s
          |}
          |
-         |waves {
+         |TN {
          |  network.enable-peers-exchange = no
          |
          |  miner {

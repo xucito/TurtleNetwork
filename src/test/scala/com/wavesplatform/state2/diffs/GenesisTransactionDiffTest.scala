@@ -18,7 +18,7 @@ class GenesisTransactionDiffTest extends PropSpec
     }
   }
 
-  property("Diff establishes Waves invariant") {
+  property("Diff establishes TN invariant") {
     forAll(nelMax(genesisGen)) { gtxs =>
       assertDiffAndState(db, Seq.empty, TestBlock.create(gtxs)) { (blockDiff, state) =>
         val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.txsDiff.portfolios.values)

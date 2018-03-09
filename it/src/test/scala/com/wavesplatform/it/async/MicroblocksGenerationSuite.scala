@@ -16,7 +16,7 @@ class MicroblocksGenerationSuite extends FreeSpec with Matchers with TransferSen
 
   override protected val nodeConfigs: Seq[Config] = NodeConfigs.newBuilder
     .overrideBase(_.raw(
-      s"""waves {
+      s"""TN {
          |  network.enable-peers-exchange = no
          |
          |  miner {

@@ -32,8 +32,8 @@ trait MatcherTestData {
   val createdTimeGen: Gen[Long] = Gen.choose(0L, 10000L).map(NTP.correctedTime() - _)
 
   val config = loadConfig(ConfigFactory.parseString(
-    """waves {
-      |  directory: "/tmp/waves-test"
+    """TN {
+      |  directory: "/tmp/TN-test"
       |  matcher {
       |    enable: yes
       |    account: ""

@@ -18,16 +18,16 @@ import scorex.transaction.assets.TransferTransaction.MaxAttachmentSize
 
 class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
 
-  private val assetQuantity = 100.waves
-  private val transferAmount = 5.waves
-  private val leasingAmount = 5.waves
-  private val leasingFee = 0.003.waves
+  private val assetQuantity = 100.TN
+  private val transferAmount = 5.TN
+  private val leasingAmount = 5.TN
+  private val leasingFee = 0.003.TN
   private val transferFee = notMiner.settings.feesSettings.fees(TransactionType.TransferTransaction.id)(0).fee
-  private val issueFee = 1.waves
+  private val issueFee = 1.TN
   private val massTransferFeePerTransfer = notMiner.settings.feesSettings.fees(TransactionType.MassTransferTransaction.id)(0).fee
 
 
-  test("asset mass transfer changes asset balances and sender's.waves balance is decreased by fee.") {
+  test("asset mass transfer changes asset balances and sender's.TN balance is decreased by fee.") {
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
@@ -48,7 +48,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     notMiner.assertAssetBalance(secondAddress, assetId, transferAmount)
   }
 
-  test("waves mass transfer changes waves balances") {
+  test("TN mass transfer changes TN balances") {
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
@@ -64,7 +64,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     notMiner.assertBalances(thirdAddress, balance3 + 2 * transferAmount, eff3 + 2 * transferAmount)
   }
 
-  test("can not make mass transfer without having enough waves") {
+  test("can not make mass transfer without having enough TN") {
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
     val transfers = List(Transfer(secondAddress, balance1 / 2), Transfer(thirdAddress, balance1 / 2))

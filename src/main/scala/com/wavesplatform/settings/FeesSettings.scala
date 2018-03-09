@@ -10,7 +10,7 @@ case class FeeSettings(asset: String, fee: Long)
 case class FeesSettings(fees: Map[Int, Seq[FeeSettings]])
 
 object FeesSettings {
-  val configPath: String = "waves.fees"
+  val configPath: String = "TN.fees"
 
   private val converter = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.UPPER_CAMEL)
 

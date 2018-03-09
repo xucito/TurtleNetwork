@@ -1,8 +1,8 @@
-# Waves [![Build Status](https://travis-ci.org/wavesplatform/Waves.svg?branch=master)](https://travis-ci.org/wavesplatform/Waves) [![](https://images.microbadger.com/badges/version/wavesplatform/waves-testnet.svg)](http://microbadger.com/images/wavesplatform/waves-testnet "Testnet Node Docker image")
+# TN [![Build Status](https://travis-ci.org/wavesplatform/Waves.svg?branch=master)](https://travis-ci.org/wavesplatform/Waves) [![](https://images.microbadger.com/badges/version/wavesplatform/waves-testnet.svg)](http://microbadger.com/images/wavesplatform/waves-testnet "Testnet Node Docker image")
 
 In the master branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section](https://github.com/wavesplatform/Waves/releases), you can switch to the corresponding tag and build the application.
 
-[How to configure Waves node](https://github.com/wavesplatform/Waves/wiki/How-to-install-Waves-node)
+[How to configure TN node](https://github.com/wavesplatform/Waves/wiki/How-to-install-Waves-node)
 
 # Installation
 
@@ -96,7 +96,7 @@ have `docker.imageId` system property defined for the run configuration. The eas
 
 ```
 ...
-[info] Step 5/5 : ENTRYPOINT /opt/waves/start-waves.sh
+[info] Step 5/5 : ENTRYPOINT /opt/TN/start-TN.sh
 [info]  ---> Using cache
 [info]  ---> e243fa08d496
 [info] Successfully built e243fa08d496
@@ -122,7 +122,7 @@ this automatically.
     -Dkamon.modules.kamon-statsd.auto-start=yes \
     -Dkamon.modules.kamon-system-metrics.auto-start=yes \
     -Dkamon.statsd.hostname=localhost \
-    -Dkamon.statsd.port=9999" sbt waves-testnet.conf
+    -Dkamon.statsd.port=9999" sbt TN-testnet.conf
     ``` 
 
     Here:
@@ -134,7 +134,7 @@ this automatically.
 # Acknowledgement
 
 [<img src="https://www.yourkit.com/images/yklogo.png">](http://www.yourkit.com/java/profiler/index.jsp)  
-We use YourKit full-featured Java Profiler to make Waves node faster. YourKit, LLC is the creator of innovative and intelligent tools for profiling Java and .NET applications.    
+We use YourKit full-featured Java Profiler to make TN node faster. YourKit, LLC is the creator of innovative and intelligent tools for profiling Java and .NET applications.    
 Take a look at YourKit's leading software products: 
 <a href="http://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and
 <a href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>.

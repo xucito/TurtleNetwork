@@ -23,7 +23,7 @@ class ActivationFeatureTestSuite extends FreeSpec with Matchers with CancelAfter
 
   override protected def nodeConfigs: Seq[Config] = NodeConfigs.newBuilder
     .overrideBase(_.raw(
-      s"""waves {
+      s"""TN {
          |  blockchain {
          |    custom {
          |      functionality {

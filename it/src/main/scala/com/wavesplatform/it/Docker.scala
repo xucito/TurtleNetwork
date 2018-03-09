@@ -66,7 +66,7 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
   private val networkPrefix = s"${InetAddress.getByAddress(toByteArray(networkSeed)).getHostAddress}/28"
 
   private val logDir: Coeval[Path] = Coeval.evalOnce {
-    val r = Option(System.getProperty("waves.it.logging.dir"))
+    val r = Option(System.getProperty("TN.it.logging.dir"))
       .map(Paths.get(_))
       .getOrElse(Paths.get(System.getProperty("user.dir"), "target", "logs"))
 
@@ -76,9 +76,9 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
 
   private val profilerController: Coeval[Option[File]] = Coeval.evalOnce {
     if (enableProfiling) {
-      Option(System.getProperty("waves.profiling.yourKitDir")) match {
+      Option(System.getProperty("TN.profiling.yourKitDir")) match {
         case None =>
-          throw new IllegalStateException("Can't enable profiling, because there is no property 'waves.profiling.yourKitDir'!")
+          throw new IllegalStateException("Can't enable profiling, because there is no property 'TN.profiling.yourKitDir'!")
 
         case Some(yourKitDir) =>
           val controller = Paths.get(yourKitDir, "yjp-controller-api-redist.jar").toFile
@@ -94,7 +94,7 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
   private def ipForNode(nodeId: Int) = InetAddress.getByAddress(toByteArray(nodeId & 0xF | networkSeed)).getHostAddress
 
   private lazy val wavesNetwork: Network = {
-    val networkName = s"waves-${hashCode().toLong.toHexString}"
+    val networkName = s"TN-${hashCode().toLong.toHexString}"
 
     def network: Option[Network] = try {
       val networks = client.listNetworks(DockerClient.ListNetworksParam.byNetworkName(networkName))
@@ -192,9 +192,9 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
       .withFallback(ConfigFactory.defaultReference())
       .resolve()
 
-    val restApiPort = actualConfig.getString("waves.rest-api.port")
-    val networkPort = actualConfig.getString("waves.network.port")
-    val matcherApiPort = actualConfig.getString("waves.matcher.port")
+    val restApiPort = actualConfig.getString("TN.rest-api.port")
+    val networkPort = actualConfig.getString("TN.network.port")
+    val matcherApiPort = actualConfig.getString("TN.matcher.port")
 
     val portBindings = new ImmutableMap.Builder[String, java.util.List[PortBinding]]()
       .put(s"$ProfilerPort", singletonList(PortBinding.randomPort("0.0.0.0")))
@@ -207,18 +207,18 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
       .portBindings(portBindings)
       .build()
 
-    val nodeName = actualConfig.getString("waves.network.node-name")
+    val nodeName = actualConfig.getString("TN.network.node-name")
     val nodeNumber = nodeName.replace("node", "").toInt
     val ip = ipForNode(nodeNumber)
 
     val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
     val configOverrides = {
       val common = s"$javaOptions ${renderProperties(asProperties(nodeConfig.withFallback(suiteConfig)))} " +
-        s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -Dwaves.network.declared-address=$ip:$networkPort"
+        s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort"
 
       val additional = profilerController().fold("") { _ =>
         s"-agentpath:$ContainerRoot/libyjpagent.so=listen=0.0.0.0:$ProfilerPort," +
-          s"sampling,monitors,sessionname=WavesNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot"
+          s"sampling,monitors,sessionname=TNNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot"
       }
 
       s"$common $additional"
@@ -231,7 +231,7 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
         wavesNetwork.name() -> endpointConfigFor(nodeName)
       ).asJava))
       .hostConfig(hostConfig)
-      .env(s"WAVES_OPTS=$configOverrides")
+      .env(s"TN_OPTS=$configOverrides")
       .build()
 
     val containerId = {
@@ -439,7 +439,7 @@ class Docker(suiteConfig: Config = ConfigFactory.empty,
 
 object Docker {
   private val ProfilerPort = 10001
-  private val ContainerRoot = Paths.get("/opt/waves")
+  private val ContainerRoot = Paths.get("/opt/TN")
   private val jsonMapper = new ObjectMapper
   private val propsMapper = new JavaPropsMapper
 

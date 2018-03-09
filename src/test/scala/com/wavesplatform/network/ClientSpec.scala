@@ -19,7 +19,7 @@ class ClientSpec extends FreeSpec
   with TransactionGen {
 
   private val clientHandshake = new Handshake(
-    applicationName = "wavesI",
+    applicationName = "TNI",
     applicationVersion = Version.VersionTuple,
     nodeName = "test",
     nodeNonce = Random.nextInt(),
