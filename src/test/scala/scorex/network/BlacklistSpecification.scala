@@ -9,8 +9,12 @@ import net.ceedubs.ficus.Ficus._
 import org.scalatest.{FeatureSpec, GivenWhenThen}
 
 class BlacklistSpecification extends FeatureSpec with GivenWhenThen {
+<<<<<<< HEAD
   private val config = ConfigFactory.parseString(
     """TN.network {
+=======
+  private val config = ConfigFactory.parseString("""waves.network {
+>>>>>>> pr/3
       |  known-peers = []
       |  file = null
       |  black-list-residence-time: 1s

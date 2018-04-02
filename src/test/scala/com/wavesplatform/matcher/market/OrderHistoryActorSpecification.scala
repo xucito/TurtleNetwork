@@ -6,32 +6,40 @@ import com.wavesplatform.matcher.market.OrderHistoryActor.GetOrderHistory
 import com.wavesplatform.matcher.{MatcherSettings, MatcherTestData}
 import com.wavesplatform.settings.WalletSettings
 import com.wavesplatform.state2.ByteStr
-import com.wavesplatform.{UtxPool, WithDB}
+import com.wavesplatform.WithDB
+import com.wavesplatform.utx.UtxPool
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest._
 import scorex.transaction.assets.exchange.AssetPair
 import scorex.utils.{NTP, ScorexLogging}
 import scorex.wallet.Wallet
 
-class OrderHistoryActorSpecification extends TestKit(ActorSystem("MatcherTest"))
-  with WordSpecLike
-  with WithDB
-  with Matchers
-  with BeforeAndAfterAll
-  with ImplicitSender
-  with MatcherTestData
-  with BeforeAndAfterEach
-  with ScorexLogging
-  with PathMockFactory {
+class OrderHistoryActorSpecification
+    extends TestKit(ActorSystem("MatcherTest"))
+    with WordSpecLike
+    with WithDB
+    with Matchers
+    with BeforeAndAfterAll
+    with ImplicitSender
+    with MatcherTestData
+    with BeforeAndAfterEach
+    with ScorexLogging
+    with PathMockFactory {
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
   }
 
   val settings: MatcherSettings = matcherSettings.copy(account = MatcherAccount.address)
+<<<<<<< HEAD
   val pair = AssetPair(Some(ByteStr("BTC".getBytes)), Some(ByteStr("TN".getBytes)))
   val utxPool: UtxPool = stub[UtxPool]
   val wallet = Wallet(WalletSettings(None, "matcher", Some(WalletSeed)))
+=======
+  val pair                      = AssetPair(Some(ByteStr("BTC".getBytes)), Some(ByteStr("WAVES".getBytes)))
+  val utxPool: UtxPool          = stub[UtxPool]
+  val wallet                    = Wallet(WalletSettings(None, "matcher", Some(WalletSeed)))
+>>>>>>> pr/3
   wallet.generateNewAccount()
 
   var actor: ActorRef = system.actorOf(Props(new OrderHistoryActor(db, settings, utxPool, wallet)))

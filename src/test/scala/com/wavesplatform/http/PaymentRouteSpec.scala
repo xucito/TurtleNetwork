@@ -1,7 +1,9 @@
 package com.wavesplatform.http
 
 import com.wavesplatform.http.ApiMarshallers._
-import com.wavesplatform.{NoShrink, TestWallet, TransactionGen, UtxPool}
+import com.wavesplatform.state2.Diff
+import com.wavesplatform.utx.UtxPool
+import com.wavesplatform.{NoShrink, TestWallet, TransactionGen}
 import io.netty.channel.group.ChannelGroup
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.PropertyChecks
@@ -12,7 +14,7 @@ import scorex.transaction.assets.TransferTransaction
 import scorex.utils.Time
 
 class PaymentRouteSpec
-  extends RouteSpec("/payment")
+    extends RouteSpec("/payment")
     with MockFactory
     with PropertyChecks
     with RestAPISettingsHelper
@@ -21,13 +23,12 @@ class PaymentRouteSpec
     with NoShrink {
 
   private val utx = stub[UtxPool]
-  (utx.putIfNew _).when(*).onCall((t: Transaction) => Right(true)).anyNumberOfTimes()
+  (utx.putIfNew _).when(*).onCall((t: Transaction) => Right((true, Diff.empty))).anyNumberOfTimes()
   private val allChannels = stub[ChannelGroup]
 
   "accepts payments" in {
     forAll(accountOrAliasGen.label("recipient"), positiveLongGen.label("amount"), smallFeeGen.label("fee")) {
       case (recipient, amount, fee) =>
-
         val timestamp = System.currentTimeMillis()
 
         val time = new Time {
@@ -37,7 +38,7 @@ class PaymentRouteSpec
         }
 
         val sender = testWallet.privateKeyAccounts.head
-        val tx = TransferTransaction.create(None, sender, recipient, amount, timestamp, None, fee, Array())
+        val tx     = TransferTransaction.create(None, sender, recipient, amount, timestamp, None, fee, Array())
 
         val route = PaymentApiRoute(restAPISettings, testWallet, utx, allChannels, time).route
 

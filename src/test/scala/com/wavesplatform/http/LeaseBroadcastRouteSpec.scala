@@ -1,10 +1,11 @@
 package com.wavesplatform.http
 
 import com.typesafe.config.ConfigFactory
-import com.wavesplatform.{RequestGen, UtxPool}
+import com.wavesplatform.RequestGen
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
 import com.wavesplatform.state2.diffs.TransactionDiffer.TransactionValidationError
+import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen.posNum
 import org.scalacheck.{Gen => G}
@@ -17,10 +18,9 @@ import scorex.api.http.leasing.LeaseBroadcastApiRoute
 import scorex.transaction.ValidationError.GenericError
 import scorex.transaction.Transaction
 
-
 class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with RequestGen with PathMockFactory with PropertyChecks {
-  private val settings = RestAPISettings.fromConfig(ConfigFactory.load())
-  private val utx = stub[UtxPool]
+  private val settings    = RestAPISettings.fromConfig(ConfigFactory.load())
+  private val utx         = stub[UtxPool]
   private val allChannels = stub[ChannelGroup]
 
   (utx.putIfNew _).when(*).onCall((t: Transaction) => Left(TransactionValidationError(GenericError("foo"), t))).anyNumberOfTimes()
@@ -33,7 +33,7 @@ class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with Requ
       ("lease", leaseGen, identity),
       ("cancel", leaseCancelGen, {
         case o: JsObject => o ++ Json.obj("txId" -> o.value("leaseId"))
-        case other => other
+        case other       => other
       })
     )
 
@@ -54,19 +54,43 @@ class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with Requ
     "lease transaction" in forAll(leaseReq) { lease =>
       def posting[A: Writes](v: A): RouteTestResult = Post(routePath("lease"), v) ~> route
 
+<<<<<<< HEAD
       forAll(nonPositiveLong) { q => posting(lease.copy(amount = q)) should produce(NegativeAmount(s"$q of TN")) }
       forAll(invalidBase58) { pk => posting(lease.copy(senderPublicKey = pk)) should produce(InvalidAddress) }
       forAll(invalidBase58) { a => posting(lease.copy(recipient = a)) should produce(InvalidAddress) }
       forAll(nonPositiveLong) { fee => posting(lease.copy(fee = fee)) should produce(InsufficientFee) }
       forAll(posNum[Long]) { quantity => posting(lease.copy(amount = quantity, fee = Long.MaxValue)) should produce(OverflowError) }
+=======
+      forAll(nonPositiveLong) { q =>
+        posting(lease.copy(amount = q)) should produce(NegativeAmount(s"$q of waves"))
+      }
+      forAll(invalidBase58) { pk =>
+        posting(lease.copy(senderPublicKey = pk)) should produce(InvalidAddress)
+      }
+      forAll(invalidBase58) { a =>
+        posting(lease.copy(recipient = a)) should produce(InvalidAddress)
+      }
+      forAll(nonPositiveLong) { fee =>
+        posting(lease.copy(fee = fee)) should produce(InsufficientFee)
+      }
+      forAll(posNum[Long]) { quantity =>
+        posting(lease.copy(amount = quantity, fee = Long.MaxValue)) should produce(OverflowError)
+      }
+>>>>>>> pr/3
     }
 
     "lease cancel transaction" in forAll(leaseCancelReq) { cancel =>
       def posting[A: Writes](v: A): RouteTestResult = Post(routePath("cancel"), v) ~> route
 
-      forAll(invalidBase58) { pk => posting(cancel.copy(txId = pk)) should produce(CustomValidationError("invalid.leaseTx")) }
-      forAll(invalidBase58) { pk => posting(cancel.copy(senderPublicKey = pk)) should produce(InvalidAddress) }
-      forAll(nonPositiveLong) { fee => posting(cancel.copy(fee = fee)) should produce(InsufficientFee) }
+      forAll(invalidBase58) { pk =>
+        posting(cancel.copy(txId = pk)) should produce(CustomValidationError("invalid.leaseTx"))
+      }
+      forAll(invalidBase58) { pk =>
+        posting(cancel.copy(senderPublicKey = pk)) should produce(InvalidAddress)
+      }
+      forAll(nonPositiveLong) { fee =>
+        posting(cancel.copy(fee = fee)) should produce(InsufficientFee)
+      }
     }
   }
 }

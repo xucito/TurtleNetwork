@@ -1,11 +1,12 @@
 package com.wavesplatform.matcher.market
 
+import com.wavesplatform.WithDB
 import com.wavesplatform.matcher.model._
 import com.wavesplatform.matcher.{MatcherSettings, MatcherTestData}
 import com.wavesplatform.settings.{Constants, WalletSettings}
 import com.wavesplatform.state2.reader.SnapshotStateReader
-import com.wavesplatform.state2.{AssetInfo, ByteStr, LeaseInfo, Portfolio}
-import com.wavesplatform.{UtxPool, WithDB}
+import com.wavesplatform.state2.{ByteStr, LeaseBalance, Portfolio}
+import com.wavesplatform.utx.UtxPool
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
@@ -15,49 +16,51 @@ import scorex.transaction.assets.IssueTransaction
 import scorex.transaction.assets.exchange.{AssetPair, Order}
 import scorex.wallet.Wallet
 
-class OrderValidatorSpecification extends WordSpec
-  with WithDB
-  with PropertyChecks
-  with Matchers
-  with MatcherTestData
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with PathMockFactory {
+class OrderValidatorSpecification
+    extends WordSpec
+    with WithDB
+    with PropertyChecks
+    with Matchers
+    with MatcherTestData
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with PathMockFactory {
 
   val utxPool: UtxPool = stub[UtxPool]
 
   val ss: SnapshotStateReader = stub[SnapshotStateReader]
-  (ss.assetInfo _).when(*).returns(Some(AssetInfo(true, 10000000000L)))
-  val i1: IssueTransaction = IssueTransaction.create(PrivateKeyAccount(Array.empty), "WBTC".getBytes(), Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L).right.get
-  (ss.transactionInfo _).when(*).returns(Some((1, Some(i1))))
+  val i1: IssueTransaction =
+    IssueTransaction.create(PrivateKeyAccount(Array.empty), "WBTC".getBytes(), Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L).right.get
+  (ss.transactionInfo _).when(*).returns(Some((1, i1)))
 
-  val s: MatcherSettings = matcherSettings.copy(account = MatcherAccount.address)
-  val w = Wallet(WalletSettings(None, "matcher", Some(WalletSeed)))
+  val s: MatcherSettings             = matcherSettings.copy(account = MatcherAccount.address)
+  val w                              = Wallet(WalletSettings(None, "matcher", Some(WalletSeed)))
   val acc: Option[PrivateKeyAccount] = w.generateNewAccount()
 
   val matcherPubKey: PublicKeyAccount = w.findWallet(s.account).right.get
 
   private var ov = new OrderValidator {
     override val orderHistory: OrderHistory = OrderHistoryImpl(db, matcherSettings)
-    override val utxPool: UtxPool = stub[UtxPool]
-    override val settings: MatcherSettings = s
-    override val wallet: Wallet = w
+    override val utxPool: UtxPool           = stub[UtxPool]
+    override val settings: MatcherSettings  = s
+    override val wallet: Wallet             = w
   }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     ov = new OrderValidator {
       override val orderHistory: OrderHistory = OrderHistoryImpl(db, matcherSettings)
-      override val utxPool: UtxPool = stub[UtxPool]
-      override val settings: MatcherSettings = s
-      override val wallet: Wallet = w
+      override val utxPool: UtxPool           = stub[UtxPool]
+      override val settings: MatcherSettings  = s
+      override val wallet: Wallet             = w
     }
   }
 
-  val wbtc = ByteStr("WBTC".getBytes)
+  val wbtc         = ByteStr("WBTC".getBytes)
   val pairWavesBtc = AssetPair(None, Some(wbtc))
 
   "OrderValidator" should {
+<<<<<<< HEAD
     "allows buy TN for BTC without balance for order fee" in {
       validateNewOrderTest(Portfolio(0, LeaseInfo.empty, Map(
         wbtc -> 10 * Constants.UnitsInWave
@@ -68,6 +71,24 @@ class OrderValidatorSpecification extends WordSpec
       validateNewOrderTest(Portfolio(0, LeaseInfo.empty, Map(
         wbtc -> -10 * Constants.UnitsInWave
       ))) shouldBe a[Left[_, _]]
+=======
+    "allows buy WAVES for BTC without balance for order fee" in {
+      validateNewOrderTest(
+        Portfolio(0,
+                  LeaseBalance.empty,
+                  Map(
+                    wbtc -> 10 * Constants.UnitsInWave
+                  ))) shouldBe an[Right[_, _]]
+    }
+
+    "does not allow buy WAVES for BTC when assets number is negative" in {
+      validateNewOrderTest(
+        Portfolio(0,
+                  LeaseBalance.empty,
+                  Map(
+                    wbtc -> -10 * Constants.UnitsInWave
+                  ))) shouldBe a[Left[_, _]]
+>>>>>>> pr/3
     }
   }
 

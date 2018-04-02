@@ -22,11 +22,27 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blockVersion3AfterHeight: Int,
                                  preActivatedFeatures: Map[Short, Int],
                                  doubleFeaturesPeriodsAfterHeight: Int) {
-  val dontRequireSortedTransactionsAfter = blockVersion3AfterHeight
-  val allowLeasedBalanceTransferUntilHeight = blockVersion3AfterHeight
+  val dontRequireSortedTransactionsAfter: Int    = blockVersion3AfterHeight
+  val allowLeasedBalanceTransferUntilHeight: Int = blockVersion3AfterHeight
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
-  require((blocksForFeatureActivation > 0) && (blocksForFeatureActivation <= featureCheckBlocksPeriod), s"blocksForFeatureActivation must be in range 1 to $featureCheckBlocksPeriod")
+  require(
+    (blocksForFeatureActivation > 0) && (blocksForFeatureActivation <= featureCheckBlocksPeriod),
+    s"blocksForFeatureActivation must be in range 1 to $featureCheckBlocksPeriod"
+  )
+
+  def activationWindowSize(height: Int): Int =
+    featureCheckBlocksPeriod * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
+
+  def activationWindow(height: Int): Range =
+    if (height < 1) Range(0, 0)
+    else {
+      val ws = activationWindowSize(height)
+      Range.inclusive((height - 1) / ws * ws + 1, ((height - 1) / ws + 1) * ws)
+    }
+
+  def blocksForFeatureActivation(height: Int): Int =
+    blocksForFeatureActivation * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
 }
 
 object FunctionalitySettings {
@@ -44,7 +60,12 @@ object FunctionalitySettings {
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     preActivatedFeatures = Map.empty,
+<<<<<<< HEAD
     doubleFeaturesPeriodsAfterHeight = 0)
+=======
+    doubleFeaturesPeriodsAfterHeight = 810000
+  )
+>>>>>>> pr/3
 
   val TESTNET = apply(
     featureCheckBlocksPeriod = 3000,
@@ -60,23 +81,24 @@ object FunctionalitySettings {
     resetEffectiveBalancesAtHeight = 51500,
     blockVersion3AfterHeight = 161700,
     preActivatedFeatures = Map.empty,
-    doubleFeaturesPeriodsAfterHeight = Int.MaxValue)
+    doubleFeaturesPeriodsAfterHeight = Int.MaxValue
+  )
 
   val configPath = "TN.blockchain.custom.functionality"
 }
 
 case class GenesisTransactionSettings(recipient: String, amount: Long)
 
-case class GenesisSettings(
-                            blockTimestamp: Long,
-                            timestamp: Long,
-                            initialBalance: Long,
-                            signature: Option[ByteStr],
-                            transactions: Seq[GenesisTransactionSettings],
-                            initialBaseTarget: Long,
-                            averageBlockDelay: FiniteDuration)
+case class GenesisSettings(blockTimestamp: Long,
+                           timestamp: Long,
+                           initialBalance: Long,
+                           signature: Option[ByteStr],
+                           transactions: Seq[GenesisTransactionSettings],
+                           initialBaseTarget: Long,
+                           averageBlockDelay: FiniteDuration)
 
 object GenesisSettings {
+<<<<<<< HEAD
   val MAINNET = GenesisSettings(1517503972000L, 1517503972000L, Constants.UnitsInWave * Constants.TotalWaves,
     ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption,
     List(
@@ -84,14 +106,41 @@ object GenesisSettings {
     153722867L, 60.seconds)
 
   val TESTNET = GenesisSettings(1460678400000L, 1478000000000L, Constants.UnitsInWave * Constants.TotalWaves,
+=======
+  val MAINNET = GenesisSettings(
+    1460678400000L,
+    1465742577614L,
+    Constants.UnitsInWave * Constants.TotalWaves,
+    ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption,
+    List(
+      GenesisTransactionSettings("3PAWwWa6GbwcJaFzwqXQN5KQm7H96Y7SHTQ", Constants.UnitsInWave * Constants.TotalWaves - 5 * Constants.UnitsInWave),
+      GenesisTransactionSettings("3P8JdJGYc7vaLu4UXUZc1iRLdzrkGtdCyJM", Constants.UnitsInWave),
+      GenesisTransactionSettings("3PAGPDPqnGkyhcihyjMHe9v36Y4hkAh9yDy", Constants.UnitsInWave),
+      GenesisTransactionSettings("3P9o3ZYwtHkaU1KxsKkFjJqJKS3dLHLC9oF", Constants.UnitsInWave),
+      GenesisTransactionSettings("3PJaDyprvekvPXPuAtxrapacuDJopgJRaU3", Constants.UnitsInWave),
+      GenesisTransactionSettings("3PBWXDFUc86N2EQxKJmW8eFco65xTyMZx6J", Constants.UnitsInWave)
+    ),
+    153722867L,
+    60.seconds
+  )
+
+  val TESTNET = GenesisSettings(
+    1460678400000L,
+    1478000000000L,
+    Constants.UnitsInWave * Constants.TotalWaves,
+>>>>>>> pr/3
     ByteStr.decodeBase58("5uqnLK3Z9eiot6FyYBfwUnbyid3abicQbAZjz38GQ1Q8XigQMxTK4C1zNkqS1SVw7FqSidbZKxWAKLVoEsp4nNqa").toOption,
     List(
       GenesisTransactionSettings("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8", (Constants.UnitsInWave * Constants.TotalWaves * 0.04).toLong),
       GenesisTransactionSettings("3NBVqYXrapgJP9atQccdBPAgJPwHDKkh6A8", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
       GenesisTransactionSettings("3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
       GenesisTransactionSettings("3NCBMxgdghg4tUhEEffSXy11L6hUi6fcBpd", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
-      GenesisTransactionSettings("3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx", (Constants.UnitsInWave * Constants.TotalWaves - Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong)),
-    153722867L, 60.seconds)
+      GenesisTransactionSettings("3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx",
+                                 (Constants.UnitsInWave * Constants.TotalWaves - Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong)
+    ),
+    153722867L,
+    60.seconds
+  )
 }
 
 case class BlockchainSettings(addressSchemeCharacter: Char,
@@ -103,7 +152,7 @@ case class BlockchainSettings(addressSchemeCharacter: Char,
 object BlockchainType extends Enumeration {
   val TESTNET = Value("TESTNET")
   val MAINNET = Value("MAINNET")
-  val CUSTOM = Value("CUSTOM")
+  val CUSTOM  = Value("CUSTOM")
 }
 
 object BlockchainSettings {
@@ -118,8 +167,13 @@ object BlockchainSettings {
         ('W', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET)
       case BlockchainType.CUSTOM =>
         val addressSchemeCharacter = config.as[String](s"$configPath.custom.address-scheme-character").charAt(0)
+<<<<<<< HEAD
         val functionalitySettings = config.as[FunctionalitySettings]("TN.blockchain.custom.functionality")
         val genesisSettings = config.as[GenesisSettings]("TN.blockchain.custom.genesis")
+=======
+        val functionalitySettings  = config.as[FunctionalitySettings]("waves.blockchain.custom.functionality")
+        val genesisSettings        = config.as[GenesisSettings]("waves.blockchain.custom.genesis")
+>>>>>>> pr/3
         (addressSchemeCharacter, functionalitySettings, genesisSettings)
     }
 
@@ -128,6 +182,7 @@ object BlockchainSettings {
       maxTransactionsPerBlockDiff = config.as[Int](s"$configPath.max-transactions-per-block-diff"),
       minBlocksInMemory = config.as[Int](s"$configPath.min-blocks-in-memory"),
       functionalitySettings = functionalitySettings,
-      genesisSettings = genesisSettings)
+      genesisSettings = genesisSettings
+    )
   }
 }

@@ -5,12 +5,16 @@ import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import org.scalatest.{FlatSpec, Matchers}
 
-
 class FeaturesSettingsSpecification extends FlatSpec with Matchers {
   "FeaturesSettings" should "read values" in {
+<<<<<<< HEAD
     val config = ConfigFactory.parseString(
       """
         |TN {
+=======
+    val config = ConfigFactory.parseString("""
+        |waves {
+>>>>>>> pr/3
         |  features {
         |    auto-shutdown-on-unsupported-feature = yes
         |    supported = [123,124,135]
@@ -21,6 +25,6 @@ class FeaturesSettingsSpecification extends FlatSpec with Matchers {
     val settings = config.as[FeaturesSettings]("TN.features")
 
     settings.autoShutdownOnUnsupportedFeature should be(true)
-    settings.supported shouldEqual List(123,124,135)
+    settings.supported shouldEqual List(123, 124, 135)
   }
 }

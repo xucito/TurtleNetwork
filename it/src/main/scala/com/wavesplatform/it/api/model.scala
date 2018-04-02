@@ -5,7 +5,7 @@ import play.api.libs.json.{Format, Json}
 // USCE no longer contains references to non-serializable Request/Response objects
 // to work around https://github.com/scalatest/scalatest/issues/556
 case class UnexpectedStatusCodeException(requestUrl: String, statusCode: Int, responseBody: String)
-  extends Exception(s"Request: $requestUrl; Unexpected status code ($statusCode): $responseBody")
+    extends Exception(s"Request: $requestUrl; Unexpected status code ($statusCode): $responseBody")
 
 case class Status(blockchainHeight: Int, stateHeight: Int, updatedTimestamp: Long, updatedDate: String)
 object Status {
@@ -32,6 +32,11 @@ object AssetBalance {
   implicit val assetBalanceFormat: Format[AssetBalance] = Json.format
 }
 
+case class CompiledScript(script: String)
+object CompiledScript {
+  implicit val compiledScriptFormat: Format[CompiledScript] = Json.format
+}
+
 case class FullAssetInfo(assetId: String, balance: Long, reissuable: Boolean, quantity: Long)
 object FullAssetInfo {
   implicit val fullAssetInfoFormat: Format[FullAssetInfo] = Json.format
@@ -42,18 +47,29 @@ object FullAssetsInfo {
   implicit val fullAssetsInfoFormat: Format[FullAssetsInfo] = Json.format
 }
 
-case class Transaction(`type`: Int, id: String, fee: Long, timestamp: Long)
+case class Transaction(`type`: Int, id: String, fee: Long, timestamp: Long, sender: Option[String])
 object Transaction {
   implicit val transactionFormat: Format[Transaction] = Json.format
 }
 
-case class Block(signature: String, height: Int, timestamp: Long, generator: String, transactions: Seq[Transaction],
-                 fee: Long, features: Option[Seq[Short]])
+case class Block(signature: String,
+                 height: Int,
+                 timestamp: Long,
+                 generator: String,
+                 transactions: Seq[Transaction],
+                 fee: Long,
+                 features: Option[Seq[Short]])
 object Block {
   implicit val blockFormat: Format[Block] = Json.format
 }
 
-case class BlockHeaders(signature: String, height: Int, timestamp: Long, generator: String, transactionCount: Int, blocksize: Int, features: Set[Short])
+case class BlockHeaders(signature: String,
+                        height: Int,
+                        timestamp: Long,
+                        generator: String,
+                        transactionCount: Int,
+                        blocksize: Int,
+                        features: Set[Short])
 object BlockHeaders {
   implicit val blockHeadersFormat: Format[BlockHeaders] = Json.format
 }
@@ -78,8 +94,7 @@ object MessageMatcherResponse {
   implicit val messageMatcherResponseFormat: Format[MessageMatcherResponse] = Json.format
 }
 
-case class OrderbookHistory(id: String, `type`: String, amount: Long, price: Long, timestamp: Long, filled: Int,
-                            status: String)
+case class OrderbookHistory(id: String, `type`: String, amount: Long, price: Long, timestamp: Long, filled: Int, status: String)
 object OrderbookHistory {
   implicit val orderbookHistory: Format[OrderbookHistory] = Json.format
 }
@@ -107,6 +122,11 @@ object DebugInfo {
 case class BlacklistedPeer(hostname: String, timestamp: Long, reason: String)
 object BlacklistedPeer {
   implicit val blacklistedPeerFormat: Format[BlacklistedPeer] = Json.format
+}
+
+case class State(address: String, miningBalance: Long, timestamp: Long)
+object State {
+  implicit val StateFormat: Format[State] = Json.format
 }
 
 // Obsolete payment request

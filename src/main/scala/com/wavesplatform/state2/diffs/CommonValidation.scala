@@ -18,21 +18,25 @@ import scala.util.{Left, Right}
 
 object CommonValidation {
 
-  val MaxTimeTransactionOverBlockDiff: FiniteDuration = 90.minutes
+  val MaxTimeTransactionOverBlockDiff: FiniteDuration     = 90.minutes
   val MaxTimePrevBlockOverTransactionDiff: FiniteDuration = 2.hours
 
-  def disallowSendingGreaterThanBalance[T <: Transaction](s: SnapshotStateReader, settings: FunctionalitySettings, blockTime: Long, tx: T): Either[ValidationError, T] =
+  def disallowSendingGreaterThanBalance[T <: Transaction](s: SnapshotStateReader,
+                                                          settings: FunctionalitySettings,
+                                                          blockTime: Long,
+                                                          tx: T): Either[ValidationError, T] =
     if (blockTime >= settings.allowTemporaryNegativeUntil) {
       def checkTransfer(sender: Address, assetId: Option[AssetId], amount: Long, feeAssetId: Option[AssetId], feeAmount: Long) = {
         val amountDiff = assetId match {
-          case Some(aid) => Portfolio(0, LeaseInfo.empty, Map(aid -> -amount))
-          case None => Portfolio(-amount, LeaseInfo.empty, Map.empty)
+          case Some(aid) => Portfolio(0, LeaseBalance.empty, Map(aid -> -amount))
+          case None      => Portfolio(-amount, LeaseBalance.empty, Map.empty)
         }
         val feeDiff = feeAssetId match {
-          case Some(aid) => Portfolio(0, LeaseInfo.empty, Map(aid -> -feeAmount))
-          case None => Portfolio(-feeAmount, LeaseInfo.empty, Map.empty)
+          case Some(aid) => Portfolio(0, LeaseBalance.empty, Map(aid -> -feeAmount))
+          case None      => Portfolio(-feeAmount, LeaseBalance.empty, Map.empty)
         }
 
+<<<<<<< HEAD
         val spendings = Monoid.combine(amountDiff, feeDiff)
         val accountPortfolio = s.partialPortfolio(sender, spendings.assets.keySet)
 
@@ -46,48 +50,79 @@ object CommonValidation {
           Left(GenericError(s"Attempt to transfer unavailable funds:" +
             s" Transaction application leads to negative asset '${negativeAsset.get._1}' balance to (at least) temporary negative state, current balance is ${negativeAsset.get._2}, spends equals ${negativeAsset.get._3}, result is ${negativeAsset.get._4}"))
         else Right(tx)
+=======
+        val spendings       = Monoid.combine(amountDiff, feeDiff)
+        val oldWavesBalance = s.portfolio(sender).balance
+
+        val newWavesBalance = oldWavesBalance + spendings.balance
+        if (newWavesBalance < 0) {
+          Left(
+            GenericError(
+              "Attempt to transfer unavailable funds: Transaction application leads to " +
+                s"negative waves balance to (at least) temporary negative state, current balance equals $oldWavesBalance, " +
+                s"spends equals ${spendings.balance}, result is $newWavesBalance"))
+        } else if (spendings.assets.nonEmpty) {
+          val oldAssetBalances = s.portfolio(sender).assets
+          val balanceError = spendings.assets.collectFirst {
+            case (aid, delta) if oldAssetBalances.getOrElse(aid, 0L) + delta < 0 =>
+              val availableBalance = oldAssetBalances.getOrElse(aid, 0L)
+              GenericError(
+                "Attempt to transfer unavailable funds: Transaction application leads to negative asset " +
+                  s"'$aid' balance to (at least) temporary negative state, current balance is $availableBalance, " +
+                  s"spends equals $delta, result is ${availableBalance + delta}")
+          }
+
+          balanceError.fold[Either[ValidationError, T]](Right(tx))(Left(_))
+        } else Right(tx)
+>>>>>>> pr/3
       }
 
       tx match {
-        case ptx: PaymentTransaction if s.partialPortfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
-          Left(GenericError(s"Attempt to pay unavailable funds: balance " +
-            s"${s.partialPortfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
-        case ttx: TransferTransaction => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
+        case ptx: PaymentTransaction if s.portfolio(ptx.sender).balance < (ptx.amount + ptx.fee) =>
+          Left(
+            GenericError(
+              "Attempt to pay unavailable funds: balance " +
+                s"${s.portfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
+        case ttx: TransferTransaction     => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
         case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
-        case _ => Right(tx)
+        case _                            => Right(tx)
       }
     } else Right(tx)
 
-  def disallowDuplicateIds[T <: Transaction](state: SnapshotStateReader, settings: FunctionalitySettings, height: Int, tx: T): Either[ValidationError, T] = tx match {
-    case ptx: PaymentTransaction => Right(tx)
-    case _ =>
-      state.transactionInfo(tx.id()) match {
-        case Some((txHeight, _)) => Left(AlreadyInTheState(tx.id(), txHeight))
-        case None => Right(tx)
-      }
+  def disallowDuplicateIds[T <: Transaction](state: SnapshotStateReader,
+                                             settings: FunctionalitySettings,
+                                             height: Int,
+                                             tx: T): Either[ValidationError, T] = tx match {
+    case _: PaymentTransaction => Right(tx)
+    case _                     => if (state.containsTransaction(tx.id())) Left(AlreadyInTheState(tx.id(), 0)) else Right(tx)
   }
 
   def disallowBeforeActivationTime[T <: Transaction](featureProvider: FeatureProvider, height: Int, tx: T): Either[ValidationError, T] = {
 
     def activationBarrier(b: BlockchainFeature) =
-      Either.cond(featureProvider.isFeatureActivated(b, height),
-        tx, ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has not been activated yet"))
+      Either.cond(
+        featureProvider.isFeatureActivated(b, height),
+        tx,
+        ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has not been activated yet")
+      )
 
     tx match {
-      case _: BurnTransaction => Right(tx)
-      case _: PaymentTransaction => Right(tx)
-      case _: GenesisTransaction => Right(tx)
-      case _: TransferTransaction => Right(tx)
-      case _: IssueTransaction => Right(tx)
-      case _: ReissueTransaction => Right(tx)
-      case _: ExchangeTransaction => Right(tx)
-      case _: LeaseTransaction => Right(tx)
-      case _: LeaseCancelTransaction => Right(tx)
-      case _: CreateAliasTransaction => Right(tx)
-      case _: MassTransferTransaction => activationBarrier(BlockchainFeatures.MassTransfer)
-      case _: SetScriptTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: ScriptTransferTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _ => Left(GenericError("Unknown transaction must be explicitly activated"))
+      case _: BurnTransaction              => Right(tx)
+      case _: PaymentTransaction           => Right(tx)
+      case _: GenesisTransaction           => Right(tx)
+      case _: TransferTransaction          => Right(tx)
+      case _: IssueTransaction             => Right(tx)
+      case _: ReissueTransaction           => Right(tx)
+      case _: ExchangeTransaction          => Right(tx)
+      case _: LeaseTransaction             => Right(tx)
+      case _: LeaseCancelTransaction       => Right(tx)
+      case _: CreateAliasTransaction       => Right(tx)
+      case _: MassTransferTransaction      => activationBarrier(BlockchainFeatures.MassTransfer)
+      case _: DataTransaction              => activationBarrier(BlockchainFeatures.DataTransaction)
+      case _: SetScriptTransaction         => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _: VersionedTransferTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _: SmartIssueTransaction        => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _                               => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }
 
@@ -105,5 +140,3 @@ object CommonValidation {
       case _ => Right(tx)
     }
 }
-
-

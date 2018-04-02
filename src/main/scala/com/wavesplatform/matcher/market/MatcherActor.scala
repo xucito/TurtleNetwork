@@ -3,12 +3,15 @@ package com.wavesplatform.matcher.market
 import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.persistence.{PersistentActor, RecoveryCompleted}
-import com.wavesplatform.UtxPool
+import akka.routing.FromConfig
+import com.google.common.base.Charsets
 import com.wavesplatform.matcher.MatcherSettings
 import com.wavesplatform.matcher.api.{MatcherResponse, StatusCodeMatcherResponse}
-import com.wavesplatform.matcher.market.OrderBookActor.{DeleteOrderBookRequest, GetOrderBookResponse, OrderBookRequest}
+import com.wavesplatform.matcher.market.OrderBookActor._
+import com.wavesplatform.matcher.model.Events.BalanceChanged
 import com.wavesplatform.settings.FunctionalitySettings
-import com.wavesplatform.state2.StateReader
+import com.wavesplatform.state2.reader.SnapshotStateReader
+import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import play.api.libs.json._
 import scorex.account.Address
@@ -22,37 +25,49 @@ import scorex.wallet.Wallet
 import scala.collection.{immutable, mutable}
 import scala.language.reflectiveCalls
 
-class MatcherActor(orderHistory: ActorRef, storedState: StateReader, wallet: Wallet, utx: UtxPool, allChannels: ChannelGroup,
-                   settings: MatcherSettings, history: History, functionalitySettings: FunctionalitySettings)
-  extends PersistentActor with ScorexLogging {
+class MatcherActor(orderHistory: ActorRef,
+                   storedState: SnapshotStateReader,
+                   wallet: Wallet,
+                   utx: UtxPool,
+                   allChannels: ChannelGroup,
+                   settings: MatcherSettings,
+                   history: History,
+                   functionalitySettings: FunctionalitySettings)
+    extends PersistentActor
+    with ScorexLogging {
 
   import MatcherActor._
 
   val tradedPairs = mutable.Map.empty[AssetPair, MarketData]
 
   def getAssetName(asset: Option[AssetId]): String =
-    asset.map(storedState().getAssetName).getOrElse(AssetPair.WavesName)
+    asset.fold(AssetPair.WavesName) { aid =>
+      // fixme: the following line will throw an exception when asset name bytes are not a valid UTF-8
+      storedState.assetDescription(aid).fold("Unknown")(d => new String(d.name, Charsets.UTF_8))
+    }
 
   def createOrderBook(pair: AssetPair): ActorRef = {
-    val s = storedState()
-    def getAssetName(asset: Option[AssetId]): String = asset.map(s.getAssetName).getOrElse(AssetPair.WavesName)
-
-    val md = MarketData(pair, getAssetName(pair.amountAsset), getAssetName(pair.priceAsset), NTP.correctedTime(),
-      pair.amountAsset.flatMap(s.getIssueTransaction).map(t => AssetInfo(t.decimals)),
-      pair.priceAsset.flatMap(s.getIssueTransaction).map(t => AssetInfo(t.decimals)))
+    val md = MarketData(
+      pair,
+      getAssetName(pair.amountAsset),
+      getAssetName(pair.priceAsset),
+      NTP.correctedTime(),
+      pair.amountAsset.flatMap(storedState.assetDescription).map(t => AssetInfo(t.decimals)),
+      pair.priceAsset.flatMap(storedState.assetDescription).map(t => AssetInfo(t.decimals))
+    )
     tradedPairs += pair -> md
 
     context.actorOf(OrderBookActor.props(pair, orderHistory, storedState, settings, wallet, utx, allChannels, history, functionalitySettings),
-      OrderBookActor.name(pair))
+                    OrderBookActor.name(pair))
   }
 
-  def basicValidation(msg: {def assetPair: AssetPair}): Validation = {
-    val s = storedState()
+  def basicValidation(msg: { def assetPair: AssetPair }): Validation = {
+    val s = storedState
     def isAssetsExist: Validation = {
-      msg.assetPair.priceAsset.forall(s.assetExists(_)) :|
+      msg.assetPair.priceAsset.forall(s.assetDescription(_).isDefined) :|
         s"Unknown Asset ID: ${msg.assetPair.priceAssetStr}" &&
-        msg.assetPair.amountAsset.forall(s.assetExists(_)) :|
-          s"Unknown Asset ID: ${msg.assetPair.amountAssetStr}"
+      msg.assetPair.amountAsset.forall(s.assetDescription(_).isDefined) :|
+        s"Unknown Asset ID: ${msg.assetPair.amountAssetStr}"
     }
 
     msg.assetPair.isValid :| "Invalid AssetPair" && isAssetsExist
@@ -61,31 +76,31 @@ class MatcherActor(orderHistory: ActorRef, storedState: StateReader, wallet: Wal
   def checkPairOrdering(aPair: AssetPair): Validation = {
     val reversePair = AssetPair(aPair.priceAsset, aPair.amountAsset)
 
-    val isCorrectOrder = if (tradedPairs.contains(aPair)) true
-    else if (tradedPairs.contains(reversePair)) false
-    else if (settings.priceAssets.contains(aPair.priceAssetStr) && settings.priceAssets.contains(aPair.amountAssetStr)) {
-      settings.priceAssets.indexOf(aPair.priceAssetStr) < settings.priceAssets.indexOf(aPair.amountAssetStr)
-    }
-    else if (settings.priceAssets.contains(aPair.priceAssetStr)) true
-    else if (settings.priceAssets.contains(reversePair.priceAssetStr)) false
-    else compare(aPair.priceAsset.map(_.arr), aPair.amountAsset.map(_.arr)) < 0
+    val isCorrectOrder =
+      if (tradedPairs.contains(aPair)) true
+      else if (tradedPairs.contains(reversePair)) false
+      else if (settings.priceAssets.contains(aPair.priceAssetStr) && settings.priceAssets.contains(aPair.amountAssetStr)) {
+        settings.priceAssets.indexOf(aPair.priceAssetStr) < settings.priceAssets.indexOf(aPair.amountAssetStr)
+      } else if (settings.priceAssets.contains(aPair.priceAssetStr)) true
+      else if (settings.priceAssets.contains(reversePair.priceAssetStr)) false
+      else compare(aPair.priceAsset.map(_.arr), aPair.amountAsset.map(_.arr)) < 0
 
     isCorrectOrder :| s"Invalid AssetPair ordering, should be reversed: $reversePair"
   }
 
   def checkBlacklistRegex(aPair: AssetPair): Validation = {
-      val (amountName, priceName) = (getAssetName(aPair.amountAsset), getAssetName(aPair.priceAsset))
-      settings.blacklistedNames.forall(_.findFirstIn(amountName).isEmpty) :| s"Invalid Asset Name: $amountName" &&
-        settings.blacklistedNames.forall(_.findFirstIn(priceName).isEmpty) :| s"Invalid Asset Name: $priceName"
+    val (amountName, priceName) = (getAssetName(aPair.amountAsset), getAssetName(aPair.priceAsset))
+    settings.blacklistedNames.forall(_.findFirstIn(amountName).isEmpty) :| s"Invalid Asset Name: $amountName" &&
+    settings.blacklistedNames.forall(_.findFirstIn(priceName).isEmpty) :| s"Invalid Asset Name: $priceName"
   }
 
   def checkBlacklistId(aPair: AssetPair): Validation = {
     !settings.blacklistedAssets.contains(aPair.priceAssetStr) :| s"Invalid Asset ID: ${aPair.priceAssetStr}" &&
-      !settings.blacklistedAssets.contains(aPair.amountAssetStr) :| s"Invalid Asset ID: ${aPair.amountAssetStr}"
+    !settings.blacklistedAssets.contains(aPair.amountAssetStr) :| s"Invalid Asset ID: ${aPair.amountAssetStr}"
   }
 
   def checkBlacklistedAddress(address: Address)(f: => Unit): Unit = {
-    val v =  !settings.blacklistedAddresses.contains(address.address) :| s"Invalid Address: ${address.address}"
+    val v = !settings.blacklistedAddresses.contains(address.address) :| s"Invalid Address: ${address.address}"
     if (!v) {
       sender() ! StatusCodeMatcherResponse(StatusCodes.Forbidden, v.messages())
     } else {
@@ -101,13 +116,13 @@ class MatcherActor(orderHistory: ActorRef, storedState: StateReader, wallet: Wal
   }
 
   def returnEmptyOrderBook(pair: AssetPair): Unit = {
-    sender() ! GetOrderBookResponse(pair, Seq(), Seq())
+    sender() ! GetOrderBookResponse.empty(pair)
   }
 
   def forwardReq(req: Any)(orderBook: ActorRef): Unit = orderBook forward req
 
-  def checkAssetPair[A <: {def assetPair : AssetPair}](msg: A)(f: => Unit): Unit = {
-    val v =  checkBlacklistId(msg.assetPair) && basicValidation(msg) && checkBlacklistRegex(msg.assetPair)
+  def checkAssetPair[A <: { def assetPair: AssetPair }](msg: A)(f: => Unit): Unit = {
+    val v = checkBlacklistId(msg.assetPair) && basicValidation(msg) && checkBlacklistRegex(msg.assetPair)
     if (!v) {
       sender() ! StatusCodeMatcherResponse(StatusCodes.NotFound, v.messages())
     } else {
@@ -127,80 +142,119 @@ class MatcherActor(orderHistory: ActorRef, storedState: StateReader, wallet: Wal
   def forwardToOrderBook: Receive = {
     case GetMarkets =>
       sender() ! GetMarketsResponse(getMatcherPublicKey, tradedPairs.values.toSeq)
+
     case order: Order =>
       checkAssetPair(order) {
         checkBlacklistedAddress(order.senderPublicKey) {
-          context.child(OrderBookActor.name(order.assetPair))
+          context
+            .child(OrderBookActor.name(order.assetPair))
             .fold(createAndForward(order))(forwardReq(order))
         }
       }
+
     case ob: DeleteOrderBookRequest =>
       checkAssetPair(ob) {
-        context.child(OrderBookActor.name(ob.assetPair))
+        context
+          .child(OrderBookActor.name(ob.assetPair))
           .fold(returnEmptyOrderBook(ob.assetPair))(forwardReq(ob))
         removeOrderBook(ob.assetPair)
       }
+
+    case x: CancelOrder =>
+      checkAssetPair(x) {
+        context
+          .child(OrderBookActor.name(x.assetPair))
+          .fold {
+            sender() ! OrderCancelRejected(s"Order '${x.orderId}' is already cancelled or never existed in '${x.assetPair.key}' pair")
+          }(forwardReq(x))
+      }
+
+    case x: ForceCancelOrder =>
+      checkAssetPair(x) {
+        context
+          .child(OrderBookActor.name(x.assetPair))
+          .fold {
+            sender() ! OrderCancelRejected(s"Order '${x.orderId}' is already cancelled or never existed in '${x.assetPair.key}' pair")
+          }(forwardReq(x))
+      }
+
     case ob: OrderBookRequest =>
       checkAssetPair(ob) {
-        context.child(OrderBookActor.name(ob.assetPair))
+        context
+          .child(OrderBookActor.name(ob.assetPair))
           .fold(returnEmptyOrderBook(ob.assetPair))(forwardReq(ob))
       }
   }
 
   def initPredefinedPairs(): Unit = {
-    settings.predefinedPairs.diff(tradedPairs.keys.toSeq).foreach(pair =>
-      createOrderBook(pair)
-    )
+    settings.predefinedPairs.diff(tradedPairs.keys.toSeq).foreach(pair => createOrderBook(pair))
   }
 
   private def removeOrderBook(pair: AssetPair): Unit = {
     if (tradedPairs.contains(pair)) {
       tradedPairs -= pair
       deleteMessages(lastSequenceNr)
-      persistAll(tradedPairs.map(v => OrderBookCreated(v._1)).to[immutable.Seq]) { _ => }
+      persistAll(tradedPairs.map(v => OrderBookCreated(v._1)).to[immutable.Seq]) { _ =>
+        }
     }
   }
 
   override def receiveRecover: Receive = {
     case OrderBookCreated(pair) =>
-      context.child(OrderBookActor.name(pair))
+      context
+        .child(OrderBookActor.name(pair))
         .getOrElse(createOrderBook(pair))
     case RecoveryCompleted =>
       log.info("MatcherActor - Recovery completed!")
       initPredefinedPairs()
+      createBalanceWatcher()
   }
 
   override def receiveCommand: Receive = forwardToOrderBook
 
   override def persistenceId: String = "matcher"
+
+  private def createBalanceWatcher(): Unit = if (settings.balanceWatching.enable) {
+    val balanceWatcherMaster =
+      context.actorOf(FromConfig.props(BalanceWatcherWorkerActor.props(settings.balanceWatching, self, orderHistory)), "balance-watcher-router")
+    context.system.eventStream.subscribe(balanceWatcherMaster, classOf[BalanceChanged])
+  }
 }
 
 object MatcherActor {
   def name = "matcher"
 
-  def props(orderHistoryActor: ActorRef, storedState: StateReader, wallet: Wallet, utx: UtxPool, allChannels: ChannelGroup,
-            settings: MatcherSettings, history: History, functionalitySettings: FunctionalitySettings): Props =
-    Props(new MatcherActor(orderHistoryActor, storedState, wallet, utx, allChannels,settings, history, functionalitySettings))
+  def props(orderHistoryActor: ActorRef,
+            storedState: SnapshotStateReader,
+            wallet: Wallet,
+            utx: UtxPool,
+            allChannels: ChannelGroup,
+            settings: MatcherSettings,
+            history: History,
+            functionalitySettings: FunctionalitySettings): Props =
+    Props(new MatcherActor(orderHistoryActor, storedState, wallet, utx, allChannels, settings, history, functionalitySettings))
 
   case class OrderBookCreated(pair: AssetPair)
 
   case object GetMarkets
 
   case class GetMarketsResponse(publicKey: Array[Byte], markets: Seq[MarketData]) extends MatcherResponse {
-    def getMarketsJs: JsValue = JsArray(markets.map(m => Json.obj(
-      "amountAsset" -> m.pair.amountAssetStr,
-      "amountAssetName" -> m.amountAssetName,
-      "amountAssetInfo" -> m.amountAssetInfo,
-      "priceAsset" -> m.pair.priceAssetStr,
-      "priceAssetName" -> m.priceAssetName,
-      "priceAssetInfo" -> m.priceAssetinfo,
-      "created" -> m.created
-    ))
-    )
+    def getMarketsJs: JsValue =
+      JsArray(
+        markets.map(m =>
+          Json.obj(
+            "amountAsset"     -> m.pair.amountAssetStr,
+            "amountAssetName" -> m.amountAssetName,
+            "amountAssetInfo" -> m.amountAssetInfo,
+            "priceAsset"      -> m.pair.priceAssetStr,
+            "priceAssetName"  -> m.priceAssetName,
+            "priceAssetInfo"  -> m.priceAssetinfo,
+            "created"         -> m.created
+        )))
 
     def json: JsValue = Json.obj(
       "matcherPublicKey" -> Base58.encode(publicKey),
-      "markets" -> getMarketsJs
+      "markets"          -> getMarketsJs
     )
 
     def code: StatusCode = StatusCodes.OK
@@ -209,8 +263,12 @@ object MatcherActor {
   case class AssetInfo(decimals: Int)
   implicit val assetInfoFormat: Format[AssetInfo] = Json.format[AssetInfo]
 
-  case class MarketData(pair: AssetPair, amountAssetName: String, priceAssetName: String, created: Long,
-                        amountAssetInfo: Option[AssetInfo], priceAssetinfo: Option[AssetInfo])
+  case class MarketData(pair: AssetPair,
+                        amountAssetName: String,
+                        priceAssetName: String,
+                        created: Long,
+                        amountAssetInfo: Option[AssetInfo],
+                        priceAssetinfo: Option[AssetInfo])
 
   def compare(buffer1: Option[Array[Byte]], buffer2: Option[Array[Byte]]): Int = {
     if (buffer1.isEmpty && buffer2.isEmpty) 0

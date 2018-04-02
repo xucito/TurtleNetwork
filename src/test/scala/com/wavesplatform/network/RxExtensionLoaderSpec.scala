@@ -2,13 +2,14 @@ package com.wavesplatform.network
 
 import com.wavesplatform.network.RxExtensionLoader.ExtensionBlocks
 import com.wavesplatform.network.RxScoreObserver.{BestChannel, ChannelClosedAndSyncWith}
+import com.wavesplatform.state2.ByteStr
 import com.wavesplatform.{BlockGen, RxScheduler, TransactionGen}
 import io.netty.channel.Channel
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.channel.local.LocalChannel
-import monix.eval.Task
+import monix.eval.{Coeval, Task}
 import monix.reactive.Observable
-import monix.reactive.subjects.PublishSubject
+import monix.reactive.subjects.{PublishSubject => PS}
 import org.scalatest.{FreeSpec, Matchers}
 import scorex.block.Block
 import scorex.transaction.History.BlockchainScore
@@ -25,23 +26,25 @@ class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen w
 
   override def testSchedulerName: String = "test-rx-extension-loader"
 
-  private def withExtensionLoader(timeOut: FiniteDuration = 1.day, applier: Applier = simpleApplier)
-                                 (f: (TestHistory, InMemoryInvalidBlockStorage, PublishSubject[(Channel, Block)],
-                                   PublishSubject[(Channel, Signatures)], PublishSubject[ChannelClosedAndSyncWith],
-                                   Observable[(Channel, Block)]) => Any) = {
-    val blocks = PublishSubject[(Channel, Block)]
-    val sigs = PublishSubject[(Channel, Signatures)]
-    val ccsw = PublishSubject[ChannelClosedAndSyncWith]
-    val timeout = PublishSubject[Channel]
-    val history = new TestHistory
-    val op = PeerDatabase.NoOp
+  private def withExtensionLoader(lastBlockIds: Seq[ByteStr] = Seq.empty, timeOut: FiniteDuration = 1.day, applier: Applier = simpleApplier)(
+      f: (InMemoryInvalidBlockStorage,
+          PS[(Channel, Block)],
+          PS[(Channel, Signatures)],
+          PS[ChannelClosedAndSyncWith],
+          Observable[(Channel, Block)]) => Any) = {
+    val blocks          = PS[(Channel, Block)]
+    val sigs            = PS[(Channel, Signatures)]
+    val ccsw            = PS[ChannelClosedAndSyncWith]
+    val timeout         = PS[Channel]
+    val op              = PeerDatabase.NoOp
     val invBlockStorage = new InMemoryInvalidBlockStorage
-    val (singleBlocks, _, _) = RxExtensionLoader(MaxRollback, timeOut, history, op, invBlockStorage, blocks, sigs, ccsw, testScheduler, timeout)(applier)
+    val (singleBlocks, _, _) =
+      RxExtensionLoader(timeOut, Coeval(lastBlockIds.reverse.take(MaxRollback)), op, invBlockStorage, blocks, sigs, ccsw, testScheduler, timeout)(
+        applier)
 
     try {
-      f(history, invBlockStorage, blocks, sigs, ccsw, singleBlocks)
-    }
-    finally {
+      f(invBlockStorage, blocks, sigs, ccsw, singleBlocks)
+    } finally {
       blocks.onComplete()
       sigs.onComplete()
       ccsw.onComplete()
@@ -49,10 +52,10 @@ class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen w
     }
   }
 
-  "should propagate unexpected block" in withExtensionLoader() { (_, _, blocks, _, _, singleBlocks) =>
-    val ch = new LocalChannel()
+  "should propagate unexpected block" in withExtensionLoader() { (_, blocks, _, _, singleBlocks) =>
+    val ch              = new LocalChannel()
     val newSingleBlocks = newItems(singleBlocks)
-    val block = randomSignerBlockGen.sample.get
+    val block           = randomSignerBlockGen.sample.get
 
     test(for {
       _ <- send(blocks)((ch, block))
@@ -61,10 +64,8 @@ class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen w
     })
   }
 
-  "should blacklist GetSignatures timeout" in withExtensionLoader(1.millis) { (history, _, _, _, ccsw, _) =>
+  "should blacklist GetSignatures timeout" in withExtensionLoader(Seq.tabulate(100)(byteStr), 1.millis) { (_, _, _, ccsw, _) =>
     val ch = new EmbeddedChannel()
-    val totalBlocksInHistory = 100
-    Range(0, totalBlocksInHistory).map(byteStr).foreach(history.appendId)
     test(for {
       _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
     } yield {
@@ -72,10 +73,9 @@ class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen w
     })
   }
 
-  "should request GetSignatures and then span blocks from peer" in withExtensionLoader() { (history, _, _, sigs, ccsw, _) =>
-    val ch = new EmbeddedChannel()
+  "should request GetSignatures and then span blocks from peer" in withExtensionLoader(Seq.tabulate(100)(byteStr)) { (_, _, sigs, ccsw, _) =>
+    val ch                   = new EmbeddedChannel()
     val totalBlocksInHistory = 100
-    Range(0, totalBlocksInHistory).map(byteStr).foreach(history.appendId)
     test(for {
       _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
       _ = ch.readOutbound[GetSignatures].signatures shouldBe Range(totalBlocksInHistory - MaxRollback, totalBlocksInHistory).map(byteStr).reverse
@@ -86,47 +86,44 @@ class RxExtensionLoaderSpec extends FreeSpec with Matchers with TransactionGen w
     })
   }
 
-  "should blacklist if received Signatures contains banned id" in withExtensionLoader(1.millis) { (history, invBlockStorage, _, sigs, ccsw, _) =>
-    invBlockStorage.add(byteStr(105), GenericError("Some error"))
-    val ch = new EmbeddedChannel()
-    val totalBlocksInHistory = 100
-    Range(0, totalBlocksInHistory).map(byteStr).foreach(history.appendId)
-    test(for {
-      _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
-      _ = ch.readOutbound[GetSignatures].signatures.size shouldBe MaxRollback
-      _ <- send(sigs)((ch, Signatures(Range(99, 110).map(byteStr))))
-    } yield {
-      ch.isOpen shouldBe false
-    })
+  "should blacklist if received Signatures contains banned id" in withExtensionLoader(Seq.tabulate(100)(byteStr), 1.millis) {
+    (invBlockStorage, _, sigs, ccsw, _) =>
+      invBlockStorage.add(byteStr(105), GenericError("Some error"))
+      val ch = new EmbeddedChannel()
+      test(for {
+        _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
+        _ = ch.readOutbound[GetSignatures].signatures.size shouldBe MaxRollback
+        _ <- send(sigs)((ch, Signatures(Range(99, 110).map(byteStr))))
+      } yield {
+        ch.isOpen shouldBe false
+      })
   }
 
-  "should blacklist if some blocks didn't arrive in due time" in withExtensionLoader(timeOut = 1.second) { (history, _, blocks, sigs, ccsw, _) =>
-    val ch = new EmbeddedChannel()
-    val totalBlocksInHistory = 100
-    Range(0, totalBlocksInHistory).map(byteStr).foreach(history.appendId)
-    test(for {
-      _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
-      _ = ch.readOutbound[GetSignatures].signatures.size shouldBe MaxRollback
-      _ <- send(sigs)((ch, Signatures(Range(97, 102).map(byteStr))))
-      _ = ch.readOutbound[GetBlock].signature shouldBe byteStr(100)
-      _ = ch.readOutbound[GetBlock].signature shouldBe byteStr(101)
-      _ <- send(blocks)((ch, block(100)))
-    } yield {
-      Thread.sleep(1000)
-      ch.isOpen shouldBe false
-    })
+  "should blacklist if some blocks didn't arrive in due time" in withExtensionLoader(Seq.tabulate(100)(byteStr), 1.second) {
+    (_, blocks, sigs, ccsw, _) =>
+      val ch = new EmbeddedChannel()
+      test(for {
+        _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
+        _ = ch.readOutbound[GetSignatures].signatures.size shouldBe MaxRollback
+        _ <- send(sigs)((ch, Signatures(Range(97, 102).map(byteStr))))
+        _ = ch.readOutbound[GetBlock].signature shouldBe byteStr(100)
+        _ = ch.readOutbound[GetBlock].signature shouldBe byteStr(101)
+        _ <- send(blocks)((ch, block(100)))
+      } yield {
+        Thread.sleep(1000)
+        ch.isOpen shouldBe false
+      })
   }
 
   "should process received extension" in {
     @volatile var applied = false
-    val successfulApplier: Applier = (_, _) => Task {
-      applied = true
-      Right(None)
+    val successfulApplier: Applier = (_, _) =>
+      Task {
+        applied = true
+        Right(None)
     }
-    withExtensionLoader(applier = successfulApplier) { (history, _, blocks, sigs, ccsw, _) =>
+    withExtensionLoader(Seq.tabulate(100)(byteStr), applier = successfulApplier) { (_, blocks, sigs, ccsw, _) =>
       val ch = new EmbeddedChannel()
-      val totalBlocksInHistory = 100
-      Range(0, totalBlocksInHistory).map(byteStr).foreach(history.appendId)
       test(for {
         _ <- send(ccsw)(ChannelClosedAndSyncWith(None, Some(BestChannel(ch, 1: BigInt))))
         _ = ch.readOutbound[GetSignatures].signatures.size shouldBe MaxRollback
