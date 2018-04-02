@@ -25,18 +25,11 @@ case class NodeApiRoute(settings: RestAPISettings, history: History, state: Snap
   }
 
   @Path("/version")
-<<<<<<< HEAD
   @ApiOperation(value = "Version", notes = "Get TN node version", httpMethod = "GET")
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Json TN node version")
-  ))
-=======
-  @ApiOperation(value = "Version", notes = "Get Waves node version", httpMethod = "GET")
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json Waves node version")
+      new ApiResponse(code = 200, message = "Json TN node version")
     ))
->>>>>>> pr/3
   def version: Route = (get & path("version")) {
     complete(Json.obj("version" -> Constants.AgentName))
   }

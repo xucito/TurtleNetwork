@@ -12,7 +12,7 @@ val versionSource = Def.task {
   // Please, update the fallback version every major and minor releases.
   // This version is used then building from sources without Git repository
   // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
-  val FallbackVersion = (0, 10, 0)
+  val FallbackVersion = (0, 11, 0)
 
   val versionFile      = (sourceManaged in Compile).value / "com" / "wavesplatform" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
@@ -35,7 +35,7 @@ val versionSource = Def.task {
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 normalizedName := network.value.name
-name := "TN"
+name := "waves"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")
@@ -136,7 +136,6 @@ inConfig(Universal)(
       "-J-XX:+UseStringDeduplication"
     )
   ))
-
 
 val packageSource = Def.setting {
   sourceDirectory.value / "package"

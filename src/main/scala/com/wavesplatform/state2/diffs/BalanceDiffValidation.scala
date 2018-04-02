@@ -18,25 +18,6 @@ object BalanceDiffValidation extends ScorexLogging with Instrumented {
 
     val changedAccounts = d.portfolios.keySet
 
-<<<<<<< HEAD
-    val positiveBalanceErrors: Map[Address, String] = changedAccounts.flatMap(acc => {
-
-      val portfolioDiff = d.portfolios(acc)
-      val oldPortfolio = s.partialPortfolio(acc, portfolioDiff.assets.keySet)
-      val newPortfolio = oldPortfolio.combine(portfolioDiff)
-
-      val err = if (newPortfolio.balance < 0) {
-        Some(s"negative TN balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
-      } else if (newPortfolio.assets.values.exists(_ < 0)) {
-        Some(s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(newPortfolio)}")
-      } else if (newPortfolio.effectiveBalance < 0) {
-        Some(s"negative effective balance: $acc, old: ${leaseWavesInfo(oldPortfolio)}, new: ${leaseWavesInfo(newPortfolio)}")
-      } else if (newPortfolio.balance < newPortfolio.leaseInfo.leaseOut && s.height > fs.allowLeasedBalanceTransferUntilHeight) {
-        Some(s"leased being more than own: $acc, old: ${leaseWavesInfo(oldPortfolio)}, new: ${leaseWavesInfo(newPortfolio)}")
-      } else None
-      err.map(acc -> _)
-    }).toMap
-=======
     val positiveBalanceErrors: Map[Address, String] = changedAccounts
       .flatMap(acc => {
         val portfolioDiff = d.portfolios(acc)
@@ -45,7 +26,7 @@ object BalanceDiffValidation extends ScorexLogging with Instrumented {
         val newPortfolio = oldPortfolio.combine(portfolioDiff)
 
         val err = if (newPortfolio.balance < 0) {
-          Some(s"negative waves balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
+          Some(s"negative TN balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
         } else if (newPortfolio.assets.values.exists(_ < 0)) {
           Some(s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(newPortfolio)}")
         } else if (newPortfolio.effectiveBalance < 0) {
@@ -56,7 +37,6 @@ object BalanceDiffValidation extends ScorexLogging with Instrumented {
         err.map(acc -> _)
       })
       .toMap
->>>>>>> pr/3
 
     if (positiveBalanceErrors.isEmpty) {
       Right(d)

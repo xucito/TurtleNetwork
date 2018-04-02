@@ -29,39 +29,21 @@ object WavesSettings {
   val configPath: String = "TN"
 
   def fromConfig(config: Config): WavesSettings = {
-<<<<<<< HEAD
-    val directory = config.as[String](s"$configPath.directory")
-    val dataDirectory = config.as[String](s"$configPath.data-directory")
-    val levelDbCacheSize = config.getBytes(s"$configPath.leveldb-cache-size")
-    val networkSettings = config.as[NetworkSettings]("TN.network")
-    val walletSettings = config.as[WalletSettings]("TN.wallet")
-    val blockchainSettings = BlockchainSettings.fromConfig(config)
-    val checkpointsSettings = CheckpointsSettings.fromConfig(config)
-    val feesSettings = FeesSettings.fromConfig(config)
-    val matcherSettings = MatcherSettings.fromConfig(config)
-    val minerSettings = config.as[MinerSettings]("TN.miner")
-    val restAPISettings = RestAPISettings.fromConfig(config)
-    val synchronizationSettings = SynchronizationSettings.fromConfig(config)
-    val utxSettings = config.as[UtxSettings]("TN.utx")
-    val featuresSettings = config.as[FeaturesSettings]("TN.features")
-    val metrics = config.as[Metrics.Settings]("metrics")
-=======
     val directory               = config.as[String](s"$configPath.directory")
     val dataDirectory           = config.as[String](s"$configPath.data-directory")
     val levelDbCacheSize        = config.getBytes(s"$configPath.leveldb-cache-size")
-    val networkSettings         = config.as[NetworkSettings]("waves.network")
-    val walletSettings          = config.as[WalletSettings]("waves.wallet")
+    val networkSettings         = config.as[NetworkSettings]("TN.network")
+    val walletSettings          = config.as[WalletSettings]("TN.wallet")
     val blockchainSettings      = BlockchainSettings.fromConfig(config)
     val checkpointsSettings     = CheckpointsSettings.fromConfig(config)
     val feesSettings            = FeesSettings.fromConfig(config)
     val matcherSettings         = MatcherSettings.fromConfig(config)
-    val minerSettings           = config.as[MinerSettings]("waves.miner")
+    val minerSettings           = config.as[MinerSettings]("TN.miner")
     val restAPISettings         = RestAPISettings.fromConfig(config)
     val synchronizationSettings = SynchronizationSettings.fromConfig(config)
-    val utxSettings             = config.as[UtxSettings]("waves.utx")
-    val featuresSettings        = config.as[FeaturesSettings]("waves.features")
+    val utxSettings             = config.as[UtxSettings]("TN.utx")
+    val featuresSettings        = config.as[FeaturesSettings]("TN.features")
     val metrics                 = config.as[Metrics.Settings]("metrics")
->>>>>>> pr/3
 
     WavesSettings(
       directory,

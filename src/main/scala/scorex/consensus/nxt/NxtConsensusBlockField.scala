@@ -12,13 +12,6 @@ case class NxtConsensusBlockField(override val value: NxtLikeConsensusBlockData)
     Bytes.ensureCapacity(Longs.toByteArray(value.baseTarget), 8, 0) ++
       value.generationSignature.arr
 
-<<<<<<< HEAD
-  override def j: JsObject = Json.obj(name -> Json.obj(
-    "base-target" -> value.baseTarget,
-    "generation-signature" -> value.generationSignature.base58
-  ))
-}
-=======
   override def j: JsObject =
     Json.obj(
       name -> Json.obj(
@@ -26,4 +19,3 @@ case class NxtConsensusBlockField(override val value: NxtLikeConsensusBlockData)
         "generation-signature" -> value.generationSignature.base58
       ))
 }
->>>>>>> pr/3

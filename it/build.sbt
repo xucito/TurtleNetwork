@@ -17,7 +17,6 @@ enablePlugins(sbtdocker.DockerPlugin)
 val aspectjRedistDir = Def.setting(baseDirectory.value / ".." / "third-party" / "aspectj")
 val yourKitRedistDir = Def.setting(baseDirectory.value / ".." / "third-party" / "yourkit")
 
-
 inTask(docker)(
   Seq(
     dockerfile := {
@@ -68,24 +67,6 @@ lazy val itTestsCommonSettings: Seq[Def.Setting[_]] = Seq(
     for {
       group <- testGrouping.value
       suite <- group.tests
-<<<<<<< HEAD
-    } yield Group(
-      suite.name,
-      Seq(suite),
-      Tests.SubProcess(ForkOptions(
-        javaHome = javaHomeValue,
-        outputStrategy = outputStrategy.value,
-        bootJars = Vector.empty[java.io.File],
-        workingDirectory = Option(baseDirectory.value),
-        runJVMOptions = Vector(
-          "-DTN.it.logging.appender=FILE",
-          s"-DTN.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}",
-          s"-DTN.profiling.yourKitDir=$yourKitRedistDirValue"
-        ) ++ javaOptionsValue,
-        connectInput = false,
-        envVars = envVarsValue
-      )))
-=======
     } yield
       Group(
         suite.name,
@@ -99,15 +80,14 @@ lazy val itTestsCommonSettings: Seq[Def.Setting[_]] = Seq(
             runJVMOptions = Vector(
               "-XX:+IgnoreUnrecognizedVMOptions",
               "--add-modules=java.xml.bind",
-              "-Dwaves.it.logging.appender=FILE",
-              s"-Dwaves.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}",
-              s"-Dwaves.profiling.yourKitDir=$yourKitRedistDirValue"
+              "-DTN.it.logging.appender=FILE",
+              s"-DTN.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}",
+              s"-DTN.profiling.yourKitDir=$yourKitRedistDirValue"
             ) ++ javaOptionsValue,
             connectInput = false,
             envVars = envVarsValue
           ))
       )
->>>>>>> pr/3
   }
 )
 

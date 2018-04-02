@@ -59,27 +59,17 @@ case class MatcherApiRoute(wallet: Wallet,
   }
 
   @Path("/orderbook/{amountAsset}/{priceAsset}")
-<<<<<<< HEAD
-  @ApiOperation(value = "Get Order Book for a given Asset Pair",
-    notes = "Get Order Book for a given Asset Pair", httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "depth", value = "Limit the number of bid/ask records returned", required = false, dataType = "integer", paramType = "query")
-  ))
-=======
   @ApiOperation(value = "Get Order Book for a given Asset Pair", notes = "Get Order Book for a given Asset Pair", httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "depth",
                            value = "Limit the number of bid/ask records returned",
                            required = false,
                            dataType = "integer",
                            paramType = "query")
     ))
->>>>>>> pr/3
   def orderBook: Route = (path("orderbook" / Segment / Segment) & get) { (a1, a2) =>
     parameters('depth.as[Int].?) { depth =>
       withAssetPair(a1, a2) { pair =>
@@ -127,26 +117,12 @@ case class MatcherApiRoute(wallet: Wallet,
     notes = "Cancel previously submitted order if it's not already filled completely",
     httpMethod = "POST",
     produces = "application/json",
-<<<<<<< HEAD
-    consumes = "application/json")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(
-      name = "body",
-      value = "Json with data",
-      required = true,
-      paramType = "body",
-      dataType = "com.wavesplatform.matcher.api.CancelOrderRequest"
-    )
-  ))
-=======
     consumes = "application/json"
   )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(
         name = "body",
         value = "Json with data",
@@ -155,7 +131,6 @@ case class MatcherApiRoute(wallet: Wallet,
         dataType = "com.wavesplatform.matcher.api.CancelOrderRequest"
       )
     ))
->>>>>>> pr/3
   def cancel: Route = (path("orderbook" / Segment / Segment / "cancel") & post) { (a1, a2) =>
     withAssetPair(a1, a2) { pair =>
       json[CancelOrderRequest] { req =>
@@ -172,26 +147,12 @@ case class MatcherApiRoute(wallet: Wallet,
     notes = "Delete Order from History by Id if it's in terminal status (Filled, Cancel)",
     httpMethod = "POST",
     produces = "application/json",
-<<<<<<< HEAD
-    consumes = "application/json")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(
-      name = "body",
-      value = "Json with data",
-      required = true,
-      paramType = "body",
-      dataType = "com.wavesplatform.matcher.api.CancelOrderRequest"
-    )
-  ))
-=======
     consumes = "application/json"
   )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(
         name = "body",
         value = "Json with data",
@@ -200,7 +161,6 @@ case class MatcherApiRoute(wallet: Wallet,
         dataType = "com.wavesplatform.matcher.api.CancelOrderRequest"
       )
     ))
->>>>>>> pr/3
   def historyDelete: Route = (path("orderbook" / Segment / Segment / "delete") & post) { (a1, a2) =>
     withAssetPair(a1, a2) { pair =>
       json[CancelOrderRequest] { req =>
@@ -224,23 +184,12 @@ case class MatcherApiRoute(wallet: Wallet,
 
   @Path("/orderbook/{amountAsset}/{priceAsset}/publicKey/{publicKey}")
   @ApiOperation(value = "Order History by Asset Pair and Public Key",
-<<<<<<< HEAD
-    notes = "Get Order History for a given Asset Pair and Public Key",
-    httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "publicKey", value = "Public Key", required = true, dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "Timestamp", value = "Timestamp", required = true, dataType = "integer", paramType = "header"),
-    new ApiImplicitParam(name = "Signature", value = "Signature of [Public Key ++ Timestamp] bytes", required = true, dataType = "string", paramType = "header")
-  ))
-=======
                 notes = "Get Order History for a given Asset Pair and Public Key",
                 httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "publicKey", value = "Public Key", required = true, dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "Timestamp", value = "Timestamp", required = true, dataType = "integer", paramType = "header"),
       new ApiImplicitParam(name = "Signature",
@@ -249,7 +198,6 @@ case class MatcherApiRoute(wallet: Wallet,
                            dataType = "string",
                            paramType = "header")
     ))
->>>>>>> pr/3
   def getAssetPairAndPublicKeyOrderHistory: Route = (path("orderbook" / Segment / Segment / "publicKey" / Segment) & get) { (a1, a2, publicKey) =>
     (headerValueByName("Timestamp") & headerValueByName("Signature")) { (ts, sig) =>
       checkGetSignature(publicKey, ts, sig) match {
@@ -347,24 +295,13 @@ case class MatcherApiRoute(wallet: Wallet,
   }
 
   @Path("/orderbook/{amountAsset}/{priceAsset}/tradableBalance/{address}")
-<<<<<<< HEAD
-  @ApiOperation(value = "Tradable balance for Asset Pair",
-    notes = "Get Tradable balance for the given Asset Pair",
-    httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "address", value = "Account Address", required = true, dataType = "string", paramType = "path")
-  ))
-=======
   @ApiOperation(value = "Tradable balance for Asset Pair", notes = "Get Tradable balance for the given Asset Pair", httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "address", value = "Account Address", required = true, dataType = "string", paramType = "path")
     ))
->>>>>>> pr/3
   def getTradableBalance: Route = (path("orderbook" / Segment / Segment / "tradableBalance" / Segment) & get) { (a1, a2, address) =>
     withAssetPair(a1, a2) { pair =>
       complete(
@@ -401,24 +338,13 @@ case class MatcherApiRoute(wallet: Wallet,
   }
 
   @Path("/orderbook/{amountAsset}/{priceAsset}/{orderId}")
-<<<<<<< HEAD
-  @ApiOperation(value = "Order Status",
-    notes = "Get Order status for a given Asset Pair during the last 30 days",
-    httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "orderId", value = "Order Id", required = true, dataType = "string", paramType = "path")
-  ))
-=======
   @ApiOperation(value = "Order Status", notes = "Get Order status for a given Asset Pair during the last 30 days", httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
       new ApiImplicitParam(name = "orderId", value = "Order Id", required = true, dataType = "string", paramType = "path")
     ))
->>>>>>> pr/3
   def orderStatus: Route = (path("orderbook" / Segment / Segment / Segment) & get) { (a1, a2, orderId) =>
     withAssetPair(a1, a2) { pair =>
       complete(
@@ -440,21 +366,12 @@ case class MatcherApiRoute(wallet: Wallet,
   }
 
   @Path("/orderbook/{amountAsset}/{priceAsset}")
-<<<<<<< HEAD
-  @ApiOperation(value = "Remove Order Book for a given Asset Pair",
-    notes = "Remove Order Book for a given Asset Pair", httpMethod = "DELETE")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
-    new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path")
-  ))
-=======
   @ApiOperation(value = "Remove Order Book for a given Asset Pair", notes = "Remove Order Book for a given Asset Pair", httpMethod = "DELETE")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'WAVES'", dataType = "string", paramType = "path")
+      new ApiImplicitParam(name = "amountAsset", value = "Amount Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path"),
+      new ApiImplicitParam(name = "priceAsset", value = "Price Asset Id in Pair, or 'TN'", dataType = "string", paramType = "path")
     ))
->>>>>>> pr/3
   def orderBookDelete: Route = (path("orderbook" / Segment / Segment) & delete & withAuth) { (a1, a2) =>
     withAssetPair(a1, a2) { pair =>
       complete(

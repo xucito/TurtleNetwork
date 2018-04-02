@@ -60,12 +60,8 @@ object FunctionalitySettings {
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     preActivatedFeatures = Map.empty,
-<<<<<<< HEAD
-    doubleFeaturesPeriodsAfterHeight = 0)
-=======
-    doubleFeaturesPeriodsAfterHeight = 810000
+    doubleFeaturesPeriodsAfterHeight = 0
   )
->>>>>>> pr/3
 
   val TESTNET = apply(
     featureCheckBlocksPeriod = 3000,
@@ -98,28 +94,12 @@ case class GenesisSettings(blockTimestamp: Long,
                            averageBlockDelay: FiniteDuration)
 
 object GenesisSettings {
-<<<<<<< HEAD
-  val MAINNET = GenesisSettings(1517503972000L, 1517503972000L, Constants.UnitsInWave * Constants.TotalWaves,
-    ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption,
-    List(
-      GenesisTransactionSettings("3P8FjeNpPDHX5PvLvdgoLqyDYS1qZYwc1FM", (Constants.UnitsInWave * Constants.TotalWaves).toLong)),
-    153722867L, 60.seconds)
-
-  val TESTNET = GenesisSettings(1460678400000L, 1478000000000L, Constants.UnitsInWave * Constants.TotalWaves,
-=======
   val MAINNET = GenesisSettings(
-    1460678400000L,
-    1465742577614L,
+    1517503972000L,
+    1517503972000L,
     Constants.UnitsInWave * Constants.TotalWaves,
     ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption,
-    List(
-      GenesisTransactionSettings("3PAWwWa6GbwcJaFzwqXQN5KQm7H96Y7SHTQ", Constants.UnitsInWave * Constants.TotalWaves - 5 * Constants.UnitsInWave),
-      GenesisTransactionSettings("3P8JdJGYc7vaLu4UXUZc1iRLdzrkGtdCyJM", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PAGPDPqnGkyhcihyjMHe9v36Y4hkAh9yDy", Constants.UnitsInWave),
-      GenesisTransactionSettings("3P9o3ZYwtHkaU1KxsKkFjJqJKS3dLHLC9oF", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PJaDyprvekvPXPuAtxrapacuDJopgJRaU3", Constants.UnitsInWave),
-      GenesisTransactionSettings("3PBWXDFUc86N2EQxKJmW8eFco65xTyMZx6J", Constants.UnitsInWave)
-    ),
+    List(GenesisTransactionSettings("3P8FjeNpPDHX5PvLvdgoLqyDYS1qZYwc1FM", (Constants.UnitsInWave * Constants.TotalWaves).toLong)),
     153722867L,
     60.seconds
   )
@@ -128,7 +108,6 @@ object GenesisSettings {
     1460678400000L,
     1478000000000L,
     Constants.UnitsInWave * Constants.TotalWaves,
->>>>>>> pr/3
     ByteStr.decodeBase58("5uqnLK3Z9eiot6FyYBfwUnbyid3abicQbAZjz38GQ1Q8XigQMxTK4C1zNkqS1SVw7FqSidbZKxWAKLVoEsp4nNqa").toOption,
     List(
       GenesisTransactionSettings("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8", (Constants.UnitsInWave * Constants.TotalWaves * 0.04).toLong),
@@ -167,13 +146,8 @@ object BlockchainSettings {
         ('W', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET)
       case BlockchainType.CUSTOM =>
         val addressSchemeCharacter = config.as[String](s"$configPath.custom.address-scheme-character").charAt(0)
-<<<<<<< HEAD
-        val functionalitySettings = config.as[FunctionalitySettings]("TN.blockchain.custom.functionality")
-        val genesisSettings = config.as[GenesisSettings]("TN.blockchain.custom.genesis")
-=======
-        val functionalitySettings  = config.as[FunctionalitySettings]("waves.blockchain.custom.functionality")
-        val genesisSettings        = config.as[GenesisSettings]("waves.blockchain.custom.genesis")
->>>>>>> pr/3
+        val functionalitySettings  = config.as[FunctionalitySettings]("TN.blockchain.custom.functionality")
+        val genesisSettings        = config.as[GenesisSettings]("TN.blockchain.custom.genesis")
         (addressSchemeCharacter, functionalitySettings, genesisSettings)
     }
 
