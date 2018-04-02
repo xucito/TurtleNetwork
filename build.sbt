@@ -35,7 +35,7 @@ val versionSource = Def.task {
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 normalizedName := network.value.name
-name := "waves"
+name := "TN"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")
@@ -82,7 +82,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 inTask(assembly)(
   Seq(
     test := {},
-    assemblyJarName := s"waves-all-${version.value}.jar",
+    assemblyJarName := s"TN-all-${version.value}.jar",
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
@@ -108,14 +108,14 @@ inConfig(Test)(
 
 inConfig(Linux)(
   Seq(
-    maintainer := "wavesplatform.com",
-    packageSummary := "Waves node",
-    packageDescription := "Waves node"
+    maintainer := "TNplatform.com",
+    packageSummary := "TN node",
+    packageDescription := "TN node"
   ))
 
 inConfig(Universal)(
   Seq(
-    mappings += (baseDirectory.value / s"waves-${network.value}.conf" -> "doc/waves.conf.sample"),
+    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/waves.conf.sample"),
     javaOptions ++= Seq(
       // -J prefix is required by the bash script
       "-J-server",
