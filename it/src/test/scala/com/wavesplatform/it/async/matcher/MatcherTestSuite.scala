@@ -639,7 +639,7 @@ class MatcherTestSuite
 
 object MatcherTestSuite {
 
-  import com.TNplatform.it.NodeConfigs._
+  import com.wavesplatform.it.NodeConfigs._
 
   val ForbiddenAssetId = "FdbnAsset"
 
