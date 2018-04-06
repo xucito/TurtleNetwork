@@ -6,13 +6,8 @@ import com.wavesplatform.it.util._
 
 class LeaseTransactionSuite extends BaseTransactionSuite {
 
-<<<<<<< HEAD
-  private val defaultQuantity = 100000
-  private val decimals: Byte = 2
+
   private val defaultFee = 1.TN
-=======
-  private val defaultFee = 1.waves
->>>>>>> pr/3
 
   test("can't lease more than you have") {
     val (balance, _) = notMiner.accountBalances(firstAddress)

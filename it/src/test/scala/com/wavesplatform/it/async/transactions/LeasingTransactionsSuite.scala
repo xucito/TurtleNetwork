@@ -15,13 +15,8 @@ import scala.concurrent.duration._
 class LeasingTransactionsSuite extends BaseTransactionSuite with CancelAfterFailure {
 
   private val waitCompletion = 2.minutes
-<<<<<<< HEAD
-  private val defaultFee = 2.TN
-  private val leasingAmount = 5.TN
-=======
-  private val defaultFee     = 2.waves
-  private val leasingAmount  = 5.waves
->>>>>>> pr/3
+  private val defaultFee     = 2.TN
+  private val leasingAmount  = 5.TN
 
   test("leasing TN decreases lessor's eff.b. and increases lessee's eff.b.; lessor pays fee") {
     val f = for {
