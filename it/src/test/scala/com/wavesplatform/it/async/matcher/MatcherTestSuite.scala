@@ -295,7 +295,7 @@ class MatcherTestSuite
     )
   }
 
-  "trader should be able to place a buy waves for asset order without having waves" in {
+  "trader should be able to place a buy TN for asset order without having TN" in {
     // Bob issues new asset
     val bobAssetQuantity = 10000
     val bobAssetName     = "BobCoin2"
@@ -317,7 +317,7 @@ class MatcherTestSuite
     val (sellId, _) = matcherPlaceOrder(matcherNode, bobOrder)
     waitForOrderStatus(matcherNode, bobAsset, sellId, "Accepted")
 
-    // Bob moves all waves to Alice
+    // Bob moves all TN to Alice
     val bobBalance     = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
     val transferAmount = bobBalance - TransactionFee
     transfer(bobNode, aliceNode, None, transferAmount, wait = true)
@@ -335,7 +335,7 @@ class MatcherTestSuite
     Await.ready(matcherNode.waitForHeightArise, 1.minute)
   }
 
-  "owner moves assets/waves to another account and order become an invalid" - {
+  "owner moves assets/TN to another account and order become an invalid" - {
     val bobAssetName             = "BobCoin3"
     var bobAssetIdRaw: String    = ""
     var bobAssetId: ByteStr      = ByteStr.empty
@@ -390,7 +390,7 @@ class MatcherTestSuite
         Await.ready(matcherNode.waitForHeightArise, 1.minute)
       }
 
-      "leased waves, insufficient fee" in {
+      "leased TN, insufficient fee" in {
         val bobBalance    = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
         val oldestOrderId = bobPlacesAssetOrder(1000)
         val newestOrderId = bobPlacesAssetOrder(1000)
@@ -413,7 +413,7 @@ class MatcherTestSuite
         Await.ready(matcherNode.waitForHeightArise, 1.minute)
       }
 
-      "moved waves, insufficient fee" in {
+      "moved TN, insufficient fee" in {
         val bobBalance    = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
         val oldestOrderId = bobPlacesAssetOrder(1000)
         val newestOrderId = bobPlacesAssetOrder(1000)
@@ -437,9 +437,9 @@ class MatcherTestSuite
       }
     }
 
-    "order with waves" - {
-      "leased waves, insufficient fee" in {
-        // Amount of waves in order is smaller than fee
+    "order with TN" - {
+      "leased TN, insufficient fee" in {
+        // Amount of TN in order is smaller than fee
         val bobBalance = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
 
         val price   = TransactionFee / 2
@@ -458,7 +458,7 @@ class MatcherTestSuite
         Await.ready(matcherNode.waitForHeightArise, 1.minute)
       }
 
-      "leased waves, insufficient waves" in {
+      "leased TN, insufficient TN" in {
         val bobBalance = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
 
         val price   = 1 * Waves
@@ -477,7 +477,7 @@ class MatcherTestSuite
         Await.ready(matcherNode.waitForHeightArise, 1.minute)
       }
 
-      "moved waves, insufficient fee" in {
+      "moved TN, insufficient fee" in {
         // Amount of waves in order is smaller than fee
         val bobBalance = Await.result(matcherNode.balance(bobNode.address), 1.minute).balance
 
@@ -639,7 +639,7 @@ class MatcherTestSuite
 
 object MatcherTestSuite {
 
-  import com.wavesplatform.it.NodeConfigs._
+  import com.TNplatform.it.NodeConfigs._
 
   val ForbiddenAssetId = "FdbnAsset"
 
@@ -664,7 +664,7 @@ object MatcherTestSuite {
   val MatcherFee: Long     = 300000
   val TransactionFee: Long = 300000
 
-  val Waves: Long = 100000000L
+  val TN: Long = 100000000L
 
   val Configs: Seq[Config] = Seq(matcherConfig.withFallback(Default.head)) ++
     Random.shuffle(Default.tail.init).take(2).map(nonGeneratingPeersConfig.withFallback(_)) ++

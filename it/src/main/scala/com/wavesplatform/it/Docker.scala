@@ -206,9 +206,9 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
         .withFallback(ConfigFactory.defaultReference())
         .resolve()
 
-      val restApiPort    = actualConfig.getString("waves.rest-api.port")
-      val networkPort    = actualConfig.getString("waves.network.port")
-      val matcherApiPort = actualConfig.getString("waves.matcher.port")
+      val restApiPort    = actualConfig.getString("TN.rest-api.port")
+      val networkPort    = actualConfig.getString("TN.network.port")
+      val matcherApiPort = actualConfig.getString("TN.matcher.port")
 
       val portBindings = new ImmutableMap.Builder[String, java.util.List[PortBinding]]()
         .put(s"$ProfilerPort", singletonList(PortBinding.randomPort("0.0.0.0")))
@@ -237,14 +237,14 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
           s"sampling,monitors,sessionname=TNNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot"
       }
 =======
-      val nodeName   = actualConfig.getString("waves.network.node-name")
+      val nodeName   = actualConfig.getString("TN.network.node-name")
       val nodeNumber = nodeName.replace("node", "").toInt
       val ip         = ipForNode(nodeNumber)
 
       val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
       val configOverrides: String = {
         var config = s"$javaOptions ${renderProperties(asProperties(nodeConfig.withFallback(suiteConfig)))} " +
-          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -Dwaves.network.declared-address=$ip:$networkPort "
+          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort "
 
         if (profilerController().isDefined) {
           config += s"-agentpath:$ContainerRoot/libyjpagent.so=listen=0.0.0.0:$ProfilerPort," +
@@ -491,17 +491,10 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
 }
 
 object Docker {
-<<<<<<< HEAD
-  private val ProfilerPort = 10001
-  private val ContainerRoot = Paths.get("/opt/TN")
-  private val jsonMapper = new ObjectMapper
-  private val propsMapper = new JavaPropsMapper
-=======
   private val ProfilerPort  = 10001
-  private val ContainerRoot = Paths.get("/opt/waves")
+  private val ContainerRoot = Paths.get("/opt/TN")
   private val jsonMapper    = new ObjectMapper
   private val propsMapper   = new JavaPropsMapper
->>>>>>> pr/3
 
   def apply(owner: Class[_]): Docker = new Docker(tag = owner.getSimpleName)
 

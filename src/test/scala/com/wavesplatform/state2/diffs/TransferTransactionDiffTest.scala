@@ -27,23 +27,7 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
     transfer                 <- transferGeneratorP(master, recepient, maybeAsset.map(_.id()), maybeFeeAsset.map(_.id()))
   } yield (genesis, issue1, issue2, transfer)
 
-<<<<<<< HEAD
   property("transfers assets to recipient preserving TN invariant") {
-    forAll(preconditionsAndTransfer) { case ((genesis, issue1, issue2, transfer)) =>
-      assertDiffAndState(db, Seq(TestBlock.create(Seq(genesis, issue1, issue2))), TestBlock.create(Seq(transfer))) { case (totalDiff, newState) =>
-        val totalPortfolioDiff = Monoid.combineAll(totalDiff.txsDiff.portfolios.values)
-        totalPortfolioDiff.balance shouldBe 0
-        totalPortfolioDiff.effectiveBalance shouldBe 0
-        totalPortfolioDiff.assets.values.foreach(_ shouldBe 0)
-
-        val recipient: Address = transfer.recipient.asInstanceOf[Address]
-        val recipientPortfolio = newState.accountPortfolio(recipient)
-        if (transfer.sender.toAddress != recipient) {
-          transfer.assetId match {
-            case Some(aid) => recipientPortfolio shouldBe Portfolio(0, LeaseInfo.empty, Map(aid -> transfer.amount))
-            case None => recipientPortfolio shouldBe Portfolio(transfer.amount, LeaseInfo.empty, Map.empty)
-=======
-  property("transfers assets to recipient preserving waves invariant") {
     forAll(preconditionsAndTransfer) {
       case ((genesis, issue1, issue2, transfer)) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(genesis, issue1, issue2))), TestBlock.create(Seq(transfer))) {
@@ -83,7 +67,6 @@ class TransferTransactionDiffTest extends PropSpec with PropertyChecks with Matc
           case (_, state) => {
             val diffOrError = TransferTransactionDiff(state, smartEnabledFS, System.currentTimeMillis(), state.height)(transfer)
             diffOrError shouldBe Left(GenericError("Smart assets can't participate in TransferTransactions as a fee"))
->>>>>>> pr/3
           }
         }
     }

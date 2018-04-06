@@ -11,12 +11,7 @@ import scala.concurrent.duration._
 class NetworkSettingsSpecification extends FlatSpec with Matchers {
 
   "NetworkSpecification" should "read values from config" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.parseString(
-      """TN.network {
-=======
-    val config          = loadConfig(ConfigFactory.parseString("""waves.network {
->>>>>>> pr/3
+    val config          = loadConfig(ConfigFactory.parseString("""TN.network {
         |  bind-address: "127.0.0.1"
         |  port: 6868
         |  node-name: "default-node-name"
@@ -67,50 +62,31 @@ class NetworkSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "generate random nonce" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("TN.network")
-=======
     val config          = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("waves.network")
->>>>>>> pr/3
+    val networkSettings = config.as[NetworkSettings]("TN.network")
 
     networkSettings.nonce should not be 0
   }
 
   it should "build node name using nonce" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.parseString("TN.network.nonce = 12345"))
+    val config          = loadConfig(ConfigFactory.parseString("TN.network.nonce = 12345"))
     val networkSettings = config.as[NetworkSettings]("TN.network")
-=======
-    val config          = loadConfig(ConfigFactory.parseString("waves.network.nonce = 12345"))
-    val networkSettings = config.as[NetworkSettings]("waves.network")
->>>>>>> pr/3
 
     networkSettings.nonce should be(12345)
     networkSettings.nodeName should be("Node-12345")
   }
 
   it should "build node name using random nonce" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("TN.network")
-=======
     val config          = loadConfig(ConfigFactory.empty())
-    val networkSettings = config.as[NetworkSettings]("waves.network")
->>>>>>> pr/3
+    val networkSettings = config.as[NetworkSettings]("TN.network")
 
     networkSettings.nonce should not be 0
     networkSettings.nodeName should be(s"Node-${networkSettings.nonce}")
   }
 
   it should "fail with IllegalArgumentException on too long node name" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.parseString("TN.network.node-name = очень-длинное-название-в-многобайтной-кодировке-отличной-от-однобайтной-кодировки-американского-института-стандартов"))
-=======
     val config = loadConfig(ConfigFactory.parseString(
-      "waves.network.node-name = очень-длинное-название-в-многобайтной-кодировке-отличной-от-однобайтной-кодировки-американского-института-стандартов"))
->>>>>>> pr/3
+      "TN.network.node-name = очень-длинное-название-в-многобайтной-кодировке-отличной-от-однобайтной-кодировки-американского-института-стандартов"))
     intercept[IllegalArgumentException] {
       config.as[NetworkSettings]("TN.network")
     }

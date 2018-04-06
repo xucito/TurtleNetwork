@@ -1,4 +1,4 @@
-package com.wavesplatform.settings
+package com.TNplatform.settings
 
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
@@ -9,12 +9,7 @@ import scala.concurrent.duration._
 
 class UTXSettingsSpecification extends FlatSpec with Matchers {
   "UTXSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """TN {
-=======
-    val config   = ConfigFactory.parseString("""waves {
->>>>>>> pr/3
+    val config   = ConfigFactory.parseString("""TN {
         |  utx {
         |    max-size = 100
         |    max-transaction-age = 100m

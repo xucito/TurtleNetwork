@@ -103,7 +103,7 @@ object VersionedTransferTransaction extends TransactionParserFor[VersionedTransf
     } else if (attachment.length > TransferTransaction.MaxAttachmentSize) {
       Left(ValidationError.TooBigArray)
     } else if (amount <= 0) {
-      Left(ValidationError.NegativeAmount(amount, "waves"))
+      Left(ValidationError.NegativeAmount(amount, "TN"))
     } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(ValidationError.OverflowError)
     } else if (feeAmount <= 0) {

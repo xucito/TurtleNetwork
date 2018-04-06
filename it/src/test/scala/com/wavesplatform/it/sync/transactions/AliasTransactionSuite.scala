@@ -9,15 +9,9 @@ import scala.util.Random
 
 class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropertyChecks {
 
-<<<<<<< HEAD
-  private val transferFee = 1.TN
-  private val leasingFee = 0.001.TN
+  private val transferFee    = 1.TN
+  private val leasingFee     = 0.001.TN
   private val transferAmount = 1.TN
-=======
-  private val transferFee    = 1.waves
-  private val leasingFee     = 0.001.waves
-  private val transferAmount = 1.waves
->>>>>>> pr/3
 
   test("Able to send money to an alias") {
     val alias            = randomAlias()

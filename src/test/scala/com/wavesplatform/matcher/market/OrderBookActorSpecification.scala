@@ -1,4 +1,4 @@
-package com.wavesplatform.matcher.market
+package com.TNplatform.matcher.market
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.persistence.inmemory.extension.{InMemoryJournalStorage, InMemorySnapshotStorage, StorageExtension}
@@ -44,27 +44,7 @@ class OrderBookActorSpecification
 
   var eventsProbe = TestProbe()
 
-<<<<<<< HEAD
-  val pair = AssetPair(Some(ByteStr("BTC".getBytes)), Some(ByteStr("TN".getBytes)))
-  val storedState: SnapshotStateReader = stub[SnapshotStateReader]
-  val hugeAmount = Long.MaxValue / 2
-  (storedState.accountPortfolio _).when(*).returns(Portfolio(hugeAmount, LeaseInfo.empty, Map(
-    ByteStr("BTC".getBytes) -> hugeAmount,
-    ByteStr("TN".getBytes) -> hugeAmount
-  )))
-  val issueTransaction: IssueTransaction = IssueTransaction.create(
-    PrivateKeyAccount("123".getBytes),
-    "MinerReward".getBytes,
-    Array.empty,
-    10000000000L,
-    8.toByte,
-    true,
-    100000L,
-    10000L).right.get
-
-  (storedState.transactionInfo _).when(*).returns(Some((1, Some(issueTransaction))))
-=======
-  val pair                             = AssetPair(Some(ByteStr("BTC".getBytes)), Some(ByteStr("WAVES".getBytes)))
+  val pair                             = AssetPair(Some(ByteStr("BTC".getBytes)), Some(ByteStr("TN".getBytes)))
   val storedState: SnapshotStateReader = stub[SnapshotStateReader]
   val hugeAmount                       = Long.MaxValue / 2
   (storedState.portfolio _)
@@ -74,7 +54,7 @@ class OrderBookActorSpecification
                 LeaseBalance.empty,
                 Map(
                   ByteStr("BTC".getBytes)   -> hugeAmount,
-                  ByteStr("WAVES".getBytes) -> hugeAmount
+                  ByteStr("TN".getBytes) -> hugeAmount
                 )))
   val issueTransaction: IssueTransaction = IssueTransaction
     .create(PrivateKeyAccount("123".getBytes), "MinerReward".getBytes, Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L)
@@ -82,7 +62,6 @@ class OrderBookActorSpecification
     .get
 
   (storedState.transactionInfo _).when(*).returns(Some((1, issueTransaction)))
->>>>>>> pr/3
 
   val settings = matcherSettings.copy(account = MatcherAccount.address)
 

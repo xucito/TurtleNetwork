@@ -84,25 +84,14 @@ class RollbackSpecSuite
     val alias = "test_alias4"
 
     val f = for {
-<<<<<<< HEAD
-      startHeight <- Future.traverse(nodes)(_.height).map(_.max)
-      aliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
-      _ <- Future.traverse(nodes)(_.waitForTransaction(aliasTxId))
-      _ <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
-      _ <- Future.traverse(nodes)(_.rollback(startHeight - 1, returnToUTX = false))
-      _ <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
-      secondAliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
-      _ <- Future.traverse(nodes)(_.waitForTransaction(secondAliasTxId))
-=======
       startHeight     <- Future.traverse(nodes)(_.height).map(_.max)
-      aliasTxId       <- nodes.head.createAlias(nodes.head.address, alias, 1.waves).map(_.id)
+      aliasTxId       <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
       _               <- Future.traverse(nodes)(_.waitForTransaction(aliasTxId))
       _               <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
       _               <- Future.traverse(nodes)(_.rollback(startHeight - 1, returnToUTX = false))
       _               <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
-      secondAliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.waves).map(_.id)
+      secondAliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.TN).map(_.id)
       _               <- Future.traverse(nodes)(_.waitForTransaction(secondAliasTxId))
->>>>>>> pr/3
     } yield succeed
 
     Await.result(f, 1.minute)

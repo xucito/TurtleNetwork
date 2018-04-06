@@ -6,14 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class CheckpointsSettingsSpecification extends FlatSpec with Matchers {
   "CheckpointsSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """
-        |TN {
-=======
     val config   = ConfigFactory.parseString("""
-        |waves {
->>>>>>> pr/3
+        |TN {
         |  checkpoints {
         |    public-key: "BASE58PUBKEY"
         |  }

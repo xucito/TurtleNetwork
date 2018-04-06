@@ -8,12 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class WalletSettingsSpecification extends FlatSpec with Matchers {
   "WalletSettings" should "read values from config" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.parseString(
-      """TN.wallet {
-=======
-    val config   = loadConfig(ConfigFactory.parseString("""waves.wallet {
->>>>>>> pr/3
+    val config   = loadConfig(ConfigFactory.parseString("""TN.wallet {
         |  password: "some string as password"
         |  seed: "BASE58SEED"
         |}""".stripMargin))

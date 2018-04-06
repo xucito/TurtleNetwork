@@ -38,7 +38,7 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
           //Not mining node sends transfer transactions to another not mining node
           //Mining nodes collect fee
           (1 to n).map { _ =>
-            notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).waves, fee)
+            notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).TN, fee)
           }
         }
         .map(_ => ())

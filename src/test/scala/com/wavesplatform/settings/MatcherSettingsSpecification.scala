@@ -9,16 +9,10 @@ import scorex.transaction.assets.exchange.AssetPair
 
 class MatcherSettingsSpecification extends FlatSpec with Matchers {
   "MatcherSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = loadConfig(ConfigFactory.parseString(
-      """TN {
-        |  directory: "/TN"
-=======
     val config = loadConfig(
       ConfigFactory.parseString(
-        """waves {
-        |  directory: "/waves"
->>>>>>> pr/3
+        """TN {
+        |  directory: "/TN"
         |  matcher {
         |    enable: yes
         |    account: "BASE58MATCHERACCOUNT"
@@ -64,22 +58,13 @@ class MatcherSettingsSpecification extends FlatSpec with Matchers {
     settings.orderCleanupInterval should be(5.minute)
     settings.maxOpenOrders should be(1000)
     settings.maxOrdersPerRequest should be(100)
-<<<<<<< HEAD
     settings.priceAssets should be(Seq("TN", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS", "DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J"))
-    settings.predefinedPairs should be(Seq(
-      AssetPair.createAssetPair("TN", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS").get,
-      AssetPair.createAssetPair("DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J", "TN").get,
-      AssetPair.createAssetPair("DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS").get
-    ))
-=======
-    settings.priceAssets should be(Seq("WAVES", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS", "DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J"))
     settings.predefinedPairs should be(
       Seq(
-        AssetPair.createAssetPair("WAVES", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS").get,
-        AssetPair.createAssetPair("DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J", "WAVES").get,
+        AssetPair.createAssetPair("TN", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS").get,
+        AssetPair.createAssetPair("DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J", "TN").get,
         AssetPair.createAssetPair("DHgwrRvVyqJsepd32YbBqUeDH4GJ1N984X8QoekjgH8J", "8LQW8f7P5d5PZM7GtZEBgaqRPGSzS3DfPuiXrURJ4AJS").get
       ))
->>>>>>> pr/3
     settings.blacklistedAssets shouldBe Set("a")
     settings.blacklistedNames.map(_.pattern.pattern()) shouldBe Seq("b")
     settings.blacklistedAddresses shouldBe Set("c")

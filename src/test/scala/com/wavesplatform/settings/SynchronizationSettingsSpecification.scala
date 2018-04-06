@@ -1,4 +1,4 @@
-package com.wavesplatform.settings
+package com.TNplatform.settings
 
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.network.InvalidBlockStorageImpl.InvalidBlockStorageSettings
@@ -9,14 +9,9 @@ import scala.concurrent.duration._
 
 class SynchronizationSettingsSpecification extends FlatSpec with Matchers {
   "SynchronizationSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """
-        |TN {
-=======
+
     val config = ConfigFactory.parseString("""
-        |waves {
->>>>>>> pr/3
+        |TN {
         |  synchronization {
         |    max-rollback = 100
         |    max-chain-length = 101

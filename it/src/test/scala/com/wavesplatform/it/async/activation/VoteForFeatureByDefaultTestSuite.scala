@@ -49,17 +49,10 @@ class VoteForFeatureByDefaultTestSuite
          |  TN.features.supported=[$defaultVotingFeatureNum]
          |  miner.quorum = 3
          |}""".stripMargin
-<<<<<<< HEAD
-    ))
-    .withDefault(3)
-    .withSpecial(_.raw(s"TN.features.supported=[$nonVotingFeatureNum]"))
-    .buildNonConflicting()
-=======
         ))
       .withDefault(3)
-      .withSpecial(_.raw(s"waves.features.supported=[$nonVotingFeatureNum]"))
+      .withSpecial(_.raw(s"TN.features.supported=[$nonVotingFeatureNum]"))
       .buildNonConflicting()
->>>>>>> pr/3
 
   private def supportedNodes   = nodes.init
   private def notSupportedNode = nodes.last

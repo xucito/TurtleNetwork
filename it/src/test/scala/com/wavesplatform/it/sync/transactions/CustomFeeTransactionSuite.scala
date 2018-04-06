@@ -20,7 +20,7 @@ class CustomFeeTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
   private val defaultAssetQuantity = 1000000
   private val transferFee          = 100000
-  private val issueFee             = 1.waves
+  private val issueFee             = 1.TN
 
   test("make transfer with custom asset") {
     val (balance1, eff1) = notMiner.accountBalances(addressDefaultNode)
@@ -56,7 +56,7 @@ object CustomIssueTransactionTestSuite {
       quantity = 1000000,
       decimals = 2,
       reissuable = false,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -66,14 +66,14 @@ object CustomIssueTransactionTestSuite {
   import NodeConfigs.Default
 
   private val acceptAssetsFee = ConfigFactory.parseString(s"""
-       |waves.fees.transfer {
+       |TN.fees.transfer {
        |  $assetId = 100000
        |
        |}
       """.stripMargin)
 
   private val notMinerConfig = ConfigFactory.parseString(s"""
-       |waves.miner.enable=no
+       |TN.miner.enable=no
        |
       """.stripMargin).withFallback(acceptAssetsFee)
 

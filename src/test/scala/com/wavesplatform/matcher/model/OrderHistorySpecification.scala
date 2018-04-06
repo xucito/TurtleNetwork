@@ -84,13 +84,8 @@ class OrderHistorySpecification
     oh.activeOrderIdsByAddress(ord1.senderPublicKey.address) shouldBe Set(pair.amountAsset -> ord1.idStr())
   }
 
-<<<<<<< HEAD
-  property("New buy and sell TN order  added") {
-    val pk = PrivateKeyAccount("private".getBytes("utf-8"))
-=======
-  property("New buy and sell WAVES order added") {
+  property("New buy and sell TN order added") {
     val pk   = PrivateKeyAccount("private".getBytes("utf-8"))
->>>>>>> pr/3
     val pair = AssetPair(None, Some(ByteStr("BTC".getBytes)))
     val ord1 = buy(pair, 0.0008, 100000000, Some(pk))
     val ord2 = sell(pair, 0.0009, 210000000, Some(pk))
@@ -356,7 +351,7 @@ class OrderHistorySpecification
 
     oh.openPortfolio(pk.address) shouldBe
       OpenPortfolio(
-        Map("WAVES"     -> (2 * matcherFee - LimitOrder(ord1).getReceiveAmount - LimitOrder(ord2).getReceiveAmount),
+        Map("TN"     -> (2 * matcherFee - LimitOrder(ord1).getReceiveAmount - LimitOrder(ord2).getReceiveAmount),
             ass1.base58 -> ord1.amount,
             ass2.base58 -> ord2.amount))
   }

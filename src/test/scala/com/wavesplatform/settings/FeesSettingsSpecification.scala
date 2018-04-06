@@ -6,12 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class FeesSettingsSpecification extends FlatSpec with Matchers {
   "FeesSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """TN {
-=======
-    val config = ConfigFactory.parseString("""waves {
->>>>>>> pr/3
+    val config = ConfigFactory.parseString("""TN {
         |  network.file = "xxx"
         |  fees {
         |    payment.TN = 100000
@@ -37,12 +32,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "combine read few fees for one transaction type" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """TN.fees {
-=======
-    val config = ConfigFactory.parseString("""waves.fees {
->>>>>>> pr/3
+    val config = ConfigFactory.parseString("""TN.fees {
         |  payment {
         |    TN0 = 0
         |  }
@@ -72,37 +62,20 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "override values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """TN.fees {
+    val config = ConfigFactory
+      .parseString("""TN.fees {
         |  payment.TN1 = 1111
         |  reissue.TN5 = 0
         |}
-      """.stripMargin).withFallback(
-      ConfigFactory.parseString(
-        """TN.fees {
+      """.stripMargin)
+      .withFallback(
+        ConfigFactory.parseString("""TN.fees {
           |  payment.TN = 100000
           |  issue.TN = 100000000
           |  transfer.TN = 100000
           |  reissue.TN = 100000
           |  burn.TN = 100000
           |  exchange.TN = 100000
-=======
-    val config = ConfigFactory
-      .parseString("""waves.fees {
-        |  payment.WAVES1 = 1111
-        |  reissue.WAVES5 = 0
-        |}
-      """.stripMargin)
-      .withFallback(
-        ConfigFactory.parseString("""waves.fees {
-          |  payment.WAVES = 100000
-          |  issue.WAVES = 100000000
-          |  transfer.WAVES = 100000
-          |  reissue.WAVES = 100000
-          |  burn.WAVES = 100000
-          |  exchange.WAVES = 100000
->>>>>>> pr/3
           |}
         """.stripMargin)
       )
@@ -123,11 +96,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "not fail on long values as strings" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString("TN.fees.transfer.TN=\"1000\"").resolve()
-=======
-    val config   = ConfigFactory.parseString("waves.fees.transfer.WAVES=\"1000\"").resolve()
->>>>>>> pr/3
+    val config   = ConfigFactory.parseString("TN.fees.transfer.TN=\"1000\"").resolve()
     val settings = FeesSettings.fromConfig(config)
     settings.fees(4).toSet should equal(Set(FeeSettings("TN", 1000)))
   }
@@ -142,107 +111,58 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
   it should "override values from default config" in {
     val defaultConfig = ConfigFactory.load()
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """
-        |TN.fees {
-        |  payment {
-        |    TN = 100000
-        |  }
-        |  issue {
-        |    TN = 100000000
-        |  }
-        |  transfer {
-        |    TN = 100000,
-        |    "6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL" = 1
-        |  }
-        |  mass-transfer {
-        |    TN = 50000,
-        |  }
-        |  reissue {
-        |    TN = 100000
-        |  }
-        |  burn {
-        |    TN = 100000
-        |  }
-        |  exchange {
-        |    TN = 100000
-        |  }
-        |  lease {
-        |    TN = 100000
-        |  }
-        |  lease-cancel {
-        |    TN = 100000
-        |  }
-        |  create-alias {
-        |    TN = 100000
-        |  }
-        |}
-      """.stripMargin).withFallback(defaultConfig).resolve()
-    val settings = FeesSettings.fromConfig(config)
-    settings.fees.size should be(10)
-    settings.fees(2).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(3).toSet should equal(Set(FeeSettings("TN", 100000000)))
-    settings.fees(4).toSet should equal(Set(FeeSettings("TN", 100000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))
-    settings.fees(5).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(6).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(7).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(8).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(9).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(10).toSet should equal(Set(FeeSettings("TN", 100000)))
-    settings.fees(11).toSet should equal(Set(FeeSettings("TN", 50000)))
-=======
+
     val config        = ConfigFactory.parseString("""
-        |waves.fees {
+        |TN.fees {
         |  issue {
-        |    WAVES = 200000000
+        |    TN = 200000000
         |  }
         |  transfer {
-        |    WAVES = 300000,
+        |    TN = 300000,
         |    "6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL" = 1
         |  }
         |  reissue {
-        |    WAVES = 400000
+        |    TN = 400000
         |  }
         |  burn {
-        |    WAVES = 500000
+        |    TN = 500000
         |  }
         |  exchange {
-        |    WAVES = 600000
+        |    TN = 600000
         |  }
         |  lease {
-        |    WAVES = 700000
+        |    TN = 700000
         |  }
         |  lease-cancel {
-        |    WAVES = 800000
+        |    TN = 800000
         |  }
         |  create-alias {
-        |    WAVES = 900000
+        |    TN = 900000
         |  }
         |  mass-transfer {
-        |    WAVES = 10000,
+        |    TN = 10000,
         |  }
         |  data {
-        |    WAVES = 200000
+        |    TN = 200000
         |  }
         |  set-script {
-        |    WAVES = 300000
+        |    TN = 300000
         |  }
         |}
       """.stripMargin).withFallback(defaultConfig).resolve()
     val settings      = FeesSettings.fromConfig(config)
     settings.fees.size should be(11)
-    settings.fees(3).toSet should equal(Set(FeeSettings("WAVES", 200000000)))
-    settings.fees(4).toSet should equal(Set(FeeSettings("WAVES", 300000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))
-    settings.fees(5).toSet should equal(Set(FeeSettings("WAVES", 400000)))
-    settings.fees(6).toSet should equal(Set(FeeSettings("WAVES", 500000)))
-    settings.fees(7).toSet should equal(Set(FeeSettings("WAVES", 600000)))
-    settings.fees(8).toSet should equal(Set(FeeSettings("WAVES", 700000)))
-    settings.fees(9).toSet should equal(Set(FeeSettings("WAVES", 800000)))
-    settings.fees(10).toSet should equal(Set(FeeSettings("WAVES", 900000)))
-    settings.fees(11).toSet should equal(Set(FeeSettings("WAVES", 10000)))
-    settings.fees(12).toSet should equal(Set(FeeSettings("WAVES", 200000)))
-    settings.fees(13).toSet should equal(Set(FeeSettings("WAVES", 300000)))
->>>>>>> pr/3
+    settings.fees(3).toSet should equal(Set(FeeSettings("TN", 200000000)))
+    settings.fees(4).toSet should equal(Set(FeeSettings("TN", 300000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))
+    settings.fees(5).toSet should equal(Set(FeeSettings("TN", 400000)))
+    settings.fees(6).toSet should equal(Set(FeeSettings("TN", 500000)))
+    settings.fees(7).toSet should equal(Set(FeeSettings("TN", 600000)))
+    settings.fees(8).toSet should equal(Set(FeeSettings("TN", 700000)))
+    settings.fees(9).toSet should equal(Set(FeeSettings("TN", 800000)))
+    settings.fees(10).toSet should equal(Set(FeeSettings("TN", 900000)))
+    settings.fees(11).toSet should equal(Set(FeeSettings("TN", 10000)))
+    settings.fees(12).toSet should equal(Set(FeeSettings("TN", 200000)))
+    settings.fees(13).toSet should equal(Set(FeeSettings("TN", 300000)))
+
   }
 }

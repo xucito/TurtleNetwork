@@ -12,24 +12,14 @@ import org.scalatest.{Matchers, path}
 
 class PeerDatabaseImplSpecification extends path.FreeSpecLike with Matchers {
 
-<<<<<<< HEAD
-  private val config1 = ConfigFactory.parseString(
-    """TN.network {
-=======
-  private val config1   = ConfigFactory.parseString("""waves.network {
->>>>>>> pr/3
+  private val config1   = ConfigFactory.parseString("""TN.network {
       |  file = null
       |  known-peers = []
       |  peers-data-residence-time: 2s
       |}""".stripMargin).withFallback(ConfigFactory.load()).resolve()
   private val settings1 = config1.as[NetworkSettings]("TN.network")
 
-<<<<<<< HEAD
-  private val config2 = ConfigFactory.parseString(
-    """TN.network {
-=======
-  private val config2   = ConfigFactory.parseString("""waves.network {
->>>>>>> pr/3
+  private val config2   = ConfigFactory.parseString("""TN.network {
       |  file = null
       |  known-peers = []
       |  peers-data-residence-time: 10s
@@ -115,16 +105,9 @@ class PeerDatabaseImplSpecification extends path.FreeSpecLike with Matchers {
 
     "if blacklisting is disable" - {
       "should clear blacklist at start" in {
-<<<<<<< HEAD
         val databaseFile = Files.createTempFile("TN-tests", "PeerDatabaseImplSpecification-blacklisting-clear").toAbsolutePath.toString
-        val path = if (File.separatorChar == '\\') databaseFile.replace('\\', '/') else databaseFile
-        val prevConfig = ConfigFactory.parseString(
-          s"""TN.network {
-=======
-        val databaseFile = Files.createTempFile("waves-tests", "PeerDatabaseImplSpecification-blacklisting-clear").toAbsolutePath.toString
         val path         = if (File.separatorChar == '\\') databaseFile.replace('\\', '/') else databaseFile
-        val prevConfig   = ConfigFactory.parseString(s"""waves.network {
->>>>>>> pr/3
+        val prevConfig   = ConfigFactory.parseString(s"""TN.network {
              |  file = "$path"
              |  known-peers = []
              |  peers-data-residence-time: 100s
@@ -134,12 +117,7 @@ class PeerDatabaseImplSpecification extends path.FreeSpecLike with Matchers {
         prevDatabase.blacklist(address1, "I don't like it")
         prevDatabase.close()
 
-<<<<<<< HEAD
-        val config = ConfigFactory.parseString(
-          s"""TN.network {
-=======
-        val config   = ConfigFactory.parseString(s"""waves.network {
->>>>>>> pr/3
+        val config   = ConfigFactory.parseString(s"""TN.network {
              |  file = "$path"
              |  known-peers = []
              |  peers-data-residence-time: 100s
@@ -152,12 +130,7 @@ class PeerDatabaseImplSpecification extends path.FreeSpecLike with Matchers {
       }
 
       "should not add nodes to the blacklist" in {
-<<<<<<< HEAD
-        val config = ConfigFactory.parseString(
-          s"""TN.network {
-=======
-        val config   = ConfigFactory.parseString(s"""waves.network {
->>>>>>> pr/3
+        val config   = ConfigFactory.parseString(s"""TN.network {
              |  file = null
              |  known-peers = []
              |  peers-data-residence-time: 100s

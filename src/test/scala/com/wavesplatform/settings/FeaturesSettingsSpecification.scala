@@ -7,14 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class FeaturesSettingsSpecification extends FlatSpec with Matchers {
   "FeaturesSettings" should "read values" in {
-<<<<<<< HEAD
-    val config = ConfigFactory.parseString(
-      """
-        |TN {
-=======
     val config = ConfigFactory.parseString("""
-        |waves {
->>>>>>> pr/3
+        |TN {
         |  features {
         |    auto-shutdown-on-unsupported-feature = yes
         |    supported = [123,124,135]

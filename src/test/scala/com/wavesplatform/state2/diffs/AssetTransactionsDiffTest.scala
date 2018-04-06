@@ -32,22 +32,7 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
       (issue, reissue, burn) <- issueReissueBurnGeneratorP(ia, ra, ba, master) suchThat (_._1.reissuable == isReissuable)
     } yield ((genesis, issue), (reissue, burn))
 
-<<<<<<< HEAD
   property("Issue+Reissue+Burn do not break TN invariant and updates state") {
-    forAll(issueReissueBurnTxs(isReissuable = true)) { case (((gen, issue), (reissue, burn))) =>
-      assertDiffAndState(db, Seq(TestBlock.create(Seq(gen, issue))), TestBlock.create(Seq(reissue, burn))) { case (blockDiff, newState) =>
-        val totalPortfolioDiff = Monoid.combineAll(blockDiff.txsDiff.portfolios.values)
-
-        totalPortfolioDiff.balance shouldBe 0
-        totalPortfolioDiff.effectiveBalance shouldBe 0
-        totalPortfolioDiff.assets shouldBe Map(reissue.assetId -> (reissue.quantity - burn.amount))
-
-        val totalAssetVolume = issue.quantity + reissue.quantity - burn.amount
-        newState.accountPortfolio(issue.sender).assets shouldBe Map(reissue.assetId -> totalAssetVolume)
-        newState.assetInfo(issue.id()) shouldBe Some(AssetInfo(reissue.reissuable, totalAssetVolume))
-      }
-=======
-  property("Issue+Reissue+Burn do not break waves invariant and updates state") {
     forAll(issueReissueBurnTxs(isReissuable = true)) {
       case (((gen, issue), (reissue, burn))) =>
         assertDiffAndState(Seq(TestBlock.create(Seq(gen, issue))), TestBlock.create(Seq(reissue, burn))) {
@@ -61,7 +46,6 @@ class AssetTransactionsDiffTest extends PropSpec with PropertyChecks with Matche
             val totalAssetVolume = issue.quantity + reissue.quantity - burn.amount
             newState.portfolio(issue.sender).assets shouldBe Map(reissue.assetId -> totalAssetVolume)
         }
->>>>>>> pr/3
     }
   }
 

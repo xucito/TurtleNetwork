@@ -41,7 +41,7 @@ class FeeCalculatorSpecification extends PropSpec with PropertyChecks with Match
       |      TN = 600000
       |    }
       |    data {
-      |      WAVES = 100000
+      |      TN = 100000
       |    }
       |  }
       |}""".stripMargin

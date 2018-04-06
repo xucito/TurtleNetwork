@@ -29,14 +29,8 @@ trait MatcherTestData {
   val maxTimeGen: Gen[Long]     = Gen.choose(10000L, Order.MaxLiveTime).map(_ + NTP.correctedTime())
   val createdTimeGen: Gen[Long] = Gen.choose(0L, 10000L).map(NTP.correctedTime() - _)
 
-<<<<<<< HEAD
-  val config = loadConfig(ConfigFactory.parseString(
-    """TN {
+  val config = loadConfig(ConfigFactory.parseString("""TN {
       |  directory: "/tmp/TN-test"
-=======
-  val config = loadConfig(ConfigFactory.parseString("""waves {
-      |  directory: "/tmp/waves-test"
->>>>>>> pr/3
       |  matcher {
       |    enable: yes
       |    account: ""
