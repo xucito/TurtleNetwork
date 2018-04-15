@@ -34,6 +34,8 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
         |          1 = 0
         |          2 = 0
         |          3 = 0
+        |          5 = 0
+        |          6 = 0
         |        }
         |        double-features-periods-after-height = 21
         |      }
@@ -68,7 +70,7 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
     settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(14)
     settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(15)
     settings.functionalitySettings.blockVersion3AfterHeight should be(18)
-    settings.functionalitySettings.preActivatedFeatures should be(Map(1 -> 0, 2 -> 0, 3 -> 0))
+    settings.functionalitySettings.preActivatedFeatures should be(Map(5 -> 0, 1 -> 0, 6 -> 0, 2 -> 0, 3 -> 0))
     settings.functionalitySettings.doubleFeaturesPeriodsAfterHeight should be(21)
     settings.genesisSettings.blockTimestamp should be(1517503972000L)
     settings.genesisSettings.timestamp should be(1517503972000L)
@@ -134,22 +136,31 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
 
     settings.maxTransactionsPerBlockDiff should be(203)
     settings.minBlocksInMemory should be(204)
-    settings.addressSchemeCharacter should be('W')
-    settings.functionalitySettings.allowTemporaryNegativeUntil should be(1479168000000L)
-    settings.functionalitySettings.requireSortedTransactionsAfter should be(1479168000000L)
-    settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(232000L)
-    settings.functionalitySettings.minimalGeneratingBalanceAfter should be(1479168000000L)
-    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(1479168000000L)
-    settings.functionalitySettings.allowUnissuedAssetsUntil should be(1479416400000L)
-    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(1492768800000L)
-    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(1492768800000L)
+    settings.addressSchemeCharacter should be('L')
+    settings.functionalitySettings.allowTemporaryNegativeUntil should be(0L)
+    settings.functionalitySettings.requireSortedTransactionsAfter should be(0L)
+    settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0L)
+    settings.functionalitySettings.minimalGeneratingBalanceAfter should be(0L)
+    settings.functionalitySettings.allowTransactionsFromFutureUntil should be(0L)
+    settings.functionalitySettings.allowUnissuedAssetsUntil should be(0L)
+    settings.functionalitySettings.allowInvalidReissueInSameBlockUntilTimestamp should be(0L)
+    settings.functionalitySettings.allowMultipleLeaseCancelTransactionUntilTimestamp should be(0L)
     settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(1)
-    settings.genesisSettings.blockTimestamp should be(1517503972000L)
-    settings.genesisSettings.timestamp should be(1517503972000L)
+    settings.genesisSettings.blockTimestamp should be(1500635421931L)
+    settings.genesisSettings.timestamp should be(1500635421931L)
     settings.genesisSettings.signature should be(
-      ByteStr.decodeBase58("FSH8eAAzZNqnG8xgTZtz5xuLqXySsXgAjmFEC25hXMbEufiGjqWPnGCZFt6gLiVLJny16ipxRNAkkzjjhqTjBE2").toOption)
-    settings.genesisSettings.initialBalance should be(50000000000000000L)
-    settings.genesisSettings.transactions should be(Seq(GenesisTransactionSettings("3P8FjeNpPDHX5PvLvdgoLqyDYS1qZYwc1FM", 50000000000000000L)))
+      ByteStr.decodeBase58("4UpaXRasizJcaYjV8PndCFAXMftC3yZVvGiTft9c5HiXX5jj5eJ1Xo95Lerg6X8diKzi1dywvyfZYJipif1oYgZD").toOption)
+    settings.genesisSettings.initialBalance should be(10000000000000000L)
+    settings.genesisSettings.transactions should be(
+      Seq(
+        GenesisTransactionSettings("3JhF7aMPXBYtJ84iwX5e3N9W5JmZRSgHPy9", 1000000000000000L),
+        GenesisTransactionSettings("3JqAYiRnuiJxdMVmdTUsxuTV39LXHR5JWXk", 5000000000000000L),
+        GenesisTransactionSettings("3JeXZJAU1onkoiMCKT2i5LxMXWe7aRB7daL", 1000000000000000L),
+        GenesisTransactionSettings("3Jf2GXsAExpfhbcPg6NJAdaF7EhX176rb4B", 1000000000000000L),
+        GenesisTransactionSettings("3JzWq595aZxaU2Jkexsb8N6XWDPYoi1wzCL", 1000000000000000L),
+        GenesisTransactionSettings("3JjJuwvTcQKCq7H53H1XZXNy7Up1syjrRng", 1000000000000000L)
+      )
+    )
 
   }
 }
