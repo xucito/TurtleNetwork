@@ -172,15 +172,9 @@ class LeasingTransactionsSuite extends BaseTransactionSuite with CancelAfterFail
       fb <- traverse(nodes)(_.height).map(_.min)
 
       (firstBalance, firstEffBalance) <- notMiner.accountBalances(firstAddress)
-<<<<<<< HEAD
-      transferFailureAssertion <- assertBadRequest(sender.lease(firstAddress, firstAddress, firstBalance + 1.TN, fee = defaultFee))
-      _ <- traverse(nodes)(_.waitForHeight(fb + 2))
-      _ <- notMiner.assertBalances(firstAddress, firstBalance, firstEffBalance)
-=======
-      transferFailureAssertion        <- assertBadRequest(sender.lease(firstAddress, firstAddress, firstBalance + 1.waves, fee = defaultFee))
+      transferFailureAssertion        <- assertBadRequest(sender.lease(firstAddress, firstAddress, firstBalance + 1.TN, fee = defaultFee))
       _                               <- traverse(nodes)(_.waitForHeight(fb + 2))
       _                               <- notMiner.assertBalances(firstAddress, firstBalance, firstEffBalance)
->>>>>>> pr/3
     } yield transferFailureAssertion
 
     Await.result(f, waitCompletion)

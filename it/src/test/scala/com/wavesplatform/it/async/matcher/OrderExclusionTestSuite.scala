@@ -97,14 +97,8 @@ object OrderExclusionTestSuite {
 
   import NodeConfigs.Default
 
-<<<<<<< HEAD
-  private val matcherConfig = ConfigFactory.parseString(
-    s"""
-       |TN.matcher {
-=======
   private val matcherConfig = ConfigFactory.parseString(s"""
-       |waves.matcher {
->>>>>>> pr/3
+       |TN.matcher {
        |  enable=yes
        |  account="3Hm3LGoNPmw1VTZ3eRA2pAfeQPhnaBm6YFC"
        |  bind-address="0.0.0.0"

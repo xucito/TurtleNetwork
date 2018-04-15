@@ -222,21 +222,6 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
         .portBindings(portBindings)
         .build()
 
-<<<<<<< HEAD
-    val nodeName = actualConfig.getString("TN.network.node-name")
-    val nodeNumber = nodeName.replace("node", "").toInt
-    val ip = ipForNode(nodeNumber)
-
-    val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
-    val configOverrides = {
-      val common = s"$javaOptions ${renderProperties(asProperties(nodeConfig.withFallback(suiteConfig)))} " +
-        s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort"
-
-      val additional = profilerController().fold("") { _ =>
-        s"-agentpath:$ContainerRoot/libyjpagent.so=listen=0.0.0.0:$ProfilerPort," +
-          s"sampling,monitors,sessionname=TNNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot"
-      }
-=======
       val nodeName   = actualConfig.getString("TN.network.node-name")
       val nodeNumber = nodeName.replace("node", "").toInt
       val ip         = ipForNode(nodeNumber)
@@ -250,24 +235,12 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
           config += s"-agentpath:$ContainerRoot/libyjpagent.so=listen=0.0.0.0:$ProfilerPort," +
             s"sampling,monitors,sessionname=WavesNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot "
         }
->>>>>>> pr/3
 
         val withAspectJ = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
         if (withAspectJ) config += s"-javaagent:$ContainerRoot/aspectjweaver.jar "
         config
       }
 
-<<<<<<< HEAD
-    val containerConfig = ContainerConfig.builder()
-      .image("com.wavesplatform/it:latest")
-      .exposedPorts(s"$ProfilerPort", restApiPort, networkPort, matcherApiPort)
-      .networkingConfig(ContainerConfig.NetworkingConfig.create(Map(
-        wavesNetwork.name() -> endpointConfigFor(nodeName)
-      ).asJava))
-      .hostConfig(hostConfig)
-      .env(s"TN_OPTS=$configOverrides")
-      .build()
-=======
       val containerConfig = ContainerConfig
         .builder()
         .image("com.wavesplatform/it:latest")
@@ -276,9 +249,8 @@ class Docker(suiteConfig: Config = ConfigFactory.empty, tag: String = "", enable
           wavesNetwork.name() -> endpointConfigFor(nodeName)
         ).asJava))
         .hostConfig(hostConfig)
-        .env(s"WAVES_OPTS=$configOverrides")
+        .env(s"TN_OPTS=$configOverrides")
         .build()
->>>>>>> pr/3
 
       val containerId = {
         val containerName = s"${wavesNetwork.name()}-$nodeName"

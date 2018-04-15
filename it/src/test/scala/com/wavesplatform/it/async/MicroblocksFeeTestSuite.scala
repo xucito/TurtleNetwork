@@ -23,15 +23,6 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
   private def txRequestsGen(n: Int, fee: Long): Future[Unit] = {
     val parallelRequests = 1
 
-<<<<<<< HEAD
-    def requests(n: Int): Future[Unit] = Future
-      .sequence {
-        //Not mining node sends transfer transactions to another not mining node
-        //Mining nodes collect fee
-        (1 to n).map { _ => notMiner.transfer(notMiner.address, firstAddress, (1 + Random.nextInt(10)).TN, fee) }
-      }
-      .map(_ => ())
-=======
     def requests(n: Int): Future[Unit] =
       Future
         .sequence {
@@ -42,7 +33,6 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
           }
         }
         .map(_ => ())
->>>>>>> pr/3
 
     val steps = (1 to n)
       .sliding(parallelRequests, parallelRequests)
