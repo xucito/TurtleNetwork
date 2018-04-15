@@ -7,7 +7,7 @@ import scorex.transaction.Transaction
 import scorex.transaction.Transaction.Type
 import scorex.transaction.assets.{IssueTransaction, SmartIssueTransaction}
 import scorex.transaction.lease.LeaseTransaction
-import scorex.transaction.smart.Script
+import scorex.transaction.smart.script.Script
 
 class CompositeStateReader(inner: SnapshotStateReader, maybeDiff: => Option[Diff]) extends SnapshotStateReader {
 
@@ -52,6 +52,12 @@ class CompositeStateReader(inner: SnapshotStateReader, maybeDiff: => Option[Diff
       .get(id)
       .map(t => (t._1, t._2))
       .orElse(inner.transactionInfo(id))
+
+  override def transactionHeight(id: ByteStr): Option[Int] =
+    diff.transactions
+      .get(id)
+      .map(_._1)
+      .orElse(inner.transactionHeight(id))
 
   override def height: Int = inner.height + (if (maybeDiff.isDefined) 1 else 0)
 

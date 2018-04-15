@@ -6,7 +6,7 @@ import scorex.transaction.Transaction.Type
 import scorex.transaction.ValidationError.AliasDoesNotExist
 import scorex.transaction._
 import scorex.transaction.lease.LeaseTransaction
-import scorex.transaction.smart.Script
+import scorex.transaction.smart.script.Script
 import scorex.utils.ScorexLogging
 
 import scala.util.Right
@@ -18,6 +18,8 @@ trait SnapshotStateReader {
   def portfolio(a: Address): Portfolio
 
   def transactionInfo(id: ByteStr): Option[(Int, Transaction)]
+
+  def transactionHeight(id: ByteStr): Option[Int]
 
   def addressTransactions(address: Address, types: Set[Type], count: Int, from: Int): Seq[(Int, Transaction)]
 

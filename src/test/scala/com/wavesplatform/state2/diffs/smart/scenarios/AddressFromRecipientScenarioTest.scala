@@ -1,10 +1,10 @@
 package com.wavesplatform.state2.diffs.smart.scenarios
 
+import com.wavesplatform.lang.v1.{EvaluatorV1, Parser, TypeChecker}
 import com.wavesplatform.{NoShrink, TransactionGen}
-import com.wavesplatform.lang.{Evaluator, Parser, TypeChecker}
-import com.wavesplatform.lang.ctx.Obj
+import com.wavesplatform.lang.v1.ctx.Obj
 import com.wavesplatform.state2._
-import com.wavesplatform.state2.diffs.{assertDiffAndState, produce, ENOUGH_AMT}
+import com.wavesplatform.state2.diffs.{ENOUGH_AMT, assertDiffAndState, produce}
 import com.wavesplatform.state2.reader.SnapshotStateReader
 import fastparse.core.Parsed
 import monix.eval.Coeval
@@ -35,12 +35,11 @@ class AddressFromRecipientScenarioTest extends PropSpec with PropertyChecks with
 
   def evalScript(tx: Transaction, state: SnapshotStateReader): Either[com.wavesplatform.lang.ExecutionError, Obj] = {
     val context =
-      new BlockchainContext(AddressScheme.current.chainId, Coeval.evalOnce(tx), Coeval.evalOnce(state.height), state)
-        .build()
+      BlockchainContext.build(AddressScheme.current.chainId, Coeval.evalOnce(tx), Coeval.evalOnce(state.height), state)
 
     val Parsed.Success(expr, _) = Parser("addressFromRecipient(tx.recipient)")
     val Right(typedExpr)        = TypeChecker(TypeChecker.TypeCheckerContext.fromContext(context), expr)
-    Evaluator[Obj](context, typedExpr)
+    EvaluatorV1[Obj](context, typedExpr)
   }
 
   property("Script can resolve AddressOrAlias") {
