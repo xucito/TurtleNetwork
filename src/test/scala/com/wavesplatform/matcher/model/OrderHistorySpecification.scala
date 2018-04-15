@@ -351,7 +351,7 @@ class OrderHistorySpecification
 
     oh.openPortfolio(pk.address) shouldBe
       OpenPortfolio(
-        Map("TN"     -> (2 * matcherFee - LimitOrder(ord1).getReceiveAmount - LimitOrder(ord2).getReceiveAmount),
+        Map("TN"        -> (2 * matcherFee - LimitOrder(ord1).getReceiveAmount - LimitOrder(ord2).getReceiveAmount),
             ass1.base58 -> ord1.amount,
             ass2.base58 -> ord2.amount))
   }
