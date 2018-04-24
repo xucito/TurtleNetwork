@@ -1,12 +1,12 @@
-# TN [![Build Status](https://travis-ci.org/wavesplatform/Waves.svg?branch=master)](https://travis-ci.org/wavesplatform/Waves) [![](https://images.microbadger.com/badges/version/wavesplatform/waves-testnet.svg)](http://microbadger.com/images/wavesplatform/waves-testnet "Testnet Node Docker image")
+# TN 
+For information about swapping your TurtleNode to TurtleNetwork, please read [How to swap $TN](https://github.com/BlackTurtle123/TurtleNetwork/wiki/Gateway-$WAVES-$TN:-How-to-swap-from-Waves-to-TurtleNetwork).
+In the master branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section](https://github.com/BlackTurtle123/TurtleNetwork/releases), you can switch to the corresponding tag and build the application.
 
-In the master branch there is a code with functions that is under development. The latest release for each network can be found in the [Releases section](https://github.com/wavesplatform/Waves/releases), you can switch to the corresponding tag and build the application.
-
-[How to configure TN node](https://github.com/wavesplatform/Waves/wiki/How-to-install-Waves-node)
+[How to configure TN node](https://github.com/BlackTurtle123/TurtleNetwork/wiki/Setting-up-a-$TN-node)
 
 # Installation
 
-Please read [repo wiki article](https://github.com/wavesplatform/Waves/wiki/How-to-install-Waves-node).
+Please read [repo wiki article](https://github.com/BlackTurtle123/TurtleNetwork/wiki/Setting-up-a-$TN-node).
 
 ## Compiling Packages from source
 
