@@ -4,8 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.Diff
-import com.wavesplatform.state2.reader.SnapshotStateReader
+import com.wavesplatform.state.{Blockchain, Diff}
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.{RequestGen, TestTime}
 import io.netty.channel.group.ChannelGroup
@@ -13,9 +12,9 @@ import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.concurrent.Eventually
 import play.api.libs.json.Writes
 import scorex.account.Address
-import scorex.api.http.assets.{AssetsApiRoute, TransferRequest, VersionedTransferRequest}
+import scorex.api.http.assets.{AssetsApiRoute, TransferV1Request, TransferV2Request}
 import scorex.transaction.Transaction
-import scorex.transaction.assets.TransferTransaction
+import scorex.transaction.transfer._
 import scorex.wallet.Wallet
 
 class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMockFactory with Eventually {
@@ -24,7 +23,7 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
   private val wallet      = stub[Wallet]
   private val utx         = stub[UtxPool]
   private val allChannels = stub[ChannelGroup]
-  private val state       = stub[SnapshotStateReader]
+  private val state       = stub[Blockchain]
 
   private val seed               = "seed".getBytes()
   private val senderPrivateKey   = Wallet.generateNewAccount(seed, 0)
@@ -40,7 +39,7 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
     def posting[A: Writes](v: A): RouteTestResult = Post(routePath("/transfer"), v).addHeader(ApiKeyHeader) ~> route
 
     "accepts TransferRequest" in {
-      val req = TransferRequest(
+      val req = TransferV1Request(
         assetId = None,
         feeAssetId = None,
         amount = 1 * Waves,
@@ -53,15 +52,16 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
 
       posting(req) ~> check {
         status shouldBe StatusCodes.OK
-        responseAs[TransferTransaction]
+        responseAs[TransferTransactionV1]
       }
     }
 
     "accepts VersionedTransferRequest" in {
-      val req = VersionedTransferRequest(
+      val req = TransferV2Request(
         version = 2,
         assetId = None,
         amount = 1 * Waves,
+        feeAssetId = None,
         fee = Waves / 3,
         sender = senderPrivateKey.address,
         attachment = None,
@@ -71,7 +71,7 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
 
       posting(req) ~> check {
         status shouldBe StatusCodes.OK
-        responseAs[VersionedTransferRequest]
+        responseAs[TransferV2Request]
       }
     }
 

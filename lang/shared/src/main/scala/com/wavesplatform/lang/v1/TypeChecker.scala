@@ -114,28 +114,21 @@ object TypeChecker {
       }
 
     case block: Untyped.BLOCK =>
-      block.let match {
-        case None =>
-          setType(ctx, EitherT.pure(block.body)).map { resolvedT =>
-            Typed.BLOCK(let = None, body = resolvedT, tpe = resolvedT.tpe)
-          }
-
-        case Some(let) =>
-          (ctx.varDefs.get(let.name), ctx.functionDefs.get(let.name)) match {
-            case (Some(_), _) => EitherT.leftT[Coeval, Typed.EXPR](s"Value '${let.name}' already defined in the scope")
-            case (_, Some(_)) =>
-              EitherT.leftT[Coeval, Typed.EXPR](s"Value '${let.name}' can't be defined because function with such name is predefined")
-            case (None, None) =>
-              setType(ctx, EitherT.pure(let.value)).flatMap { exprTpe =>
-                val updatedCtx = ctx.copy(varDefs = ctx.varDefs + (let.name -> exprTpe.tpe))
-                setType(updatedCtx, EitherT.pure(block.body))
-                  .map { inExpr =>
-                    Typed.BLOCK(
-                      let = Some(Typed.LET(let.name, exprTpe)),
-                      body = inExpr,
-                      tpe = inExpr.tpe
-                    )
-                  }
+      import block.let
+      (ctx.varDefs.get(let.name), ctx.functionDefs.get(let.name)) match {
+        case (Some(_), _) => EitherT.leftT[Coeval, Typed.EXPR](s"Value '${let.name}' already defined in the scope")
+        case (_, Some(_)) =>
+          EitherT.leftT[Coeval, Typed.EXPR](s"Value '${let.name}' can't be defined because function with such name is predefined")
+        case (None, None) =>
+          setType(ctx, EitherT.pure(let.value)).flatMap { exprTpe =>
+            val updatedCtx = ctx.copy(varDefs = ctx.varDefs + (let.name -> exprTpe.tpe))
+            setType(updatedCtx, EitherT.pure(block.body))
+              .map { inExpr =>
+                Typed.BLOCK(
+                  let = Typed.LET(let.name, exprTpe),
+                  body = inExpr,
+                  tpe = inExpr.tpe
+                )
               }
           }
       }
@@ -143,19 +136,23 @@ object TypeChecker {
     case ifExpr: Untyped.IF =>
       (setType(ctx, EitherT.pure(ifExpr.cond)), setType(ctx, EitherT.pure(ifExpr.ifTrue)), setType(ctx, EitherT.pure(ifExpr.ifFalse))).tupled
         .subflatMap[String, Typed.EXPR] {
-          case (resolvedCond, resolvedIfTrue, resolvedIfFalse) =>
-            val ifTrueTpe  = resolvedIfTrue.tpe
-            val ifFalseTpe = resolvedIfFalse.tpe
-            findCommonType(ifTrueTpe, ifFalseTpe) match {
-              case Some(tpe) =>
-                Right(
-                  Typed.IF(
-                    cond = resolvedCond,
-                    ifTrue = resolvedIfTrue,
-                    ifFalse = resolvedIfFalse,
-                    tpe = tpe
-                  ))
-              case None => Left(s"Can't find common type for $ifTrueTpe and $ifFalseTpe")
+          case (resolvedCond: Typed.EXPR, resolvedIfTrue, resolvedIfFalse) =>
+            if (resolvedCond.tpe != BOOLEAN)
+              Left(s"IF clause is expected to be BOOLEAN, acutal: ${resolvedCond.tpe}")
+            else {
+              val ifTrueTpe  = resolvedIfTrue.tpe
+              val ifFalseTpe = resolvedIfFalse.tpe
+              findCommonType(ifTrueTpe, ifFalseTpe) match {
+                case Some(tpe) =>
+                  Right(
+                    Typed.IF(
+                      cond = resolvedCond,
+                      ifTrue = resolvedIfTrue,
+                      ifFalse = resolvedIfFalse,
+                      tpe = tpe
+                    ))
+                case None => Left(s"Can't find common type for $ifTrueTpe and $ifFalseTpe")
+              }
             }
         }
 

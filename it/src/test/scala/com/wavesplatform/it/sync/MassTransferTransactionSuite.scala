@@ -7,8 +7,10 @@ import org.scalatest.CancelAfterFailure
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import scorex.api.http.assets.SignedMassTransferRequest
 import scorex.crypto.encode.Base58
-import scorex.transaction.assets.MassTransferTransaction.{MaxTransferCount, Transfer}
-import scorex.transaction.assets.{MassTransferTransaction, TransferTransaction}
+import scorex.transaction.transfer.MassTransferTransaction.Transfer
+import scorex.transaction.transfer.MassTransferTransaction.MaxTransferCount
+import scorex.transaction.transfer.TransferTransaction.MaxAttachmentSize
+import scorex.transaction.transfer._
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -19,12 +21,12 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   private val transferAmount             = 5.TN
   private val leasingAmount              = 5.TN
   private val leasingFee                 = 0.003.TN
-  private val transferFee                = notMiner.settings.feesSettings.fees(TransferTransaction.typeId)(0).fee
+  private val transferFee                = notMiner.settings.feesSettings.fees(TransferTransactionV1.typeId)(0).fee
   private val issueFee                   = 1.TN
   private val massTransferFeePerTransfer = notMiner.settings.feesSettings.fees(MassTransferTransaction.typeId)(0).fee
 
   private def calcFee(numberOfRecipients: Int): Long = {
-    transferFee + numberOfRecipients * massTransferFeePerTransfer
+    transferFee + massTransferFeePerTransfer * (numberOfRecipients + 1)
   }
 
   private def fakeSignature = Base58.encode(Array.fill(64)(Random.nextInt.toByte))
@@ -105,7 +107,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   }
 
   test("invalid transfer should not be in UTX or blockchain") {
-    import scorex.transaction.assets.TransferTransaction.MaxAttachmentSize
+    import scorex.transaction.transfer._
 
     def request(version: Byte = MassTransferTransaction.version,
                 transfers: List[Transfer] = List(Transfer(secondAddress, transferAmount)),

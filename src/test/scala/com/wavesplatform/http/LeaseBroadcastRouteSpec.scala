@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import com.wavesplatform.RequestGen
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.diffs.TransactionDiffer.TransactionValidationError
+import com.wavesplatform.state.diffs.TransactionDiffer.TransactionValidationError
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen.posNum
@@ -17,6 +17,7 @@ import scorex.api.http._
 import scorex.api.http.leasing.LeaseBroadcastApiRoute
 import scorex.transaction.ValidationError.GenericError
 import scorex.transaction.Transaction
+import scorex.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
 
 class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with RequestGen with PathMockFactory with PropertyChecks {
   private val settings    = RestAPISettings.fromConfig(ConfigFactory.load())
@@ -30,8 +31,8 @@ class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with Requ
 
     val vt = Table[String, G[_ <: Transaction], (JsValue) => JsValue](
       ("url", "generator", "transform"),
-      ("lease", leaseGen, identity),
-      ("cancel", leaseCancelGen, {
+      ("lease", leaseGen.retryUntil(_.isInstanceOf[LeaseTransactionV1]), identity),
+      ("cancel", leaseCancelGen.retryUntil(_.isInstanceOf[LeaseCancelTransactionV1]), {
         case o: JsObject => o ++ Json.obj("txId" -> o.value("leaseId"))
         case other       => other
       })
@@ -64,7 +65,7 @@ class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with Requ
         posting(lease.copy(recipient = a)) should produce(InvalidAddress)
       }
       forAll(nonPositiveLong) { fee =>
-        posting(lease.copy(fee = fee)) should produce(InsufficientFee)
+        posting(lease.copy(fee = fee)) should produce(InsufficientFee())
       }
       forAll(posNum[Long]) { quantity =>
         posting(lease.copy(amount = quantity, fee = Long.MaxValue)) should produce(OverflowError)
@@ -81,7 +82,7 @@ class LeaseBroadcastRouteSpec extends RouteSpec("/leasing/broadcast/") with Requ
         posting(cancel.copy(senderPublicKey = pk)) should produce(InvalidAddress)
       }
       forAll(nonPositiveLong) { fee =>
-        posting(cancel.copy(fee = fee)) should produce(InsufficientFee)
+        posting(cancel.copy(fee = fee)) should produce(InsufficientFee())
       }
     }
   }

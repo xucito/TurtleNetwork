@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import com.wavesplatform.RequestGen
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.diffs.TransactionDiffer.TransactionValidationError
+import com.wavesplatform.state.diffs.TransactionDiffer.TransactionValidationError
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import org.scalamock.scalatest.PathMockFactory
@@ -29,7 +29,7 @@ class AliasBroadcastRouteSpec extends RouteSpec("/alias/broadcast/") with Reques
     def posting(url: String, v: JsValue): RouteTestResult = Post(routePath(url), v) ~> route
 
     "when state validation fails" in {
-      forAll(createAliasGen) { (t: Transaction) =>
+      forAll(createAliasGen.retryUntil(_.version == 1)) { (t: Transaction) =>
         posting("create", t.json()) should produce(StateCheckFailed(t, "foo"))
       }
     }
@@ -39,7 +39,7 @@ class AliasBroadcastRouteSpec extends RouteSpec("/alias/broadcast/") with Reques
     val route = AliasBroadcastApiRoute(settings, utx, allChannels).route
 
     "create alias transaction" in forAll(createAliasReq) { req =>
-      import scorex.api.http.alias.SignedCreateAliasRequest.broadcastAliasRequestReadsFormat
+      import scorex.api.http.alias.SignedCreateAliasV1Request.broadcastAliasV1RequestReadsFormat
 
       def posting(v: JsValue): RouteTestResult = Post(routePath("create"), v) ~> route
 
@@ -47,7 +47,7 @@ class AliasBroadcastRouteSpec extends RouteSpec("/alias/broadcast/") with Reques
         posting(toJson(req.copy(senderPublicKey = s))) should produce(InvalidAddress)
       }
       forAll(nonPositiveLong) { q =>
-        posting(toJson(req.copy(fee = q))) should produce(InsufficientFee)
+        posting(toJson(req.copy(fee = q))) should produce(InsufficientFee())
       }
       forAll(invalidAliasStringByLength) { q =>
         val obj = toJson(req).as[JsObject] ++ Json.obj("alias" -> JsString(q))

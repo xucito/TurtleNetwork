@@ -22,7 +22,6 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(6)
-
     settings.fees(2) should be(List(FeeSettings("TN", 100000)))
     settings.fees(3) should be(List(FeeSettings("TN", 100000000)))
     settings.fees(4) should be(List(FeeSettings("TN", 100000)))
@@ -55,7 +54,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "allow empty list" in {
-    val config = ConfigFactory.parseString("TN.fees = {}").resolve()
+    val config = ConfigFactory.parseString("TN.fees {}".stripMargin).resolve()
 
     val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(0)
@@ -88,22 +87,26 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
   }
 
   it should "fail on incorrect long values" in {
-    val config = ConfigFactory.parseString("TN.fees.payment.TN=N/A").resolve()
-
+    val config = ConfigFactory.parseString("""TN.fees {
+        |  payment.TN=N/A
+        |}""".stripMargin).resolve()
     intercept[WrongType] {
       FeesSettings.fromConfig(config)
     }
   }
 
   it should "not fail on long values as strings" in {
-    val config   = ConfigFactory.parseString("TN.fees.transfer.TN=\"1000\"").resolve()
+    val config   = ConfigFactory.parseString("""TN.fees {
+        |  transfer.TN="1000"
+        |}""".stripMargin).resolve()
     val settings = FeesSettings.fromConfig(config)
     settings.fees(4).toSet should equal(Set(FeeSettings("TN", 1000)))
   }
 
   it should "fail on unknown transaction type" in {
-    val config = ConfigFactory.parseString("TN.fees.shmayment.TN=100").resolve()
-
+    val config = ConfigFactory.parseString("""TN.fees {
+        |  shmayment.TN=100
+        |}""".stripMargin).resolve()
     intercept[NoSuchElementException] {
       FeesSettings.fromConfig(config)
     }
@@ -118,7 +121,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
         |    TN = 200000000
         |  }
         |  transfer {
-        |    TN = 300000,
+        |    TN = 300000
         |    "6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL" = 1
         |  }
         |  reissue {
@@ -140,7 +143,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
         |    TN = 900000
         |  }
         |  mass-transfer {
-        |    TN = 10000,
+        |    TN = 10000
         |  }
         |  data {
         |    TN = 200000
@@ -148,10 +151,13 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
         |  set-script {
         |    TN = 300000
         |  }
+        |  sponsor-fee {
+        |    TN = 400000
+        |  }
         |}
       """.stripMargin).withFallback(defaultConfig).resolve()
-    val settings = FeesSettings.fromConfig(config)
-    settings.fees.size should be(11)
+    val settings      = FeesSettings.fromConfig(config)
+    settings.fees.size should be(12)
     settings.fees(3).toSet should equal(Set(FeeSettings("TN", 200000000)))
     settings.fees(4).toSet should equal(Set(FeeSettings("TN", 300000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))
     settings.fees(5).toSet should equal(Set(FeeSettings("TN", 400000)))
@@ -163,6 +169,6 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
     settings.fees(11).toSet should equal(Set(FeeSettings("TN", 10000)))
     settings.fees(12).toSet should equal(Set(FeeSettings("TN", 200000)))
     settings.fees(13).toSet should equal(Set(FeeSettings("TN", 300000)))
-
+    settings.fees(14).toSet should equal(Set(FeeSettings("TN", 400000)))
   }
 }

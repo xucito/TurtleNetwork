@@ -8,14 +8,14 @@ import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.{Node, ReportingTestName}
 import com.wavesplatform.matcher.api.CancelOrderRequest
 import com.wavesplatform.matcher.market.MatcherActor
-import com.wavesplatform.state2.ByteStr
+import com.wavesplatform.state.ByteStr
 import org.scalatest.{BeforeAndAfterAll, CancelAfterFailure, FreeSpec, Matchers}
-import scorex.api.http.assets.SignedTransferRequest
-import scorex.api.http.leasing.{SignedLeaseCancelRequest, SignedLeaseRequest}
+import scorex.api.http.assets.SignedTransferV1Request
+import scorex.api.http.leasing.{SignedLeaseCancelV1Request, SignedLeaseV1Request}
 import scorex.crypto.encode.Base58
-import scorex.transaction.assets.TransferTransaction
 import scorex.transaction.assets.exchange.{AssetPair, Order, OrderType}
-import scorex.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import scorex.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
+import scorex.transaction.transfer._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -48,16 +48,12 @@ class MatcherTestSuite
   private var aliceSell1      = ""
   private var bobBuy1         = ""
 
-  private var aliceAsset: String        = ""
-  private var aliceAssetId: ByteStr     = ByteStr.empty
-  private var aliceWavesPair: AssetPair = AssetPair(None, None)
+  private var aliceAsset     = ""
+  private var aliceAssetId   = ByteStr.empty
+  private var aliceWavesPair = AssetPair(None, None)
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-
-    scorex.account.AddressScheme.current = new scorex.account.AddressScheme {
-      override val chainId: Byte = 'I'
-    }
 
     // Store initial balances of participants
     matcherBalance = getBalance(matcherNode)
@@ -548,9 +544,9 @@ class MatcherTestSuite
     result.status
   }
 
-  private def createSignedTransferRequest(tx: TransferTransaction): SignedTransferRequest = {
+  private def createSignedTransferRequest(tx: TransferTransactionV1): SignedTransferV1Request = {
     import tx._
-    SignedTransferRequest(
+    SignedTransferV1Request(
       Base58.encode(tx.sender.publicKey),
       assetId.map(_.base58),
       recipient.stringRepr,
@@ -563,9 +559,9 @@ class MatcherTestSuite
     )
   }
 
-  private def createSignedLeaseRequest(tx: LeaseTransaction): SignedLeaseRequest = {
+  private def createSignedLeaseRequest(tx: LeaseTransactionV1): SignedLeaseV1Request = {
     import tx._
-    SignedLeaseRequest(
+    SignedLeaseV1Request(
       Base58.encode(tx.sender.publicKey),
       amount,
       fee,
@@ -575,9 +571,9 @@ class MatcherTestSuite
     )
   }
 
-  private def createSignedLeaseCancelRequest(tx: LeaseCancelTransaction): SignedLeaseCancelRequest = {
+  private def createSignedLeaseCancelRequest(tx: LeaseCancelTransactionV1): SignedLeaseCancelV1Request = {
     import tx._
-    SignedLeaseCancelRequest(
+    SignedLeaseCancelV1Request(
       Base58.encode(tx.sender.publicKey),
       leaseId.base58,
       timestamp,
@@ -587,7 +583,7 @@ class MatcherTestSuite
   }
 
   private def transfer(from: Node, to: Node, assetId: Option[ByteStr], amount: Long, wait: Boolean = false): Unit = {
-    val transferTx = TransferTransaction
+    val transferTx = TransferTransactionV1
       .create(
         assetId = assetId,
         sender = from.privateKey,
@@ -605,7 +601,7 @@ class MatcherTestSuite
   }
 
   private def lease(from: Node, to: Node, amount: Long): ByteStr = {
-    val leaseTx = LeaseTransaction
+    val leaseTx = LeaseTransactionV1
       .create(
         sender = from.privateKey,
         recipient = scorex.account.Address.fromBytes(Base58.decode(to.address).get).right.get,
@@ -621,7 +617,7 @@ class MatcherTestSuite
   }
 
   private def cancelLease(sender: Node, leaseId: ByteStr, amount: Long): Unit = {
-    val cancelLeaseTx = LeaseCancelTransaction
+    val cancelLeaseTx = LeaseCancelTransactionV1
       .create(
         sender = sender.privateKey,
         leaseId = leaseId,
@@ -639,34 +635,28 @@ class MatcherTestSuite
 
 object MatcherTestSuite {
 
+  import ConfigFactory._
   import com.wavesplatform.it.NodeConfigs._
 
-  val ForbiddenAssetId = "FdbnAsset"
+  private val ForbiddenAssetId = "FdbnAsset"
+  private val AssetQuantity    = 1000
+  private val MatcherFee       = 300000
+  private val TransactionFee   = 300000
+  private val Waves            = 100000000L
 
 
-  private val matcherConfig = ConfigFactory.parseString(s"""
+  private val minerDisabled = parseString("TN.miner.enable = no")
+  private val matcherConfig = parseString(s"""
        |TN.matcher {
        |  enable = yes
-       |  account = "3Hm3LGoNPmw1VTZ3eRA2pAfeQPhnaBm6YFC"
+       |  account = 3HmFkAoQRs4Y3PE2uR6ohN7wS4VqPBGKv7k
        |  bind-address = "0.0.0.0"
        |  order-match-tx-fee = 300000
        |  blacklisted-assets = ["$ForbiddenAssetId"]
        |  balance-watching.enable = yes
-       |}
-       |TN.miner.enable = no
+       |}""".stripMargin)
 
-      """.stripMargin)
-
-  private val nonGeneratingPeersConfig = ConfigFactory.parseString("TN.miner.enable=no")
-
-  val AssetQuantity: Long = 1000
-
-  val MatcherFee: Long     = 300000
-  val TransactionFee: Long = 300000
-
-  val TN: Long = 100000000L
-
-  val Configs: Seq[Config] = Seq(matcherConfig.withFallback(Default.head)) ++
-    Random.shuffle(Default.tail.init).take(2).map(nonGeneratingPeersConfig.withFallback(_)) ++
-    Seq(Default.last)
+  private val Configs: Seq[Config] = (Default.last +: Random.shuffle(Default.init).take(3))
+    .zip(Seq(matcherConfig, minerDisabled, minerDisabled, empty()))
+    .map { case (n, o) => o.withFallback(n) }
 }

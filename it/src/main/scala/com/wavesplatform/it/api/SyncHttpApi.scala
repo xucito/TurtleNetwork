@@ -2,15 +2,15 @@ package com.wavesplatform.it.api
 
 import akka.http.scaladsl.model.StatusCodes
 import com.wavesplatform.it.Node
-import com.wavesplatform.state2.DataEntry
+import com.wavesplatform.state.DataEntry
 import org.asynchttpclient.Response
 import org.scalactic.source.Position
 import org.scalatest.{Assertion, Assertions, Matchers}
 import play.api.libs.json.Json.parse
 import play.api.libs.json.{Format, JsObject, Json, Writes}
 import scorex.api.http.AddressApiRoute
-import scorex.api.http.assets.SignedIssueRequest
-import scorex.transaction.assets.MassTransferTransaction.Transfer
+import scorex.api.http.assets.SignedIssueV1Request
+import scorex.transaction.transfer.MassTransferTransaction.Transfer
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -52,6 +52,9 @@ object SyncHttpApi extends Assertions {
     def get(path: String): Response =
       Await.result(async(n).get(path), RequestAwaitTime)
 
+    def seed(address: String): String =
+      Await.result(async(n).seed(address), RequestAwaitTime)
+
     def postJson[A: Writes](path: String, body: A): Response =
       Await.result(async(n).postJson(path, body), RequestAwaitTime)
 
@@ -60,6 +63,9 @@ object SyncHttpApi extends Assertions {
 
     def accountBalances(acc: String): (Long, Long) =
       Await.result(async(n).accountBalances(acc), RequestAwaitTime)
+
+    def assertBalances(acc: String, balance: Long)(implicit pos: Position): Unit =
+      Await.result(async(n).assertBalances(acc, balance, effectiveBalance = balance), RequestAwaitTime)
 
     def assertBalances(acc: String, balance: Long, effectiveBalance: Long)(implicit pos: Position): Unit =
       Await.result(async(n).assertBalances(acc, balance, effectiveBalance), RequestAwaitTime)
@@ -84,6 +90,12 @@ object SyncHttpApi extends Assertions {
 
     def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Transaction =
       Await.result(async(n).burn(sourceAddress, assetId, quantity, fee), RequestAwaitTime)
+
+    def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long): Transaction =
+      Await.result(async(n).sponsorAsset(sourceAddress, assetId, baseFee, fee), RequestAwaitTime)
+
+    def cancelSponsorship(sourceAddress: String, assetId: String, fee: Long): Transaction =
+      Await.result(async(n).cancelSponsorship(sourceAddress, assetId, fee), RequestAwaitTime)
 
     def sign(jsObject: JsObject): JsObject =
       Await.result(async(n).sign(jsObject), RequestAwaitTime)
@@ -129,7 +141,7 @@ object SyncHttpApi extends Assertions {
     def signedBroadcast(tx: JsObject): Transaction =
       Await.result(async(n).signedBroadcast(tx), RequestAwaitTime)
 
-    def signedIssue(tx: SignedIssueRequest): Transaction =
+    def signedIssue(tx: SignedIssueV1Request): Transaction =
       Await.result(async(n).signedIssue(tx), RequestAwaitTime)
 
     def ensureTxDoesntExist(txId: String): Unit =
@@ -138,7 +150,7 @@ object SyncHttpApi extends Assertions {
     def createAddress(): String =
       Await.result(async(n).createAddress, RequestAwaitTime)
 
-    def waitForTransaction(txId: String, retryInterval: FiniteDuration = 1.second): Transaction =
+    def waitForTransaction(txId: String, retryInterval: FiniteDuration = 1.second): TransactionInfo =
       Await.result(async(n).waitForTransaction(txId), RequestAwaitTime)
 
     def signAndBroadcast(tx: JsObject): Transaction =
@@ -161,14 +173,14 @@ object SyncHttpApi extends Assertions {
     private val TxInBlockchainAwaitTime = 6 * nodes.head.blockDelay
     private val ConditionAwaitTime      = 5.minutes
 
-    def waitForHeightAriseAndTxPresent(transactionId: String): Unit =
+    def waitForHeightAriseAndTxPresent(transactionId: String)(implicit pos: Position): Unit =
       Await.result(async(nodes).waitForHeightAriseAndTxPresent(transactionId), TxInBlockchainAwaitTime)
 
     def waitForHeightArise(): Unit =
       Await.result(async(nodes).waitForHeightArise(), TxInBlockchainAwaitTime)
 
-    def waitForSameBlocksAt(retryInterval: FiniteDuration, height: Int): Boolean =
-      Await.result(async(nodes).waitForSameBlocksAt(retryInterval, height), ConditionAwaitTime)
+    def waitForSameBlocksAt(height: Int, retryInterval: FiniteDuration = 5.seconds): Boolean =
+      Await.result(async(nodes).waitForSameBlocksAt(height, retryInterval), ConditionAwaitTime)
 
     def waitFor[A](desc: String)(retryInterval: FiniteDuration)(request: Node => A, cond: Iterable[A] => Boolean): Boolean =
       Await.result(

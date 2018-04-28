@@ -53,7 +53,6 @@ case class NegativeAmount(msg: String) extends ApiError {
   override val message: String  = s"negative amount: $msg"
   override val code: StatusCode = StatusCodes.BadRequest
 }
-
 @Deprecated //"Use InsufficientFee instead"
 case object NegativeFee extends ApiError {
   override val id: Int          = 112
@@ -61,9 +60,8 @@ case object NegativeFee extends ApiError {
   override val code: StatusCode = StatusCodes.BadRequest
 }
 
-case object InsufficientFee extends ApiError {
+case class InsufficientFee(override val message: String = "insufficient fee") extends ApiError {
   override val id: Int          = 112
-  override val message: String  = "insufficient fee"
   override val code: StatusCode = StatusCodes.BadRequest
 }
 
@@ -72,4 +70,10 @@ case class WrongTransactionJson(err: JsError) extends ApiError {
   override val message: String =
     err.errors.map(e => s"Validation failed for field '${e._1}', errors:${e._2}. ").mkString("\n")
   override val code: StatusCode = StatusCodes.UnprocessableEntity
+}
+
+case class NegativeMinFee(msg: String) extends ApiError {
+  override val id: Int          = 114
+  override val message: String  = s"negative fee per: $msg"
+  override val code: StatusCode = StatusCodes.BadRequest
 }

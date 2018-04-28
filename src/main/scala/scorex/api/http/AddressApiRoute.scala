@@ -1,21 +1,24 @@
 package scorex.api.http
 
 import java.nio.charset.StandardCharsets
-import javax.ws.rs.Path
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
 import com.wavesplatform.crypto
 import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
-import com.wavesplatform.state2.reader.SnapshotStateReader
+import com.wavesplatform.state.Blockchain
+import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
+import javax.ws.rs.Path
 import play.api.libs.json._
 import scorex.BroadcastRoute
 import scorex.account.{Address, PublicKeyAccount}
 import scorex.crypto.encode.Base58
-import scorex.transaction.{PoSCalc, TransactionFactory}
+import scorex.transaction.ValidationError.GenericError
+import scorex.transaction.smart.script.ScriptCompiler
+import scorex.transaction.{PoSCalc, TransactionFactory, ValidationError}
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
@@ -25,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 @Api(value = "/addresses/")
 case class AddressApiRoute(settings: RestAPISettings,
                            wallet: Wallet,
-                           state: SnapshotStateReader,
+                           blockchain: Blockchain,
                            utx: UtxPool,
                            allChannels: ChannelGroup,
                            time: Time,
@@ -53,11 +56,9 @@ case class AddressApiRoute(settings: RestAPISettings,
     complete(
       Address
         .fromString(address)
-        .right
-        .map(acc => {
-          ToResponseMarshallable(addressScriptInfoJson(acc))
-        })
-        .getOrElse(InvalidAddress))
+        .flatMap(addressScriptInfoJson)
+        .map(ToResponseMarshallable(_))
+    )
   }
   @Path("/{address}")
   @ApiOperation(value = "Delete", notes = "Remove the account with address {address} from the wallet", httpMethod = "DELETE")
@@ -332,7 +333,7 @@ case class AddressApiRoute(settings: RestAPISettings,
             Balance(
               acc.address,
               confirmations,
-              state.balance(acc, state.height, confirmations)
+              blockchain.balance(acc, blockchain.height, confirmations)
             )))
       .getOrElse(InvalidAddress)
   }
@@ -347,32 +348,40 @@ case class AddressApiRoute(settings: RestAPISettings,
             Balance(
               acc.address,
               0,
-              state.portfolio(acc).balance
+              blockchain.portfolio(acc).balance
             )))
       .getOrElse(InvalidAddress)
   }
 
   private def balancesDetailsJson(account: Address): BalanceDetails = {
-    val portfolio = state.portfolio(account)
+    val portfolio = blockchain.portfolio(account)
     BalanceDetails(
       account.address,
       portfolio.balance,
-      PoSCalc.generatingBalance(state, functionalitySettings, account, state.height),
+      PoSCalc.generatingBalance(blockchain, functionalitySettings, account, blockchain.height),
       portfolio.balance - portfolio.lease.out,
       portfolio.effectiveBalance
     )
   }
 
-  private def addressScriptInfoJson(account: Address): AddressScriptInfo = {
-    val script = state.accountScript(account)
-    AddressScriptInfo(address = account.address, script = script.map(_.bytes().base58), scriptText = script.map(_.text))
-  }
+  private def addressScriptInfoJson(account: Address): Either[ValidationError, AddressScriptInfo] =
+    for {
+      script     <- Right(blockchain.accountScript(account))
+      complexity <- script.fold[Either[ValidationError, Long]](Right(0))(x => ScriptCompiler.estimate(x).left.map(GenericError(_)))
+    } yield
+      AddressScriptInfo(
+        address = account.address,
+        script = script.map(_.bytes().base58),
+        scriptText = script.map(_.text),
+        complexity = complexity,
+        extraFee = if (script.isEmpty) 0 else CommonValidation.ScriptExtraFee
+      )
 
   private def effectiveBalanceJson(address: String, confirmations: Int): ToResponseMarshallable = {
     Address
       .fromString(address)
       .right
-      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, state.effectiveBalance(acc, state.height, confirmations))))
+      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, blockchain.effectiveBalance(acc, blockchain.height, confirmations))))
       .getOrElse(InvalidAddress)
   }
 
@@ -380,7 +389,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     Address
       .fromString(address)
       .map { acc =>
-        ToResponseMarshallable(state.accountData(acc).data.values.toSeq.sortBy(_.key))
+        ToResponseMarshallable(blockchain.accountData(acc).data.values.toSeq.sortBy(_.key))
       }
       .getOrElse(InvalidAddress)
   }
@@ -388,7 +397,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   private def accountData(address: String, key: String): ToResponseMarshallable = {
     val result = for {
       addr  <- Address.fromString(address).left.map(_ => InvalidAddress)
-      value <- state.accountData(addr, key).toRight(DataKeyNotExists)
+      value <- blockchain.accountData(addr, key).toRight(DataKeyNotExists)
     } yield value
     ToResponseMarshallable(result)
   }
@@ -463,7 +472,7 @@ object AddressApiRoute {
 
   implicit val validityFormat: Format[Validity] = Json.format
 
-  case class AddressScriptInfo(address: String, script: Option[String], scriptText: Option[String])
+  case class AddressScriptInfo(address: String, script: Option[String], scriptText: Option[String], complexity: Long, extraFee: Long)
 
   implicit val accountScriptInfoFormat: Format[AddressScriptInfo] = Json.format
 }

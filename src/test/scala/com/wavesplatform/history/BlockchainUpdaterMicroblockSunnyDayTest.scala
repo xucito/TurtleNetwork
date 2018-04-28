@@ -1,15 +1,15 @@
 package com.wavesplatform.history
 
 import com.wavesplatform.TransactionGen
-import com.wavesplatform.state2._
-import com.wavesplatform.state2.diffs._
+import com.wavesplatform.state._
+import com.wavesplatform.state.diffs._
 import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import scorex.account.{Address, AddressOrAlias, PrivateKeyAccount}
 import scorex.crypto.signatures.Curve25519.KeyLength
 import scorex.transaction._
-import scorex.transaction.assets.TransferTransaction
+import scorex.transaction.transfer._
 
 class BlockchainUpdaterMicroblockSunnyDayTest
     extends PropSpec
@@ -18,7 +18,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     with Matchers
     with TransactionGen {
 
-  type Setup = (GenesisTransaction, TransferTransaction, TransferTransaction, TransferTransaction)
+  type Setup = (GenesisTransaction, TransferTransactionV1, TransferTransactionV1, TransferTransactionV1)
   val preconditionsAndPayments: Gen[Setup] = for {
     master <- accountGen
     alice  <- accountGen
@@ -26,7 +26,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
     ts     <- positiveIntGen
     fee    <- smallFeeGen
     genesis: GenesisTransaction = GenesisTransaction.create(master, ENOUGH_AMT, ts).right.get
-    masterToAlice: TransferTransaction <- wavesTransferGeneratorP(master, alice)
+    masterToAlice: TransferTransactionV1 <- wavesTransferGeneratorP(master, alice)
     aliceToBob  = createWavesTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts).right.get
     aliceToBob2 = createWavesTransfer(alice, bob, masterToAlice.amount - fee - 1, fee, ts + 1).right.get
   } yield (genesis, masterToAlice, aliceToBob, aliceToBob2)
@@ -52,7 +52,7 @@ class BlockchainUpdaterMicroblockSunnyDayTest
         domain.blockchainUpdater.processMicroBlock(microBlocks(0)).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(1)).explicitGet()
         domain.blockchainUpdater.processMicroBlock(microBlocks(2)) should produce("unavailable funds")
-        domain.history.lastBlock.get.transactionData shouldBe Seq(genesis, masterToAlice, aliceToBob)
+        domain.blockchainUpdater.lastBlock.get.transactionData shouldBe Seq(genesis, masterToAlice, aliceToBob)
 
         effBalance(genesis.recipient, domain) > 0 shouldBe true
         effBalance(masterToAlice.recipient, domain) > 0 shouldBe true

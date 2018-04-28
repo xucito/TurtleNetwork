@@ -1,15 +1,15 @@
 package scorex.api.http
 
 import cats.implicits._
-import com.wavesplatform.state2.DataEntry
+import com.wavesplatform.state.DataEntry
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.json.Json
 import scorex.account.PublicKeyAccount
 import scorex.transaction.{DataTransaction, Proofs, ValidationError}
 
 object DataRequest {
-  implicit val unsignedReads = Json.reads[DataRequest]
-  implicit val signedReads   = Json.reads[SignedDataRequest]
+  implicit val unsignedDataRequestReads = Json.reads[DataRequest]
+  implicit val signedDataRequestReads   = Json.reads[SignedDataRequest]
 }
 
 case class DataRequest(version: Byte, sender: String, data: List[DataEntry[_]], fee: Long, timestamp: Option[Long] = None)

@@ -1,7 +1,7 @@
 package com.wavesplatform.history
 
-import com.wavesplatform.state2._
-import com.wavesplatform.state2.diffs.ENOUGH_AMT
+import com.wavesplatform.state._
+import com.wavesplatform.state.diffs.ENOUGH_AMT
 import com.wavesplatform._
 import org.scalacheck.Gen
 import org.scalatest._
@@ -11,7 +11,7 @@ import scorex.block.{Block, MicroBlock, SignerData}
 import scorex.consensus.nxt.NxtLikeConsensusBlockData
 import scorex.lagonaki.mocks.TestBlock
 import scorex.transaction.ValidationError.MicroBlockAppendError
-import scorex.transaction.assets.TransferTransaction
+import scorex.transaction.transfer._
 import scorex.transaction.{GenesisTransaction, Transaction}
 
 class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with DomainScenarioDrivenPropertyCheck with Matchers with TransactionGen {
@@ -79,7 +79,7 @@ class BlockchainUpdaterLiquidBlockTest extends PropSpec with PropertyChecks with
       feeAmount <- smallFeeGen
       timestamp <- timestampGen
       recipient <- accountGen
-    } yield TransferTransaction.create(None, from, recipient, amount, timestamp, None, feeAmount, Array.empty).right.get
+    } yield TransferTransactionV1.create(None, from, recipient, amount, timestamp, None, feeAmount, Array.empty).right.get
 
   private def unsafeChainBaseAndMicro(totalRefTo: ByteStr,
                                       base: Seq[Transaction],

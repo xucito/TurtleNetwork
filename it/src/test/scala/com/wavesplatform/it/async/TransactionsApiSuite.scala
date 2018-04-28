@@ -4,12 +4,12 @@ import com.wavesplatform.it.api.AsyncHttpApi._
 import com.wavesplatform.it.api._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state2._
+import com.wavesplatform.state._
 import org.asynchttpclient.util.HttpConstants
 import play.api.libs.json._
 import scorex.api.http.assets.MassTransferRequest
 import scorex.crypto.encode.Base58
-import scorex.transaction.assets.MassTransferTransaction.Transfer
+import scorex.transaction.transfer.MassTransferTransaction.Transfer
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -164,6 +164,44 @@ class TransactionsApiSuite extends BaseTransactionSuite {
     )
   }
 
+  test("/transactions/sign should produce sponsor transactions that are good for /transactions/broadcast") {
+    val assetId = signAndBroadcast(
+      Json.obj(
+        "type"        -> 3,
+        "name"        -> "Sponsored Coin",
+        "quantity"    -> 100.waves,
+        "description" -> "Sponsored Coin",
+        "sender"      -> firstAddress,
+        "decimals"    -> 2,
+        "reissuable"  -> false,
+        "fee"         -> 1.waves
+      ))
+
+    signAndBroadcast(
+      Json.obj(
+        "type"                 -> 14,
+        "version"              -> 1,
+        "sender"               -> firstAddress,
+        "assetId"              -> assetId,
+        "minSponsoredAssetFee" -> 100,
+        "fee"                  -> 1.waves
+      ),
+      usesProofs = true
+    )
+
+    signAndBroadcast(
+      Json.obj(
+        "type"                 -> 14,
+        "version"              -> 1,
+        "sender"               -> firstAddress,
+        "assetId"              -> assetId,
+        "minSponsoredAssetFee" -> JsNull,
+        "fee"                  -> 1.waves
+      ),
+      usesProofs = true
+    )
+  }
+
   private def signAndBroadcast(json: JsObject, usesProofs: Boolean = false): String = {
     val f = for {
       rs <- sender.postJsonWithApiKey("/transactions/sign", json)
@@ -192,7 +230,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
 
     val transfers = List(Transfer(firstAddress, 5.TN), Transfer(secondAddress, 2.TN), Transfer(thirdAddress, 3.TN))
     val f = for {
-      txId <- sender.massTransfer(firstAddress, transfers, 250000).map(_.id)
+      txId <- sender.massTransfer(firstAddress, transfers, 300000).map(_.id)
       _    <- nodes.waitForHeightAriseAndTxPresent(txId)
 
       // /transactions/txInfo should return complete list of transfers

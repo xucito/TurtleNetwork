@@ -4,8 +4,9 @@ import com.wavesplatform.utils.base58Length
 import scorex.crypto.signatures.Curve25519
 import scorex.transaction.assets._
 import scorex.transaction.assets.exchange.ExchangeTransaction
-import scorex.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import scorex.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
 import scorex.transaction.smart.SetScriptTransaction
+import scorex.transaction.transfer._
 
 import scala.util.{Failure, Success, Try}
 
@@ -19,14 +20,14 @@ object TransactionParsers {
   private val old: Map[Byte, TransactionParser] = Seq[TransactionParser](
     GenesisTransaction,
     PaymentTransaction,
-    IssueTransaction,
-    TransferTransaction,
-    ReissueTransaction,
-    BurnTransaction,
+    IssueTransactionV1,
+    TransferTransactionV1,
+    ReissueTransactionV1,
+    BurnTransactionV1,
     ExchangeTransaction,
-    LeaseTransaction,
-    LeaseCancelTransaction,
-    CreateAliasTransaction,
+    LeaseTransactionV1,
+    LeaseCancelTransactionV1,
+    CreateAliasTransactionV1,
     MassTransferTransaction
   ).map { x =>
     x.typeId -> x
@@ -34,9 +35,15 @@ object TransactionParsers {
 
   private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
     DataTransaction,
-    VersionedTransferTransaction,
+    TransferTransactionV2,
     SetScriptTransaction,
-    SmartIssueTransaction
+    IssueTransactionV2,
+    CreateAliasTransactionV2,
+    ReissueTransactionV2,
+    BurnTransactionV2,
+    LeaseTransactionV2,
+    LeaseCancelTransactionV2,
+    SponsorFeeTransaction
   ).flatMap { x =>
     x.supportedVersions.map { version =>
       ((x.typeId, version), x)
@@ -50,7 +57,7 @@ object TransactionParsers {
       }
   } ++ modern
 
-  private val byName: Map[String, TransactionParser] = (old ++ modern).map {
+  val byName: Map[String, TransactionParser] = (old ++ modern).map {
     case (_, builder) => builder.classTag.runtimeClass.getSimpleName -> builder
   }
 

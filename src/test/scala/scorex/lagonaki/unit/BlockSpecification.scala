@@ -1,8 +1,8 @@
 package scorex.lagonaki.unit
 
 import com.wavesplatform.metrics.Instrumented
-import com.wavesplatform.state2._
-import com.wavesplatform.state2.diffs.produce
+import com.wavesplatform.state._
+import com.wavesplatform.state.diffs.produce
 import com.wavesplatform.{NoShrink, TransactionGen, crypto}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -11,7 +11,7 @@ import org.scalatest.prop.PropertyChecks
 import scorex.block.Block
 import scorex.consensus.nxt.NxtLikeConsensusBlockData
 import scorex.transaction._
-import scorex.transaction.assets.TransferTransaction
+import scorex.transaction.transfer._
 
 class BlockSpecification extends PropSpec with PropertyChecks with TransactionGen with Matchers with NoShrink {
 
@@ -38,9 +38,9 @@ class BlockSpecification extends PropSpec with PropertyChecks with TransactionGe
       generationSignature <- byteArrayGen(Block.GeneratorSignatureLength)
       assetBytes          <- byteArrayGen(AssetIdLength)
       assetId = Some(ByteStr(assetBytes))
-      sender                                  <- accountGen
-      recipient                               <- accountGen
-      paymentTransaction: TransferTransaction <- wavesTransferGeneratorP(time, sender, recipient)
+      sender                                    <- accountGen
+      recipient                                 <- accountGen
+      paymentTransaction: TransferTransactionV1 <- wavesTransferGeneratorP(time, sender, recipient)
     } yield
       Block
         .buildAndSign(3,

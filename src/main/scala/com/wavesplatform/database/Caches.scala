@@ -4,17 +4,28 @@ import java.util
 
 import cats.syntax.monoid._
 import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
-import com.wavesplatform.state2.reader.SnapshotStateReader
-import com.wavesplatform.state2.{AccountDataInfo, AssetDescription, AssetInfo, ByteStr, Diff, LeaseBalance, Portfolio, StateWriter, VolumeAndFee}
+import com.wavesplatform.state.{
+  AccountDataInfo,
+  AssetDescription,
+  AssetInfo,
+  Blockchain,
+  ByteStr,
+  Diff,
+  LeaseBalance,
+  Portfolio,
+  Sponsorship,
+  SponsorshipValue,
+  VolumeAndFee
+}
 import scorex.account.{Address, Alias}
 import scorex.block.Block
-import scorex.transaction.assets.{IssueTransaction, SmartIssueTransaction}
+import scorex.transaction.assets.IssueTransaction
 import scorex.transaction.smart.script.Script
-import scorex.transaction.{History, Transaction}
+import scorex.transaction.{AssetId, Transaction}
 
 import scala.collection.JavaConverters._
 
-trait Caches extends SnapshotStateReader with History with StateWriter {
+trait Caches extends Blockchain {
   import Caches._
 
   private val MaxSize = 100000
@@ -42,12 +53,17 @@ trait Caches extends SnapshotStateReader with History with StateWriter {
   protected def loadPortfolio(address: Address): Portfolio
   override def portfolio(a: Address): Portfolio = portfolioCache.get(a)
 
-  protected val assetInfoCache: LoadingCache[ByteStr, Option[AssetInfo]] = cache(MaxSize, loadAssetInfo)
-  protected def loadAssetInfo(assetId: ByteStr): Option[AssetInfo]
+  protected val assetInfoCache: LoadingCache[AssetId, Option[AssetInfo]] = cache(MaxSize, loadAssetInfo)
+  protected def loadAssetInfo(assetId: AssetId): Option[AssetInfo]
 
-  protected val assetDescriptionCache: LoadingCache[ByteStr, Option[AssetDescription]] = cache(MaxSize, loadAssetDescription)
-  protected def loadAssetDescription(assetId: ByteStr): Option[AssetDescription]
-  override def assetDescription(assetId: ByteStr): Option[AssetDescription] = assetDescriptionCache.get(assetId)
+  protected val assetDescriptionCache: LoadingCache[AssetId, Option[AssetDescription]] = cache(MaxSize, loadAssetDescription)
+  protected def loadAssetDescription(assetId: AssetId): Option[AssetDescription]
+  override def assetDescription(assetId: AssetId): Option[AssetDescription] = assetDescriptionCache.get(assetId) map { descr =>
+    sponsorshipCache.get(assetId).fold(descr) {
+      case SponsorshipValue(minFee) =>
+        descr.copy(sponsorship = minFee)
+    }
+  }
 
   protected val volumeAndFeeCache: LoadingCache[ByteStr, VolumeAndFee] = cache(MaxSize, loadVolumeAndFee)
   protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee
@@ -66,12 +82,15 @@ trait Caches extends SnapshotStateReader with History with StateWriter {
   @volatile
   protected var approvedFeaturesCache: Map[Short, Int] = loadApprovedFeatures()
   protected def loadApprovedFeatures(): Map[Short, Int]
-  override def approvedFeatures(): Map[Short, Int] = approvedFeaturesCache
+  override def approvedFeatures: Map[Short, Int] = approvedFeaturesCache
 
   @volatile
   protected var activatedFeaturesCache: Map[Short, Int] = loadActivatedFeatures()
   protected def loadActivatedFeatures(): Map[Short, Int]
-  override def activatedFeatures(): Map[Short, Int] = activatedFeaturesCache
+  override def activatedFeatures: Map[Short, Int] = activatedFeaturesCache
+
+  protected val sponsorshipCache: LoadingCache[ByteStr, Option[SponsorshipValue]] = cache(MaxSize, loadSponsorship)
+  protected def loadSponsorship(assetId: ByteStr): Option[SponsorshipValue]
 
   protected def doAppend(block: Block,
                          addresses: Map[Address, BigInt],
@@ -84,7 +103,8 @@ trait Caches extends SnapshotStateReader with History with StateWriter {
                          filledQuantity: Map[ByteStr, VolumeAndFee],
                          scripts: Map[BigInt, Option[Script]],
                          data: Map[BigInt, AccountDataInfo],
-                         aliases: Map[Alias, BigInt]): Unit
+                         aliases: Map[Alias, BigInt],
+                         sponsorship: Map[AssetId, Sponsorship]): Unit
 
   override def append(diff: Diff, block: Block): Unit = {
     heightCache += 1
@@ -147,14 +167,16 @@ trait Caches extends SnapshotStateReader with History with StateWriter {
       newTransactions += id -> ((tx, addresses.map(a => addressIdCache.get(a).get)))
     }
 
+    for ((id, sp: SponsorshipValue) <- diff.sponsorship) {
+      sponsorshipCache.put(id, Some(sp))
+    }
+
     for ((id, ai) <- diff.issuedAssets) {
       assetInfoCache.put(id, Some(ai))
       diff.transactions.get(id) match {
         case Some((_, it: IssueTransaction, _)) =>
-          assetDescriptionCache.put(id, Some(AssetDescription(it.sender, it.name, it.description, it.decimals, ai.isReissuable, ai.volume, None)))
-        case Some((_, it: SmartIssueTransaction, _)) =>
           assetDescriptionCache.put(id,
-                                    Some(AssetDescription(it.sender, it.name, it.description, it.decimals, ai.isReissuable, ai.volume, it.script)))
+                                    Some(AssetDescription(it.sender, it.name, it.description, it.decimals, ai.isReissuable, ai.volume, it.script, 0)))
         case _ =>
       }
     }
@@ -173,7 +195,8 @@ trait Caches extends SnapshotStateReader with History with StateWriter {
       newFills.result(),
       diff.scripts.map { case (address, s)        => addressIdCache.get(address).get -> s },
       diff.accountData.map { case (address, data) => addressIdCache.get(address).get -> data },
-      diff.aliases.map { case (a, address)        => a                               -> addressIdCache.get(address).get }
+      diff.aliases.map { case (a, address)        => a                               -> addressIdCache.get(address).get },
+      diff.sponsorship
     )
   }
 

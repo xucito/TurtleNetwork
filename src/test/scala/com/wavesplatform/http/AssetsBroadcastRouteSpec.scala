@@ -5,8 +5,8 @@ import com.typesafe.config.ConfigFactory
 import com.wavesplatform.RequestGen
 import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.Diff
-import com.wavesplatform.state2.diffs.TransactionDiffer.TransactionValidationError
+import com.wavesplatform.state.Diff
+import com.wavesplatform.state.diffs.TransactionDiffer.TransactionValidationError
 import com.wavesplatform.utx.{UtxBatchOps, UtxPool}
 import io.netty.channel.group.ChannelGroup
 import org.scalacheck.Gen._
@@ -18,7 +18,7 @@ import scorex.api.http._
 import scorex.api.http.assets._
 import scorex.crypto.encode.Base58
 import scorex.transaction.ValidationError.GenericError
-import scorex.transaction.assets.{TransferTransaction, VersionedTransferTransaction}
+import scorex.transaction.transfer._
 import scorex.transaction.{Proofs, Transaction, ValidationError}
 import scorex.wallet.Wallet
 import shapeless.Coproduct
@@ -36,13 +36,13 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
 
     val vt = Table[String, G[_ <: Transaction], (JsValue) => JsValue](
       ("url", "generator", "transform"),
-      ("issue", issueGen, identity),
-      ("reissue", reissueGen, identity),
-      ("burn", burnGen, {
+      ("issue", issueGen.retryUntil(_.version == 1), identity),
+      ("reissue", reissueGen.retryUntil(_.version == 1), identity),
+      ("burn", burnGen.retryUntil(_.version == 1), {
         case o: JsObject => o ++ Json.obj("quantity" -> o.value("amount"))
         case other       => other
       }),
-      ("transfer", transferGen, {
+      ("transfer", transferV1Gen, {
         case o: JsObject if o.value.contains("feeAsset") =>
           o ++ Json.obj("feeAssetId" -> o.value("feeAsset"), "quantity" -> o.value("amount"))
         case other => other
@@ -67,7 +67,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
       def posting[A: Writes](v: A): RouteTestResult = Post(routePath("issue"), v) ~> route
 
       forAll(nonPositiveLong) { q =>
-        posting(ir.copy(fee = q)) should produce(InsufficientFee)
+        posting(ir.copy(fee = q)) should produce(InsufficientFee())
       }
       forAll(nonPositiveLong) { q =>
         posting(ir.copy(quantity = q)) should produce(NegativeAmount(s"$q of assets"))
@@ -85,7 +85,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         posting(ir.copy(name = name)) should produce(InvalidName)
       }
       forAll(nonPositiveLong) { fee =>
-        posting(ir.copy(fee = fee)) should produce(InsufficientFee)
+        posting(ir.copy(fee = fee)) should produce(InsufficientFee())
       }
     }
 
@@ -97,7 +97,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         posting(rr.copy(quantity = q)) should produce(NegativeAmount(s"$q of assets"))
       }
       forAll(nonPositiveLong) { fee =>
-        posting(rr.copy(fee = fee)) should produce(InsufficientFee)
+        posting(rr.copy(fee = fee)) should produce(InsufficientFee())
       }
     }
 
@@ -111,7 +111,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         posting(br.copy(quantity = q)) should produce(NegativeAmount(s"$q of assets"))
       }
       forAll(nonPositiveLong) { fee =>
-        posting(br.copy(fee = fee)) should produce(InsufficientFee)
+        posting(br.copy(fee = fee)) should produce(InsufficientFee())
       }
     }
 
@@ -140,7 +140,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         posting(tr.copy(amount = quantity, fee = Long.MaxValue)) should produce(OverflowError)
       }
       forAll(nonPositiveLong) { fee =>
-        posting(tr.copy(fee = fee)) should produce(InsufficientFee)
+        posting(tr.copy(fee = fee)) should produce(InsufficientFee())
       }
     }
   }
@@ -163,7 +163,7 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
     val receiverPrivateKey = Wallet.generateNewAccount(seed, 1)
 
     val transferRequest = createSignedTransferRequest(
-      TransferTransaction
+      TransferTransactionV1
         .create(
           assetId = None,
           sender = senderPrivateKey,
@@ -179,13 +179,14 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
     )
 
     val versionedTransferRequest = createSignedVersionedTransferRequest(
-      VersionedTransferTransaction
+      TransferTransactionV2
         .create(
           assetId = None,
           sender = senderPrivateKey,
           recipient = receiverPrivateKey.toAddress,
           amount = 1 * Waves,
           timestamp = System.currentTimeMillis(),
+          feeAssetId = None,
           feeAmount = Waves / 3,
           attachment = Array.emptyByteArray,
           version = 2,
@@ -199,12 +200,12 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
 
       "accepts TransferRequest" in posting(transferRequest) ~> check {
         status shouldBe StatusCodes.OK
-        responseAs[TransferTransactions].select[TransferTransaction] shouldBe defined
+        responseAs[TransferTransactions].select[TransferTransactionV1] shouldBe defined
       }
 
       "accepts VersionedTransferRequest" in posting(versionedTransferRequest) ~> check {
         status shouldBe StatusCodes.OK
-        responseAs[TransferTransactions].select[VersionedTransferTransaction] shouldBe defined
+        responseAs[TransferTransactions].select[TransferTransactionV2] shouldBe defined
       }
 
       "returns a error if it is not a transfer request" in posting(issueReq.sample.get) ~> check {
@@ -219,14 +220,14 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
         status shouldBe StatusCodes.OK
         val xs = responseAs[Seq[TransferTransactions]]
         xs.size shouldBe 1
-        xs.head.select[TransferTransaction] shouldBe defined
+        xs.head.select[TransferTransactionV1] shouldBe defined
       }
 
       "accepts VersionedTransferRequest" in posting(List(versionedTransferRequest)) ~> check {
         status shouldBe StatusCodes.OK
         val xs = responseAs[Seq[TransferTransactions]]
         xs.size shouldBe 1
-        xs.head.select[VersionedTransferTransaction] shouldBe defined
+        xs.head.select[TransferTransactionV2] shouldBe defined
       }
 
       "accepts both TransferRequest and VersionedTransferRequest" in {
@@ -239,8 +240,8 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
           status shouldBe StatusCodes.OK
           val xs = responseAs[Seq[TransferTransactions]]
           xs.size shouldBe 2
-          xs.flatMap(_.select[TransferTransaction]) shouldNot be(empty)
-          xs.flatMap(_.select[VersionedTransferTransaction]) shouldNot be(empty)
+          xs.flatMap(_.select[TransferTransactionV1]) shouldNot be(empty)
+          xs.flatMap(_.select[TransferTransactionV2]) shouldNot be(empty)
         }
       }
 
@@ -251,9 +252,9 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
 
   }
 
-  protected def createSignedTransferRequest(tx: TransferTransaction): SignedTransferRequest = {
+  protected def createSignedTransferRequest(tx: TransferTransactionV1): SignedTransferV1Request = {
     import tx._
-    SignedTransferRequest(
+    SignedTransferV1Request(
       Base58.encode(tx.sender.publicKey),
       assetId.map(_.base58),
       recipient.stringRepr,
@@ -266,13 +267,14 @@ class AssetsBroadcastRouteSpec extends RouteSpec("/assets/broadcast/") with Requ
     )
   }
 
-  protected def createSignedVersionedTransferRequest(tx: VersionedTransferTransaction): SignedVersionedTransferRequest = {
+  protected def createSignedVersionedTransferRequest(tx: TransferTransactionV2): SignedTransferV2Request = {
     import tx._
-    SignedVersionedTransferRequest(
+    SignedTransferV2Request(
       Base58.encode(tx.sender.publicKey),
       assetId.map(_.base58),
       recipient.stringRepr,
       amount,
+      feeAssetId.map(_.base58),
       fee,
       timestamp,
       version,
