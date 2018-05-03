@@ -14,8 +14,8 @@ import scorex.transaction.TransactionFactory
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
-@Path("/turtlenode")
-@Api(value = "turtlenode")
+@Path("/TN")
+@Api(value = "TN")
 @Deprecated
 case class WavesApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPool, allChannels: ChannelGroup, time: Time)
     extends ApiRoute
