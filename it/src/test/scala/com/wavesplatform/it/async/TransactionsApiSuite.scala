@@ -169,12 +169,12 @@ class TransactionsApiSuite extends BaseTransactionSuite {
       Json.obj(
         "type"        -> 3,
         "name"        -> "Sponsored Coin",
-        "quantity"    -> 100.waves,
+        "quantity"    -> 100.TN,
         "description" -> "Sponsored Coin",
         "sender"      -> firstAddress,
         "decimals"    -> 2,
         "reissuable"  -> false,
-        "fee"         -> 1.waves
+        "fee"         -> 1.TN
       ))
 
     signAndBroadcast(
@@ -184,7 +184,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
         "sender"               -> firstAddress,
         "assetId"              -> assetId,
         "minSponsoredAssetFee" -> 100,
-        "fee"                  -> 1.waves
+        "fee"                  -> 1.TN
       ),
       usesProofs = true
     )
@@ -196,7 +196,7 @@ class TransactionsApiSuite extends BaseTransactionSuite {
         "sender"               -> firstAddress,
         "assetId"              -> assetId,
         "minSponsoredAssetFee" -> JsNull,
-        "fee"                  -> 1.waves
+        "fee"                  -> 1.TN
       ),
       usesProofs = true
     )
