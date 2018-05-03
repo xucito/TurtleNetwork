@@ -39,7 +39,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           assetId = None,
           sender = sender.privateKey,
           recipient = acc0,
-          amount = 3 * transferAmount + 3 * (0.00001.waves + 0.00002.waves), // Script fee
+          amount = 3 * transferAmount + 3 * (0.00001.TN + 0.00002.TN), // Script fee
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
           feeAmount = fee,
@@ -97,7 +97,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.00001.waves + 0.00002.waves,
+          feeAmount = fee + 0.00001.TN + 0.00002.TN,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -115,7 +115,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.waves,
+          feeAmount = fee + 0.004.TN,
           attachment = Array.emptyByteArray,
           proofs = Proofs.empty
         )
@@ -137,7 +137,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
         version = SetScriptTransaction.supportedVersions.head,
         sender = acc0,
         script = None,
-        fee = fee + 0.004.waves,
+        fee = fee + 0.004.TN,
         timestamp = System.currentTimeMillis(),
         proofs = Proofs.empty
       )
@@ -164,7 +164,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.waves,
+          feeAmount = fee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -203,7 +203,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val transfers =
       MassTransferTransaction.parseTransfersList(List(Transfer(thirdAddress, transferAmount), Transfer(secondAddress, transferAmount))).right.get
 
-    val massTransferFee = 0.004.waves + 0.0005.waves * 4
+    val massTransferFee = 0.004.TN + 0.0005.TN * 4
 
     val unsigned =
       MassTransferTransaction
