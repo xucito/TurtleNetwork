@@ -156,7 +156,7 @@ class FeesSettingsSpecification extends FlatSpec with Matchers {
         |  }
         |}
       """.stripMargin).withFallback(defaultConfig).resolve()
-    val settings      = FeesSettings.fromConfig(config)
+    val settings = FeesSettings.fromConfig(config)
     settings.fees.size should be(12)
     settings.fees(3).toSet should equal(Set(FeeSettings("TN", 200000000)))
     settings.fees(4).toSet should equal(Set(FeeSettings("TN", 300000), FeeSettings("6MPKrD5B7GrfbciHECg1MwdvRUhRETApgNZspreBJ8JL", 1)))

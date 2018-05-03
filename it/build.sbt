@@ -94,7 +94,7 @@ lazy val itTestsCommonSettings: Seq[Def.Setting[_]] = Seq(
             runJVMOptions = Vector(
               "-XX:+IgnoreUnrecognizedVMOptions",
               "--add-modules=java.xml.bind",
-                  "-DTN.it.logging.appender=FILE",
+              "-DTN.it.logging.appender=FILE",
               s"-DTN.it.logging.dir=${logDirectoryValue / suite.name.replaceAll("""(\w)\w*\.""", "$1.")}"
             ) ++ javaOptionsValue,
             connectInput = false,
