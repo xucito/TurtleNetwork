@@ -119,7 +119,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           blockDiffEi should produce("unavailable funds")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-          blockDiffEi should produce("does not exceed minimal value of 100000 WAVES")
+          blockDiffEi should produce("does not exceed minimal value of 100000 TN")
         }
         assertDiffEi(setupBlocks, block(Seq(wavesOverspend)), s) { blockDiffEi =>
           if (wavesOverspend.fee > issue.quantity)
