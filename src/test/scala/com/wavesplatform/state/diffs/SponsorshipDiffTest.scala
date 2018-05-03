@@ -125,12 +125,12 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           if (wavesOverspend.fee > issue.quantity)
             blockDiffEi should produce("unavailable funds")
           else
-            blockDiffEi should produce("negative waves balance")
+            blockDiffEi should produce("negative TN balance")
         }
     }
   }
 
-  property("sponsor has no WAVES but receives them just in time") {
+  property("sponsor has no TN but receives them just in time") {
     val s = settings(0)
     val setup = for {
       master    <- accountGen
