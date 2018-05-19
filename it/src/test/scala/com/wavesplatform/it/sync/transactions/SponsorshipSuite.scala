@@ -15,7 +15,7 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
   val Token       = 100L
   val TinyFee     = Token / 2
   val SmallFee    = Token + Token / 2
-  val minWavesFee = 0.001.TN
+  val minWavesFee = 0.02.TN
   val LargeFee    = 10 * Token
 
   override def nodeConfigs: Seq[Config] =

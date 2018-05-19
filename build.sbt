@@ -115,7 +115,7 @@ inConfig(Linux)(
 
 inConfig(Universal)(
   Seq(
-    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/waves.conf.sample"),
+    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/TN.conf.sample"),
     javaOptions ++= Seq(
       // -J prefix is required by the bash script
       "-J-server",

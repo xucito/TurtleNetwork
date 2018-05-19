@@ -9,9 +9,9 @@ import com.wavesplatform.TestHelpers.deleteRecursively
 import com.wavesplatform.settings.loadConfig
 
 class MatcherSnapshotStoreSpec
-    extends SnapshotStoreSpec(loadConfig(parseString(s"waves.matcher.snapshot-store.leveldb-dir = ${createTempDirectory("matcher").toAbsolutePath}"))) {
+    extends SnapshotStoreSpec(loadConfig(parseString(s"TN.matcher.snapshot-store.leveldb-dir = ${createTempDirectory("matcher").toAbsolutePath}"))) {
   protected override def afterAll(): Unit = {
     super.afterAll()
-    deleteRecursively(new File(system.settings.config.getString("waves.matcher.snapshot-store.leveldb-dir")).toPath)
+    deleteRecursively(new File(system.settings.config.getString("TN.matcher.snapshot-store.leveldb-dir")).toPath)
   }
 }

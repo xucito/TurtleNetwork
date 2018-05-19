@@ -165,7 +165,7 @@ object MatcherMassOrdersTestSuite {
        |  rest-order-limit=$orderLimit
        |}""".stripMargin)
 
-  private val minerDisabled = parseString("waves.miner.enable = no")
+  private val minerDisabled = parseString("TN.miner.enable = no")
 
   private val Configs: Seq[Config] = (Default.last +: Random.shuffle(Default.init).take(3))
     .zip(Seq(matcherConfig, minerDisabled, minerDisabled, empty()))

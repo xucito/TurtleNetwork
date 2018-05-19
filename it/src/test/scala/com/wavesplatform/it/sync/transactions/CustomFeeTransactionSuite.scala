@@ -99,7 +99,7 @@ object CustomFeeTransactionSuite {
       |   pre-activated-features = { 7 = 0 }
       |}""".stripMargin)
 
-  private val notMinerConfig = ConfigFactory.parseString("waves.miner.enable=no").withFallback(minerConfig)
+  private val notMinerConfig = ConfigFactory.parseString("TN.miner.enable=no").withFallback(minerConfig)
 
   val Configs: Seq[Config] = Seq(
     minerConfig.withFallback(Default.head),

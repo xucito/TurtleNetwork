@@ -1,4 +1,4 @@
-package com.wavesplatform.it.async
+package com.TNplatform.it.async
 
 import com.typesafe.config.Config
 import com.wavesplatform.it.api.AsyncHttpApi._
@@ -29,7 +29,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
          |  request-timeout = 60s
          |}
          |
-         |waves {
+         |TN {
          |  network.enable-peers-exchange = no
          |
          |  miner {

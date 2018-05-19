@@ -230,7 +230,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   test("reporting MassTransfer transactions") {
     implicit val mtFormat: Format[MassTransferRequest] = Json.format[MassTransferRequest]
 
-    val transfers = List(Transfer(firstAddress, 5.waves), Transfer(secondAddress, 2.waves), Transfer(thirdAddress, 3.waves))
+    val transfers = List(Transfer(firstAddress, 5.TN), Transfer(secondAddress, 2.TN), Transfer(thirdAddress, 3.TN))
     val txId      = sender.massTransfer(firstAddress, transfers, 300000).id
     nodes.waitForHeightAriseAndTxPresent(txId)
 
@@ -247,7 +247,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
       .head
     assert(txSender.as[MassTransferRequest].transfers.size == 3)
     assert((txSender \ "transferCount").as[Int] == 3)
-    assert((txSender \ "totalAmount").as[Long] == 10.waves)
+    assert((txSender \ "totalAmount").as[Long] == 10.TN)
     val transfersAfterTrans = txSender.as[MassTransferRequest].transfers
     assert(transfers.equals(transfersAfterTrans))
 
@@ -266,7 +266,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
 
     assert(txRecipient.as[MassTransferRequest].transfers.size == 1)
     assert((txRecipient \ "transferCount").as[Int] == 3)
-    assert((txRecipient \ "totalAmount").as[Long] == 10.waves)
+    assert((txRecipient \ "totalAmount").as[Long] == 10.TN)
     val transferToSecond = txRecipient.as[MassTransferRequest].transfers.head
     assert(transfers contains transferToSecond)
   }

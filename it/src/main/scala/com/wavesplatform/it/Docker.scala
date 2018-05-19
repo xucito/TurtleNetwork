@@ -67,21 +67,21 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
   private[it] val configTemplate = parseResources("template.conf")
 
   AddressScheme.current = new AddressScheme {
-    override val chainId = configTemplate.as[String]("waves.blockchain.custom.address-scheme-character").charAt(0).toByte
+    override val chainId = configTemplate.as[String]("TN.blockchain.custom.address-scheme-character").charAt(0).toByte
   }
 
   private[it] val genesisOverride = {
     val genesisTs          = System.currentTimeMillis()
-    val timestampOverrides = parseString(s"""waves.blockchain.custom.genesis {
+    val timestampOverrides = parseString(s"""TN.blockchain.custom.genesis {
          |  timestamp = $genesisTs
          |  block-timestamp = $genesisTs
          |}""".stripMargin)
 
     val genesisConfig    = configTemplate.withFallback(timestampOverrides)
-    val gs               = genesisConfig.as[GenesisSettings]("waves.blockchain.custom.genesis")
+    val gs               = genesisConfig.as[GenesisSettings]("TN.blockchain.custom.genesis")
     val genesisSignature = Block.genesis(gs).explicitGet().uniqueId
 
-    timestampOverrides.withFallback(parseString(s"waves.blockchain.custom.genesis.signature = $genesisSignature"))
+    timestampOverrides.withFallback(parseString(s"TN.blockchain.custom.genesis.signature = $genesisSignature"))
   }
 
   // a random network in 10.x.x.x range

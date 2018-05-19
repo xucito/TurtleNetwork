@@ -20,7 +20,7 @@ inTask(docker)(
   Seq(
     dockerfile := {
       val configTemplate = (Compile / resourceDirectory).value / "template.conf"
-      val startWaves     = sourceDirectory.value / "container" / "start-waves.sh"
+      val startWaves     = sourceDirectory.value / "container" / "start-TN.sh"
 
       val withAspectJ     = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
       val aspectjAgentUrl = "http://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.8.13/aspectjweaver-1.8.13.jar"
@@ -29,13 +29,13 @@ inTask(docker)(
       def extractYourKitFileCmd(name: String): String =
         s"""FILE=$$(unzip -l /tmp/$yourKitArchive | grep "$name" | rev | cut -f 1 -d' ' | rev) && \\
            |unzip -o /tmp/$yourKitArchive -d /tmp/ $$FILE && \\
-           |mv /tmp/$$FILE /opt/waves/${name.split("/").last}""".stripMargin
+           |mv /tmp/$$FILE /opt/TN/${name.split("/").last}""".stripMargin
 
       new Dockerfile {
         from("anapsix/alpine-java:8_server-jre")
 
         // Install yourkit
-        runRaw(s"""mkdir -p /opt/waves/ && \\
+        runRaw(s"""mkdir -p /opt/TN/ && \\
                   |apk update && \\
                   |apk add --no-cache ca-certificates openssl && \\
                   |update-ca-certificates && \\
@@ -44,12 +44,12 @@ inTask(docker)(
                   |${extractYourKitFileCmd("yjp-controller-api-redist.jar")} && \\
                   |rm /tmp/$yourKitArchive""".stripMargin)
 
-        if (withAspectJ) run("wget", "--quiet", aspectjAgentUrl, "-O", "/opt/waves/aspectjweaver.jar")
+        if (withAspectJ) run("wget", "--quiet", aspectjAgentUrl, "-O", "/opt/TN/aspectjweaver.jar")
 
-        add((assembly in LocalProject("node")).value, "/opt/waves/waves.jar")
-        add(Seq(configTemplate, startWaves), "/opt/waves/")
-        run("chmod", "+x", "/opt/waves/start-waves.sh")
-        entryPoint("/opt/waves/start-waves.sh")
+        add((assembly in LocalProject("node")).value, "/opt/TN/TN.jar")
+        add(Seq(configTemplate, startWaves), "/opt/TN/")
+        run("chmod", "+x", "/opt/TN/start-TN.sh")
+        entryPoint("/opt/TN/start-TN.sh")
         expose(10001)
       }
     },
