@@ -15,7 +15,7 @@ import javax.ws.rs.Path
 import play.api.libs.json._
 import scorex.BroadcastRoute
 import scorex.account.{Address, PublicKeyAccount}
-import scorex.crypto.encode.Base58
+import com.wavesplatform.utils.Base58
 import scorex.transaction.ValidationError.GenericError
 import scorex.transaction.smart.script.ScriptCompiler
 import scorex.transaction.{PoSCalc, TransactionFactory, ValidationError}
@@ -71,7 +71,7 @@ case class AddressApiRoute(settings: RestAPISettings,
       if (Address.fromString(address).isLeft) {
         complete(InvalidAddress)
       } else {
-        val deleted = wallet.findWallet(address).exists(account => wallet.deleteAccount(account))
+        val deleted = wallet.findPrivateKey(address).exists(account => wallet.deleteAccount(account))
         complete(Json.obj("deleted" -> deleted))
       }
     }
@@ -235,7 +235,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   def seed: Route = {
     (path("seed" / Segment) & get & withAuth) { address =>
       complete(for {
-        pk   <- wallet.findWallet(address)
+        pk   <- wallet.findPrivateKey(address)
         seed <- wallet.exportAccountSeed(pk)
       } yield Json.obj("address" -> address, "seed" -> Base58.encode(seed)))
     }
@@ -405,7 +405,7 @@ case class AddressApiRoute(settings: RestAPISettings,
   private def signPath(address: String, encode: Boolean) = (post & entity(as[String])) { message =>
     withAuth {
       val res = wallet
-        .findWallet(address)
+        .findPrivateKey(address)
         .map(pk => {
           val messageBytes = message.getBytes(StandardCharsets.UTF_8)
           val signature    = crypto.sign(pk, messageBytes)

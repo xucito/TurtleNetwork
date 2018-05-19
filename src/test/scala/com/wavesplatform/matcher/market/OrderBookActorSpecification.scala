@@ -56,7 +56,7 @@ class OrderBookActorSpecification
                   ByteStr("TN".getBytes)  -> hugeAmount
                 )))
   val issueTransaction: IssueTransactionV1 = IssueTransactionV1
-    .create(PrivateKeyAccount("123".getBytes), "MinerReward".getBytes, Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L)
+    .selfSigned(PrivateKeyAccount("123".getBytes), "MinerReward".getBytes, Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L)
     .right
     .get
 

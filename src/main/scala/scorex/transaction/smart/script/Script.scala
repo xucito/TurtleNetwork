@@ -1,11 +1,11 @@
 package scorex.transaction.smart.script
 
-import com.wavesplatform.lang
 import com.wavesplatform.lang.ScriptVersion.Versions.V1
 import com.wavesplatform.lang.Versioned
+import com.wavesplatform.lang.v1.compiler.Terms
 import com.wavesplatform.state.ByteStr
 import monix.eval.Coeval
-import scorex.crypto.encode.Base58
+import com.wavesplatform.utils.Base58
 import scorex.transaction.ValidationError.ScriptParseError
 
 trait Script extends Versioned {
@@ -32,8 +32,8 @@ object Script {
     } yield script
 
   object Expr {
-    def unapply(arg: Script): Option[lang.v1.Terms.Typed.EXPR] = {
-      if (arg.version == V1) Some(arg.expr.asInstanceOf[lang.v1.Terms.Typed.EXPR])
+    def unapply(arg: Script): Option[Terms.EXPR] = {
+      if (arg.version == V1) Some(arg.expr.asInstanceOf[Terms.EXPR])
       else None
     }
   }
