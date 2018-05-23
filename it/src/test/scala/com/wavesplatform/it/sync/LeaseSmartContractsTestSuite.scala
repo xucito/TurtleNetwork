@@ -24,8 +24,8 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
   private val acc1 = pkFromAddress(secondAddress)
   private val acc2 = pkFromAddress(thirdAddress)
 
-  private val transferAmount: Long = 1.waves
-  private val fee: Long            = 0.001.waves
+  private val transferAmount: Long = 1.TN
+  private val fee: Long            = 0.001.TN
 
   test("set contract, make leasing and cancel leasing") {
     val (balance1, eff1) = notMiner.accountBalances(acc0.address)
@@ -67,7 +67,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
           2,
           acc0,
           transferAmount,
-          fee + 0.2.waves,
+          fee + 0.2.TN,
           System.currentTimeMillis(),
           acc2,
           Proofs.empty
@@ -85,7 +85,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
 
     nodes.waitForHeightAriseAndTxPresent(leasingId)
 
-    notMiner.assertBalances(firstAddress, balance1 + 10 * transferAmount - (2 * fee + 0.2.waves), eff1 + 9 * transferAmount - (2 * fee + 0.2.waves))
+    notMiner.assertBalances(firstAddress, balance1 + 10 * transferAmount - (2 * fee + 0.2.TN), eff1 + 9 * transferAmount - (2 * fee + 0.2.TN))
     notMiner.assertBalances(thirdAddress, balance2, eff2 + transferAmount)
 
     val unsignedCancelLeasing =
@@ -95,7 +95,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
           chainId = AddressScheme.current.chainId,
           sender = acc0,
           leaseId = ByteStr.decodeBase58(leasingId).get,
-          fee = fee + 0.2.waves,
+          fee = fee + 0.2.TN,
           timestamp = System.currentTimeMillis(),
           proofs = Proofs.empty
         )
@@ -113,8 +113,8 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
     nodes.waitForHeightAriseAndTxPresent(leasingCancelId)
 
     notMiner.assertBalances(firstAddress,
-                            balance1 + 10 * transferAmount - (3 * fee + 2 * 0.2.waves),
-                            eff1 + 10 * transferAmount - (3 * fee + 2 * 0.2.waves))
+                            balance1 + 10 * transferAmount - (3 * fee + 2 * 0.2.TN),
+                            eff1 + 10 * transferAmount - (3 * fee + 2 * 0.2.TN))
     notMiner.assertBalances(thirdAddress, balance2, eff2)
 
   }

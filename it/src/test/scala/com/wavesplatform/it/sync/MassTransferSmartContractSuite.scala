@@ -27,9 +27,9 @@ every month a foundation makes payments from two MassTransactions(type == 11):
 
 class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAfterFailure {
   private val fourthAddress: String = sender.createAddress()
-  private val transferAmount: Long  = 1.waves
-  private val fee: Long             = 0.001.waves
-  private val massTransferFee       = 0.004.waves + 0.0005.waves * 4
+  private val transferAmount: Long  = 1.TN
+  private val fee: Long             = 0.001.TN
+  private val massTransferFee       = 0.004.TN + 0.0005.TN * 4
 
   test("airdrop emulation via MassTransfer") {
     val scriptText = {

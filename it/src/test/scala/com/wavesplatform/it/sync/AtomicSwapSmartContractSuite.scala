@@ -35,8 +35,8 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   private val AliceBC1: String = sender.createAddress()
   private val swapBC1: String  = sender.createAddress()
 
-  private val transferAmount: Long = 1.waves
-  private val fee: Long            = 0.001.waves
+  private val transferAmount: Long = 1.TN
+  private val fee: Long            = 0.001.TN
 
   private val AlicesPK = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get
 
@@ -100,10 +100,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           assetId = None,
           sender = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get,
           recipient = PrivateKeyAccount.fromSeed(sender.seed(swapBC1)).right.get,
-          amount = transferAmount + fee + 0.004.waves,
+          amount = transferAmount + fee + 0.004.TN,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.waves,
+          feeAmount = fee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -125,7 +125,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.waves,
+          feeAmount = fee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -147,7 +147,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
             amount = transferAmount,
             timestamp = System.currentTimeMillis(),
             feeAssetId = None,
-            feeAmount = fee + 0.004.waves,
+            feeAmount = fee + 0.004.TN,
             attachment = Array.emptyByteArray,
             proofs = Proofs.empty
           )
@@ -168,7 +168,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.waves,
+          feeAmount = fee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
