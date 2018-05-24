@@ -224,6 +224,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case DataTransaction              => jsv.as[SignedDataRequest].toTx
               case SmartIssueTransaction        => jsv.as[SignedSmartIssueRequest].toTx
               case SetScriptTransaction         => jsv.as[SignedSetScriptRequest].toTx
+              case exchange.ExchangeTransaction => jsv.as[SignedExchangeRequest].toTx
             }
         }
         doBroadcast(r)
