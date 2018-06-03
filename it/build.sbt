@@ -27,7 +27,7 @@ inTask(docker)(
 
       new Dockerfile {
         from("anapsix/alpine-java:8_server-jre")
-        runRaw("mkdir -p /opt/waves")
+        runRaw("mkdir -p /opt/TN")
 
         // Install YourKit
         runRaw(s"""apk update && \\

@@ -113,7 +113,7 @@ inConfig(Linux)(
     packageDescription := "TN node"
   ))
 
-bashScriptExtraDefines += s"""addJava "-Dwaves.directory=/var/lib/${normalizedName.value}""""
+bashScriptExtraDefines += s"""addJava "-DTN.directory=/var/lib/${normalizedName.value}""""
 
 val linuxScriptPattern = "bin/(.+)".r
 val batScriptPattern   = "bin/([^.]+)\\.bat".r
