@@ -3,7 +3,6 @@ package com.wavesplatform.it.sync
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
-import com.wavesplatform.it.util._
 import com.wavesplatform.lang.v1.compiler.CompilerV1
 import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.state._
@@ -17,7 +16,6 @@ import scorex.transaction.smart.script.v1.ScriptV1
 import scorex.transaction.transfer._
 
 import scala.concurrent.duration._
-import scala.util.Random
 
 /*
 Scenario:
@@ -33,9 +31,6 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
   private val BobBC1: String   = sender.createAddress()
   private val AliceBC1: String = sender.createAddress()
   private val swapBC1: String  = sender.createAddress()
-
-  private val transferAmount: Long = 1.TN
-  private val fee: Long            = 0.001.TN
 
   private val AlicesPK = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get
 
@@ -57,15 +52,17 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     let Bob = extract(addressFromString("$BobBC1")).bytes
     let Alice = extract(addressFromString("$AliceBC1")).bytes
     let AlicesPK = base58'${ByteStr(AlicesPK.publicKey)}'
+    match tx {
+      case ttx: TransferTransaction =>
+        let txRecipient = addressFromRecipient(ttx.recipient).bytes
+        let txSender = addressFromPublicKey(ttx.senderPk).bytes
 
-    let txRecipient = addressFromRecipient(tx.recipient).bytes
-    let txSender = addressFromPublicKey(tx.senderPk).bytes
+        let txToBob = (txRecipient == Bob) && (sha256(ttx.proofs[0]) == base58'$shaSecret') && ((20 + $beforeHeight) >= height)
+        let backToAliceAfterHeight = ((height >= (21 + $beforeHeight)) && (txRecipient == Alice))
 
-    let txToBob = (txRecipient == Bob) && (sha256(tx.proofs[0]) == base58'$shaSecret') && ((20 + $beforeHeight) >= height)
-    let backToAliceAfterHeight = ((height >= (21 + $beforeHeight)) && (txRecipient == Alice))
-
-    txToBob || backToAliceAfterHeight
-      """.stripMargin).get.value
+        txToBob || backToAliceAfterHeight
+      case other => false
+    }""".stripMargin).get.value
       assert(untyped.size == 1)
       CompilerV1(dummyTypeCheckerContext, untyped.head).explicitGet()
     }
@@ -100,10 +97,10 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           assetId = None,
           sender = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get,
           recipient = PrivateKeyAccount.fromSeed(sender.seed(swapBC1)).right.get,
-          amount = transferAmount + fee + 0.004.TN,
+          amount = transferAmount + fee + smartFee,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.TN,
+          feeAmount = fee + smartFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -125,7 +122,7 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.TN,
+          feeAmount = fee + smartFee,
           attachment = Array.emptyByteArray
         )
         .explicitGet()
@@ -133,51 +130,66 @@ class AtomicSwapSmartContractSuite extends BaseTransactionSuite with CancelAfter
     assertBadRequest(sender.signedBroadcast(txToSwapBC1.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))))
   }
 
-  test("step5: Bob makes transfer OR Alice takes funds back") {
-    val isBobTakesFunds = Random.nextBoolean()
+  test("step5: Bob makes transfer; after revert Alice takes funds back") {
+    val height = sender.height
 
-    val signed = if (isBobTakesFunds) {
-      val unsigned =
-        TransferTransactionV2
-          .create(
-            version = 2,
-            assetId = None,
-            sender = PrivateKeyAccount.fromSeed(sender.seed(swapBC1)).right.get,
-            recipient = PrivateKeyAccount.fromSeed(sender.seed(BobBC1)).right.get,
-            amount = transferAmount,
-            timestamp = System.currentTimeMillis(),
-            feeAssetId = None,
-            feeAmount = fee + 0.004.TN,
-            attachment = Array.emptyByteArray,
-            proofs = Proofs.empty
-          )
-          .explicitGet()
+    val (bobBalance, bobEffBalance)     = notMiner.accountBalances(BobBC1)
+    val (aliceBalance, aliceEffBalance) = notMiner.accountBalances(AliceBC1)
+    val (swapBalance, swapEffBalance)   = notMiner.accountBalances(swapBC1)
 
-      val proof    = ByteStr(secretText.getBytes())
-      val sigAlice = ByteStr(crypto.sign(AlicesPK, unsigned.bodyBytes()))
-      unsigned.copy(proofs = Proofs(Seq(proof, sigAlice)))
-    } else {
-      sender.waitForHeight(sender.height + 20, 3.minutes)
-
+    val unsigned =
       TransferTransactionV2
-        .selfSigned(
+        .create(
           version = 2,
           assetId = None,
           sender = PrivateKeyAccount.fromSeed(sender.seed(swapBC1)).right.get,
-          recipient = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get,
+          recipient = PrivateKeyAccount.fromSeed(sender.seed(BobBC1)).right.get,
           amount = transferAmount,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = fee + 0.004.TN,
-          attachment = Array.emptyByteArray
+          feeAmount = fee + smartFee,
+          attachment = Array.emptyByteArray,
+          proofs = Proofs.empty
         )
         .explicitGet()
-    }
 
+    val proof    = ByteStr(secretText.getBytes())
+    val sigAlice = ByteStr(crypto.sign(AlicesPK, unsigned.bodyBytes()))
+    val signed   = unsigned.copy(proofs = Proofs(Seq(proof, sigAlice)))
     val versionedTransferId =
       sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
 
     nodes.waitForHeightAriseAndTxPresent(versionedTransferId)
+
+    notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (fee + smartFee), swapEffBalance - transferAmount - (fee + smartFee))
+    notMiner.assertBalances(BobBC1, bobBalance + transferAmount, bobEffBalance + transferAmount)
+    notMiner.assertBalances(AliceBC1, aliceBalance, aliceEffBalance)
+
+    for (n <- nodes) n.rollback(height, false)
+
+    sender.waitForHeight(sender.height + 20, 3.minutes)
+
+    val selfSignedToAlice = TransferTransactionV2
+      .selfSigned(
+        version = 2,
+        assetId = None,
+        sender = PrivateKeyAccount.fromSeed(sender.seed(swapBC1)).right.get,
+        recipient = PrivateKeyAccount.fromSeed(sender.seed(AliceBC1)).right.get,
+        amount = transferAmount,
+        timestamp = System.currentTimeMillis(),
+        feeAssetId = None,
+        feeAmount = fee + smartFee,
+        attachment = Array.emptyByteArray
+      )
+      .explicitGet()
+
+    val transferToAlice =
+      sender.signedBroadcast(selfSignedToAlice.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+    nodes.waitForHeightAriseAndTxPresent(transferToAlice)
+
+    notMiner.assertBalances(swapBC1, swapBalance - transferAmount - (fee + smartFee), swapEffBalance - transferAmount - (fee + smartFee))
+    notMiner.assertBalances(BobBC1, bobBalance, bobEffBalance)
+    notMiner.assertBalances(AliceBC1, aliceBalance + transferAmount, aliceEffBalance + transferAmount)
   }
 
 }

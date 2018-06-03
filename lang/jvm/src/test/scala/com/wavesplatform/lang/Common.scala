@@ -13,7 +13,7 @@ import scala.util.{Left, Right, Try}
 
 object Common {
 
-  def ev[T: TypeInfo](context: EvaluationContext = PureContext.instance, expr: EXPR): Either[(EvaluationContext, ExecutionLog, ExecutionError), T] =
+  def ev[T: TypeInfo](context: EvaluationContext = PureContext.instance, expr: EXPR): (EvaluationContext, Either[ExecutionError, T]) =
     EvaluatorV1[T](context, expr)
 
   trait NoShrink {
@@ -40,14 +40,19 @@ object Common {
     case _                               => ??? // suppress pattern match warning
   }
 
-  val pointTypeA = PredefCaseType("PointA", List("X" -> LONG, "YA" -> LONG))
-  val pointTypeB = PredefCaseType("PointB", List("X" -> LONG, "YB" -> LONG))
+  val pointTypeA = PredefCaseType("PointA", List("X"  -> LONG, "YA" -> LONG))
+  val pointTypeB = PredefCaseType("PointB", List("X"  -> LONG, "YB" -> LONG))
+  val pointTypeC = PredefCaseType("PointC", List("YB" -> LONG))
 
-  val AorB = UNION(List(CASETYPEREF(pointTypeA.typeRef.name), CASETYPEREF(pointTypeB.typeRef.name)))
+  val AorB    = UNION(List(CASETYPEREF(pointTypeA.typeRef.name), CASETYPEREF(pointTypeB.typeRef.name)))
+  val AorBorC = UNION(List(CASETYPEREF(pointTypeA.typeRef.name), CASETYPEREF(pointTypeB.typeRef.name), CASETYPEREF(pointTypeC.typeRef.name)))
 
-  val pointAInstance = CaseObj(pointTypeA.typeRef, Map("X" -> Val(LONG)(3), "YA" -> Val(LONG)(40)))
-  val pointBInstance = CaseObj(pointTypeB.typeRef, Map("X" -> Val(LONG)(3), "YB" -> Val(LONG)(41)))
+  val pointAInstance = CaseObj(pointTypeA.typeRef, Map("X"  -> Val(LONG)(3), "YA" -> Val(LONG)(40)))
+  val pointBInstance = CaseObj(pointTypeB.typeRef, Map("X"  -> Val(LONG)(3), "YB" -> Val(LONG)(41)))
+  val pointCInstance = CaseObj(pointTypeC.typeRef, Map("YB" -> Val(LONG)(42)))
+
+  val sampleTypes = Seq(pointTypeA, pointTypeB, pointTypeC)
 
   def sampleUnionContext(instance: CaseObj) =
-    EvaluationContext.build(Seq.empty, Seq(pointTypeA, pointTypeB), Map("p" -> LazyVal(AorB)(EitherT.pure(instance))), Seq.empty)
+    EvaluationContext.build(Map("p" -> LazyVal(AorBorC)(EitherT.pure(instance))), Seq.empty)
 }

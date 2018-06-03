@@ -12,7 +12,7 @@ val versionSource = Def.task {
   // Please, update the fallback version every major and minor releases.
   // This version is used then building from sources without Git repository
   // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
-  val FallbackVersion = (0, 11, 0)
+  val FallbackVersion = (0, 13, 0)
 
   val versionFile      = (sourceManaged in Compile).value / "com" / "wavesplatform" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
@@ -34,8 +34,8 @@ val versionSource = Def.task {
 }
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
-normalizedName := network.value.name
 name := "TN"
+normalizedName := s"${name.value}${network.value.packageSuffix}"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")
@@ -113,9 +113,24 @@ inConfig(Linux)(
     packageDescription := "TN node"
   ))
 
+bashScriptExtraDefines += s"""addJava "-Dwaves.directory=/var/lib/${normalizedName.value}""""
+
+val linuxScriptPattern = "bin/(.+)".r
+val batScriptPattern   = "bin/([^.]+)\\.bat".r
+
 inConfig(Universal)(
   Seq(
     mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/TN.conf.sample"),
+    mappings := {
+      val scriptSuffix = network.value.packageSuffix
+      mappings.value.map {
+        case m @ (file, batScriptPattern(script)) =>
+          if (script.endsWith(scriptSuffix)) m else (file, s"bin/$script$scriptSuffix.bat")
+        case m @ (file, linuxScriptPattern(script)) =>
+          if (script.endsWith(scriptSuffix)) m else (file, s"bin/$script$scriptSuffix")
+        case other => other
+      }
+    },
     javaOptions ++= Seq(
       // -J prefix is required by the bash script
       "-J-server",
@@ -183,6 +198,7 @@ lazy val lang =
       // the following line forces scala version across all dependencies
       scalaModuleInfo ~= (_.map(_.withOverrideScalaVersion(true))),
       test in assembly := {},
+      addCompilerPlugin(Dependencies.kindProjector),
       libraryDependencies ++=
         Dependencies.cats ++
           Dependencies.scalacheck ++
@@ -211,6 +227,7 @@ lazy val langJVM = lang.jvm
 lazy val node = project
   .in(file("."))
   .settings(
+    addCompilerPlugin(Dependencies.kindProjector),
     libraryDependencies ++=
       Dependencies.network ++
         Dependencies.db ++

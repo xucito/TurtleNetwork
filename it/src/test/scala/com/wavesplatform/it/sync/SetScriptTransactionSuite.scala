@@ -26,9 +26,6 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   private val acc2 = pkFromAddress(thirdAddress)
   private val acc3 = pkFromAddress(fourthAddress)
 
-  private val transferAmount: Long = 1.TN
-  private val fee: Long            = 0.001.TN
-
   test("setup acc0 with 1 TN") {
     val tx =
       TransferTransactionV2

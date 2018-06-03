@@ -3,7 +3,6 @@ package com.wavesplatform.it.sync
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
-import org.scalatest.CancelAfterFailure
 import com.wavesplatform.it.util._
 import com.wavesplatform.lang.v1.compiler.CompilerV1
 import com.wavesplatform.lang.v1.parser.Parser
@@ -24,9 +23,6 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
   private val acc1 = pkFromAddress(secondAddress)
   private val acc2 = pkFromAddress(thirdAddress)
 
-  private val transferAmount: Long = 1.TN
-  private val fee: Long            = 0.001.TN
-
   test("set contract, make leasing and cancel leasing") {
     val (balance1, eff1) = notMiner.accountBalances(acc0.address)
     val (balance2, eff2) = notMiner.accountBalances(thirdAddress)
@@ -38,14 +34,15 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
 
     val scriptText = {
       val sc = Parser(s"""
-        let sigA = base58'${ByteStr(acc0.publicKey)}'
-        let sigB = base58'${ByteStr(acc1.publicKey)}'
-        let sigC = base58'${ByteStr(acc2.publicKey)}'
+        let pkA = base58'${ByteStr(acc0.publicKey)}'
+        let pkB = base58'${ByteStr(acc1.publicKey)}'
+        let pkC = base58'${ByteStr(acc2.publicKey)}'
 
-        let leaseTx =  ((tx.type == 8) && sigVerify(tx.bodyBytes,tx.proofs[0],sigA) && sigVerify(tx.bodyBytes,tx.proofs[2],sigC))
-        let leaseCancelTx = ((tx.type == 9) && sigVerify(tx.bodyBytes,tx.proofs[1],sigA) && sigVerify(tx.bodyBytes,tx.proofs[2],sigB))
-
-        leaseTx || leaseCancelTx
+        match tx {
+          case ltx: LeaseTransaction => sigVerify(ltx.bodyBytes,ltx.proofs[0],pkA) && sigVerify(ltx.bodyBytes,ltx.proofs[2],pkC)
+          case lctx : LeaseCancelTransaction => sigVerify(lctx.bodyBytes,lctx.proofs[1],pkA) && sigVerify(lctx.bodyBytes,lctx.proofs[2],pkB)
+          case other => false
+        }
         """.stripMargin).get.value
       assert(sc.size == 1)
       CompilerV1(dummyTypeCheckerContext, sc.head).explicitGet()

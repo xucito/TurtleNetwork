@@ -37,7 +37,12 @@ object CompiledScript {
   implicit val compiledScriptFormat: Format[CompiledScript] = Json.format
 }
 
-case class FullAssetInfo(assetId: String, balance: Long, reissuable: Boolean, quantity: Long)
+case class FullAssetInfo(assetId: String,
+                         balance: Long,
+                         reissuable: Boolean,
+                         minSponsoredAssetFee: Option[Long],
+                         sponsorBalance: Option[Long],
+                         quantity: Long)
 object FullAssetInfo {
   implicit val fullAssetInfoFormat: Format[FullAssetInfo] = Json.format
 }
@@ -45,6 +50,24 @@ object FullAssetInfo {
 case class FullAssetsInfo(address: String, balances: List[FullAssetInfo])
 object FullAssetsInfo {
   implicit val fullAssetsInfoFormat: Format[FullAssetsInfo] = Json.format
+}
+
+case class AssetInfo(assetId: String,
+                     issueHeight: Int,
+                     issueTimestamp: Long,
+                     issuer: String,
+                     name: String,
+                     description: String,
+                     decimals: Int,
+                     reissuable: Boolean,
+                     quantity: Long,
+                     script: Option[String],
+                     scriptText: Option[String],
+                     complexity: Int,
+                     extraFee: Long,
+                     minSponsoredAssetFee: Option[Long])
+object AssetInfo {
+  implicit val AssetInfoFormat: Format[AssetInfo] = Json.format
 }
 
 case class Transaction(`type`: Int, id: String, fee: Long, timestamp: Long, sender: Option[String])

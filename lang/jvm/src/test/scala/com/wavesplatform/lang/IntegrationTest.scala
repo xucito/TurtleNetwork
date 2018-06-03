@@ -4,9 +4,9 @@ import cats.kernel.Monoid
 import com.wavesplatform.lang.Common._
 import com.wavesplatform.lang.TypeInfo._
 import com.wavesplatform.lang.v1.compiler.{CompilerContext, CompilerV1}
-import com.wavesplatform.lang.v1.evaluator.ctx.impl.PureContext
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
-import com.wavesplatform.lang.v1.evaluator.ctx.{CaseObj, EvaluationContext}
+import com.wavesplatform.lang.v1.evaluator.ctx._
+import com.wavesplatform.lang.v1.evaluator.ctx.impl.PureContext
 import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.lang.v1.testing.ScriptGen
 import org.scalatest.prop.PropertyChecks
@@ -21,9 +21,52 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
       """match p {
         |  case pa: PointA => 0
         |  case pb: PointB => 1
+        |  case pc: PointC => 2
         |}""".stripMargin
     eval[Long](sampleScript, withUnion(pointAInstance)) shouldBe Right(0)
     eval[Long](sampleScript, withUnion(pointBInstance)) shouldBe Right(1)
+  }
+
+  property("patternMatching with named union types") {
+    val sampleScript =
+      """match p {
+        |  case pa: PointA => 0
+        |  case pb: PointBC => 1
+        |}""".stripMargin
+    eval[Long](sampleScript, withUnion(pointAInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) shouldBe Right(0)
+    eval[Long](sampleScript, withUnion(pointBInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) shouldBe Right(1)
+  }
+
+  property("union types have filds") {
+    val sampleScript =
+      """match p {
+        |  case pa: PointA => pa.X
+        |  case pb: PointBC => pb.YB
+        |}""".stripMargin
+    eval[Long](sampleScript, withUnion(pointAInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) shouldBe Right(3)
+    eval[Long](sampleScript, withUnion(pointBInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) shouldBe Right(41)
+    eval[Long](sampleScript, withUnion(pointCInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) shouldBe Right(42)
+  }
+
+  property("union types have  only common filds") {
+    val sampleScript =
+      """match p {
+        |  case pa: PointA => pa.X
+        |  case pb: PointBC => pb.X
+        |}""".stripMargin
+    eval[Long](sampleScript, withUnion(pointCInstance), { c =>
+      Map("PointBC" -> UnionType("PointBC", List(pointTypeB, pointTypeC).map(_.typeRef)))
+    }) should produce("Typecheck failed: Undefined field `X`")
   }
 
   property("patternMatching _") {
@@ -32,6 +75,7 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
          |match p {
          |  case _: PointA => 0
          |  case _: PointB  => 1
+         |  case _: PointC => 2
          |}
          |
       """.stripMargin
@@ -52,11 +96,16 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
     eval[Long](sampleScript, withUnion(pointBInstance)) shouldBe Right(1)
   }
 
-  private def eval[T: TypeInfo](code: String, ctx: EvaluationContext = PureContext.instance) = {
+  private def eval[T: TypeInfo](code: String, ctx: EvaluationContext = PureContext.instance, genTypes: CompilerContext => Map[String, PredefBase] = {
+    _ =>
+      Map.empty
+  }) = {
     val untyped = Parser(code).get.value
     require(untyped.size == 1)
-    val typed = CompilerV1(CompilerContext.fromEvaluationContext(ctx), untyped.head)
-    typed.flatMap(EvaluatorV1[T](ctx, _))
+    val cctx  = CompilerContext.fromEvaluationContext(ctx, sampleTypes)
+    val types = genTypes(cctx)
+    val typed = CompilerV1(cctx.copy(predefTypes = types ++ cctx.predefTypes), untyped.head)
+    typed.flatMap(EvaluatorV1[T](ctx, _)._2)
   }
 
   property("function call") {
@@ -79,8 +128,8 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
   }
 
   property("equals some lang structure") {
-    eval[Boolean]("let x = (-7763390488025868909>-1171895536391400041) let v = false (v&&true)") shouldBe Right(false)
-    eval[Boolean]("let mshUmcl = (if(true) then true else true) true || mshUmcl") shouldBe Right(true)
+    eval[Boolean]("let x = (-7763390488025868909>-1171895536391400041); let v = false; (v&&true)") shouldBe Right(false)
+    eval[Boolean]("let mshUmcl = (if(true) then true else true); true || mshUmcl") shouldBe Right(true)
     eval[Long]("""if(((1+-1)==-1)) then 1 else (1+1)""") shouldBe Right(2)
     eval[Boolean]("""((((if(true) then 1 else 1)==2)||((if(true)
                     |then true else true)&&(true||true)))||(if(((1>1)||(-1>=-1)))
@@ -94,7 +143,9 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
         str         <- toString(expr)
       } yield (str, res)) {
         case (str, res) =>
-          eval[Long](str) shouldBe Right(res)
+          withClue(str) {
+            eval[Long](str) shouldBe Right(res)
+          }
     })
 
     forAll(for {
@@ -102,7 +153,9 @@ class IntegrationTest extends PropSpec with PropertyChecks with ScriptGen with M
       str         <- toString(expr)
     } yield (str, res)) {
       case (str, res) =>
-        eval[Boolean](str) shouldBe Right(res)
+        withClue(str) {
+          eval[Boolean](str) shouldBe Right(res)
+        }
     }
   }
 
