@@ -17,7 +17,7 @@ import scorex.transaction.smart.SetScriptTransaction
 import scorex.transaction.smart.script.v1.ScriptV1
 
 class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfterFailure {
-  private def pkFromAddress(address: String) = PrivateKeyAccount.fromSeed(sender.seed(address)).right.get
+  private def pkFromAddress(address: String) = PrivateKeyAccount.fromSeed(sender.seed(address)).explicitGet()
 
   private val acc0 = pkFromAddress(firstAddress)
   private val acc1 = pkFromAddress(secondAddress)
@@ -45,7 +45,7 @@ class LeaseSmartContractsTestSuite extends BaseTransactionSuite with CancelAfter
         }
         """.stripMargin).get.value
       assert(sc.size == 1)
-      CompilerV1(dummyTypeCheckerContext, sc.head).explicitGet()
+      CompilerV1(dummyTypeCheckerContext, sc.head).explicitGet()._1
     }
 
     val script = ScriptV1(scriptText).explicitGet()

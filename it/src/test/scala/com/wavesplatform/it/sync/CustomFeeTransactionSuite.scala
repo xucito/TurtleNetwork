@@ -5,7 +5,7 @@ import com.wavesplatform.it.NodeConfigs.Default
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.Sponsorship
+import com.wavesplatform.state.{EitherExt2, Sponsorship}
 import com.wavesplatform.utils.Base58
 import org.scalatest.CancelAfterFailure
 import scorex.account.PrivateKeyAccount
@@ -51,7 +51,7 @@ class CustomFeeTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     notMiner.assertAssetBalance(minerAddress, issuedAssetId, transferFee)
 
     // after `feature-check-blocks-period` asset fees should be sponsored
-    nodes.waitForSameBlocksAt(featureCheckBlocksPeriod)
+    nodes.waitForSameBlockHeadesAt(featureCheckBlocksPeriod)
     val sponsoredId = sender.transfer(senderAddress, secondAddress, 1, transferFee, Some(issuedAssetId), Some(issuedAssetId)).id
     nodes.waitForHeightAriseAndTxPresent(sponsoredId)
 
@@ -74,7 +74,7 @@ object CustomFeeTransactionSuite {
   val featureCheckBlocksPeriod = 13
 
   private val seed = Default(3).getString("account-seed")
-  private val pk   = PrivateKeyAccount.fromSeed(seed).right.get
+  private val pk   = PrivateKeyAccount.fromSeed(seed).explicitGet()
   val assetTx = IssueTransactionV1
     .selfSigned(
       sender = pk,

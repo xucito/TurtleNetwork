@@ -136,6 +136,7 @@ this automatically.
     * See [application.conf](https://github.com/wavesplatform/Waves/blob/master/src/main/resources/application.conf)
       for more options.
 
+
 # Acknowledgement
 
 [<img src="https://www.yourkit.com/images/yklogo.png">](http://www.yourkit.com/java/profiler/index.jsp)  
@@ -143,4 +144,3 @@ We use YourKit full-featured Java Profiler to make TN node faster. YourKit, LLC 
 Take a look at YourKit's leading software products: 
 <a href="http://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a> and
 <a href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>.
-

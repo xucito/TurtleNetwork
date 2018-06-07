@@ -1,6 +1,5 @@
 package com.wavesplatform.state.diffs.smart.predef
 
-import com.wavesplatform.lang.TypeInfo._
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
 import com.wavesplatform.{NoShrink, TransactionGen}
@@ -42,7 +41,7 @@ class CommonFunctionsTest extends PropSpec with PropertyChecks with Matchers wit
                                           |""".stripMargin,
           transfer
         )
-        transfer.assetId.isDefined shouldEqual result.right.get
+        transfer.assetId.isDefined shouldEqual result.explicitGet()
     }
   }
 

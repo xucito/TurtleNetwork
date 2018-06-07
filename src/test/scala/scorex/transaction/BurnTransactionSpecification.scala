@@ -1,12 +1,12 @@
 package scorex.transaction
 
 import com.wavesplatform.TransactionGen
+import com.wavesplatform.state.{ByteStr, EitherExt2}
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import scorex.transaction.assets.{BurnTransaction, BurnTransactionV1, BurnTransactionV2}
 import scorex.account.PublicKeyAccount
-import com.wavesplatform.state.ByteStr
+import scorex.transaction.assets.{BurnTransaction, BurnTransactionV1, BurnTransactionV2}
 
 class BurnTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
@@ -36,13 +36,13 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
                        "chainId": null,
                        "version": 1,
                        "assetId": "9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz",
-                       "quantity": 10000000000
+                       "amount": 10000000000
                     }
     """)
 
     val tx = BurnTransactionV1
       .create(
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").right.get,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,
         10000000000L,
         100000000L,
@@ -68,7 +68,7 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
                        "chainId": 84,
                        "version": 2,
                        "assetId": "9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz",
-                       "quantity": 10000000000
+                       "amount": 10000000000
                     }
     """)
 
@@ -76,7 +76,7 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
       .create(
         2,
         'T',
-        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").right.get,
+        PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,
         10000000000L,
         100000000L,

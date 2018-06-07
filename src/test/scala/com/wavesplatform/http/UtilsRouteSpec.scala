@@ -14,6 +14,7 @@ import com.wavesplatform.utils.Base58
 import scorex.transaction.smart.script.Script
 import scorex.transaction.smart.script.v1.ScriptV1
 import scorex.utils.Time
+import com.wavesplatform.lang.v1.evaluator.FunctionIds._
 
 class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with PropertyChecks {
   private val route = UtilsApiRoute(
@@ -25,9 +26,8 @@ class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with
   ).route
 
   val script = FUNCTION_CALL(
-    function = FunctionHeader("==", List(FunctionHeader.FunctionHeaderType.LONG, FunctionHeader.FunctionHeaderType.LONG)),
-    args = List(CONST_LONG(1), CONST_LONG(2)),
-    tpe = BOOLEAN
+    function = FunctionHeader(EQ_LONG),
+    args = List(CONST_LONG(1), CONST_LONG(2))
   )
 
   routePath("/script/compile") in {
@@ -47,7 +47,7 @@ class UtilsRouteSpec extends RouteSpec("/utils") with RestAPISettingsHelper with
     Post(routePath("/script/estimate"), base64) ~> route ~> check {
       val json = responseAs[JsValue]
       (json \ "script").as[String] shouldBe base64
-      (json \ "scriptText").as[String] shouldBe "FUNCTION_CALL(FunctionHeader(==,List(LONG, LONG)),List(CONST_LONG(1), CONST_LONG(2)),BOOLEAN)"
+      (json \ "scriptText").as[String] shouldBe s"FUNCTION_CALL(FunctionHeader($EQ_LONG),List(CONST_LONG(1), CONST_LONG(2)))"
       (json \ "complexity").as[Long] shouldBe 3
       (json \ "extraFee").as[Long] shouldBe CommonValidation.ScriptExtraFee
     }

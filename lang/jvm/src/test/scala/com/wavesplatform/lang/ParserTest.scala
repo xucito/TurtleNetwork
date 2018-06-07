@@ -31,8 +31,8 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
 
   private def catchParseError(x: String, e: Failure[Char, String]): Nothing = {
     import e.{index => i}
-    println(s"val codeInBytes = new String(Array[Byte](${x.getBytes.mkString(",")}))")
-    println(s"""val codeInStr = "${escapedCode(x)}"""")
+    println(s"val code1 = new String(Array[Byte](${x.getBytes.mkString(",")}))")
+    println(s"""val code2 = "${escapedCode(x)}"""")
     println(s"Can't parse (len=${x.length}): <START>\n$x\n<END>\nError: $e\nPosition ($i): '${x.slice(i, i + 1)}'\nTraced:\n${e.extra.traced.fullStack
       .mkString("\n")}")
     throw new TestFailedException("Test failed", 0)
@@ -161,12 +161,26 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne("base58' bQbp'") shouldBe CONST_BYTEVECTOR(0, 13, PART.INVALID(8, 12, "can't parse Base58 string"))
   }
 
-  property("long base58 definition") {
-    import Global.MaxBase58Chars
-    val longBase58 = "A" * (MaxBase58Chars + 1)
-    val to         = 8 + MaxBase58Chars
-    parseOne(s"base58'$longBase58'") shouldBe
-      CONST_BYTEVECTOR(0, to + 1, PART.INVALID(8, to, s"base58Decode input exceeds $MaxBase58Chars"))
+  property("valid non-empty base64 definition") {
+    parseOne("base64'TElLRQ=='") shouldBe CONST_BYTEVECTOR(0, 16, PART.VALID(8, 15, ByteVector("LIKE".getBytes)))
+  }
+
+  property("valid empty base64 definition") {
+    parseOne("base64''") shouldBe CONST_BYTEVECTOR(0, 8, PART.VALID(8, 7, ByteVector.empty))
+  }
+
+  property("invalid base64 definition") {
+    parseOne("base64'mid-size'") shouldBe CONST_BYTEVECTOR(0, 16, PART.INVALID(8, 15, "can't parse Base64 string"))
+  }
+
+  property("literal too long") {
+    import Global.MaxLiteralLength
+    val longLiteral = "A" * (MaxLiteralLength + 1)
+    val to          = 8 + MaxLiteralLength
+    parseOne(s"base58'$longLiteral'") shouldBe
+      CONST_BYTEVECTOR(0, to + 1, PART.INVALID(8, to, s"base58Decode input exceeds $MaxLiteralLength"))
+    parseOne(s"base64'base64:$longLiteral'") shouldBe
+      CONST_BYTEVECTOR(0, to + 8, PART.INVALID(8, to + 7, s"base58Decode input exceeds $MaxLiteralLength"))
   }
 
   property("string is consumed fully") {
@@ -270,6 +284,33 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     )
   }
 
+  property("should parse a binary operation with block operand") {
+    val script =
+      """let x = a &&
+        |let y = 1
+        |true
+        |true""".stripMargin
+
+    parseOne(script) shouldBe BLOCK(
+      0,
+      32,
+      LET(
+        0,
+        27,
+        PART.VALID(4, 5, "x"),
+        BINARY_OP(
+          8,
+          27,
+          REF(8, 9, PART.VALID(8, 9, "a")),
+          AND_OP,
+          BLOCK(13, 27, LET(13, 22, PART.VALID(17, 18, "y"), CONST_LONG(21, 22, 1), List()), TRUE(23, 27))
+        ),
+        List()
+      ),
+      TRUE(28, 32)
+    )
+  }
+
   property("reserved keywords are invalid variable names in block: if") {
     val script =
       s"""let if = 1
@@ -277,7 +318,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne(script) shouldBe BLOCK(
       0,
       15,
-      LET(0, 10, PART.INVALID(4, 6, "keywords are restricted"), CONST_LONG(9, 10, 1), Seq.empty),
+      LET(0, 10, PART.INVALID(4, 6, "keywords are restricted: if"), CONST_LONG(9, 10, 1), Seq.empty),
       TRUE(11, 15)
     )
   }
@@ -289,7 +330,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne(script) shouldBe BLOCK(
       0,
       16,
-      LET(0, 11, PART.INVALID(4, 7, "keywords are restricted"), CONST_LONG(10, 11, 1), Seq.empty),
+      LET(0, 11, PART.INVALID(4, 7, "keywords are restricted: let"), CONST_LONG(10, 11, 1), Seq.empty),
       TRUE(12, 16)
     )
   }
@@ -302,7 +343,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
       parseOne(script) shouldBe BLOCK(
         0,
         17,
-        LET(0, 12, PART.INVALID(4, 8, "keywords are restricted"), CONST_LONG(11, 12, 1), Seq.empty),
+        LET(0, 12, PART.INVALID(4, 8, s"keywords are restricted: $keyword"), CONST_LONG(11, 12, 1), Seq.empty),
         TRUE(13, 17)
       )
     }
@@ -315,7 +356,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne(script) shouldBe BLOCK(
       0,
       18,
-      LET(0, 13, PART.INVALID(4, 9, "keywords are restricted"), CONST_LONG(12, 13, 1), Seq.empty),
+      LET(0, 13, PART.INVALID(4, 9, "keywords are restricted: false"), CONST_LONG(12, 13, 1), Seq.empty),
       TRUE(14, 18)
     )
   }
@@ -325,7 +366,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne(script) shouldBe BINARY_OP(
       0,
       6,
-      REF(0, 2, PART.INVALID(0, 2, "keywords are restricted")),
+      INVALID(0, 2, "if", None),
       BinaryOperation.SUM_OP,
       CONST_LONG(5, 6, 1)
     )
@@ -336,7 +377,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     parseOne(script) shouldBe BINARY_OP(
       0,
       7,
-      REF(0, 3, PART.INVALID(0, 3, "keywords are restricted")),
+      INVALID(0, 3, "let", None),
       BinaryOperation.SUM_OP,
       CONST_LONG(6, 7, 1)
     )
@@ -348,7 +389,7 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
       parseOne(script) shouldBe BINARY_OP(
         0,
         8,
-        REF(0, 4, PART.INVALID(0, 4, "keywords are restricted")),
+        INVALID(0, keyword.length, keyword, None),
         BinaryOperation.SUM_OP,
         CONST_LONG(7, 8, 1)
       )
@@ -571,12 +612,12 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     val script =
       """let C = 1
         |foo
-        |#@2
+        |@~2
         |true""".stripMargin
 
     parseAll(script) shouldBe Seq(
       BLOCK(0, 13, LET(0, 9, PART.VALID(4, 5, "C"), CONST_LONG(8, 9, 1), Seq.empty), REF(10, 13, PART.VALID(10, 13, "foo"))),
-      INVALID(14, 16, "#@", Some(CONST_LONG(16, 17, 2))),
+      INVALID(14, 17, "@~2", None),
       TRUE(18, 22)
     )
   }
@@ -584,32 +625,37 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
   property("should parse INVALID expressions in the middle") {
     val script =
       """let C = 1
-        |# /
+        |@ /
         |true""".stripMargin
     parseOne(script) shouldBe BLOCK(
       0,
       18,
       LET(0, 9, PART.VALID(4, 5, "C"), CONST_LONG(8, 9, 1), Seq.empty),
-      INVALID(10, 14, "# /\n", Some(TRUE(14, 18)))
+      BINARY_OP(
+        10,
+        18,
+        INVALID(10, 11, "@", None),
+        DIV_OP,
+        TRUE(14, 18)
+      )
     )
   }
 
   property("should parse INVALID expressions at start") {
     val script =
-      """# /
+      """@ /
         |let C = 1
         |true""".stripMargin
-    parseOne(script) shouldBe INVALID(
+    parseOne(script) shouldBe BINARY_OP(
       0,
-      4,
-      "# /\n",
-      Some(
-        BLOCK(
-          4,
-          18,
-          LET(4, 13, PART.VALID(8, 9, "C"), CONST_LONG(12, 13, 1), Seq.empty),
-          TRUE(14, 18)
-        )
+      18,
+      INVALID(0, 1, "@", None),
+      DIV_OP,
+      BLOCK(
+        4,
+        18,
+        LET(4, 13, PART.VALID(8, 9, "C"), CONST_LONG(12, 13, 1), List.empty),
+        TRUE(14, 18)
       )
     )
   }
@@ -618,10 +664,27 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
     val script =
       """let C = 1
         |true
-        |# /""".stripMargin
+        |~ /""".stripMargin
     parseAll(script) shouldBe Seq(
       BLOCK(0, 14, LET(0, 9, PART.VALID(4, 5, "C"), CONST_LONG(8, 9, 1), Seq.empty), TRUE(10, 14)),
-      INVALID(15, 18, "# /")
+      BINARY_OP(
+        15,
+        18,
+        INVALID(15, 16, "~", None),
+        DIV_OP,
+        INVALID(18, 18, "expected a second operator", None)
+      )
+    )
+  }
+
+  property("should parse a binary operation without a second operand") {
+    val script = "a &&"
+    parseOne(script) shouldBe BINARY_OP(
+      0,
+      4,
+      REF(0, 1, PART.VALID(0, 1, "a")),
+      AND_OP,
+      INVALID(4, 4, "expected a second operator", None)
     )
   }
 
@@ -684,6 +747,35 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
       List(
         MATCH_CASE(23, 40, Some(PART.VALID(28, 29, "x")), List(PART.VALID(30, 35, "TypeA")), CONST_LONG(39, 40, 0)),
         MATCH_CASE(43, 68, Some(PART.VALID(48, 49, "y")), List(PART.VALID(50, 55, "TypeB"), PART.VALID(58, 63, "TypeC")), CONST_LONG(67, 68, 1))
+      )
+    )
+  }
+
+  property("pattern matching - allow shadowing") {
+    val code =
+      """match p { 
+        |  case p: PointA | PointB => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      64,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          13,
+          44,
+          Some(PART.VALID(18, 19, "p")),
+          List(PART.VALID(21, 27, "PointA"), PART.VALID(30, 36, "PointB")),
+          TRUE(40, 44)
+        ),
+        MATCH_CASE(
+          47,
+          62,
+          None,
+          List.empty,
+          FALSE(57, 62)
+        )
       )
     )
   }
@@ -836,6 +928,430 @@ class ParserTest extends PropSpec with PropertyChecks with Matchers with ScriptG
           CONST_LONG(28, 29, 1)
         )
       )
+    )
+  }
+
+  property("pattern matching - incomplete binary operation") {
+    val script =
+      """match tx {
+        |  case a => true &&
+        |  case b => 1
+        |}""".stripMargin
+
+    parseAll(script) shouldBe List(
+      MATCH(
+        0,
+        46,
+        REF(6, 8, PART.VALID(6, 8, "tx")),
+        List(
+          MATCH_CASE(
+            13,
+            30,
+            Some(PART.VALID(18, 19, "a")),
+            List(),
+            BINARY_OP(23, 30, TRUE(23, 27), AND_OP, INVALID(33, 33, "expected a second operator", None))
+          ),
+          MATCH_CASE(33, 44, Some(PART.VALID(38, 39, "b")), List(), CONST_LONG(43, 44, 1))
+        )
+      )
+    )
+  }
+
+  property("if expressions") {
+    parseOne("if (10 < 15) then true else false") shouldBe IF(
+      0,
+      33,
+      BINARY_OP(4, 11, CONST_LONG(9, 11, 15), LT_OP, CONST_LONG(4, 6, 10)),
+      TRUE(18, 22),
+      FALSE(28, 33)
+    )
+    parseOne("if 10 < 15 then true else false") shouldBe IF(
+      0,
+      31,
+      BINARY_OP(3, 10, CONST_LONG(8, 10, 15), LT_OP, CONST_LONG(3, 5, 10)),
+      TRUE(16, 20),
+      FALSE(26, 31)
+    )
+    parseOne(s"""if (10 < 15)
+                |then true
+                |else false""".stripMargin) shouldBe IF(
+      0,
+      33,
+      BINARY_OP(4, 11, CONST_LONG(9, 11, 15), LT_OP, CONST_LONG(4, 6, 10)),
+      TRUE(18, 22),
+      FALSE(28, 33)
+    )
+
+    parseOne(s"""if 10 < 15
+                |then true
+                |else false""".stripMargin) shouldBe IF(
+      0,
+      31,
+      BINARY_OP(3, 10, CONST_LONG(8, 10, 15), LT_OP, CONST_LONG(3, 5, 10)),
+      TRUE(16, 20),
+      FALSE(26, 31)
+    )
+  }
+
+  property("underscore in numbers") {
+    parseOne("100_000_000") shouldBe CONST_LONG(0, 11, 100000000)
+  }
+
+  property("comments - the whole line at start") {
+    val code =
+      """# foo
+        |true""".stripMargin
+
+    parseOne(code) shouldBe TRUE(6, 10)
+  }
+
+  property("comments - the whole line at end") {
+    val code =
+      """true
+        |# foo""".stripMargin
+
+    parseOne(code) shouldBe TRUE(0, 4)
+  }
+
+  property("comments - block - after let") {
+    val s =
+      """let # foo
+        |  x = true
+        |x""".stripMargin
+    parseOne(s) shouldBe BLOCK(
+      0,
+      22,
+      LET(0, 20, PART.VALID(12, 13, "x"), TRUE(16, 20), List.empty),
+      REF(21, 22, PART.VALID(21, 22, "x"))
+    )
+  }
+
+  property("comments - block - before assignment") {
+    val s =
+      """let x # foo
+        |  = true
+        |x""".stripMargin
+    parseOne(s) shouldBe BLOCK(
+      0,
+      22,
+      LET(0, 20, PART.VALID(4, 5, "x"), TRUE(16, 20), List.empty),
+      REF(21, 22, PART.VALID(21, 22, "x"))
+    )
+  }
+
+  property("comments - block - between LET and BODY (full line)") {
+    val code =
+      """let x = true
+        |# foo
+        |x""".stripMargin
+
+    parseOne(code) shouldBe BLOCK(
+      0,
+      20,
+      LET(0, 18, PART.VALID(4, 5, "x"), TRUE(8, 12), List.empty),
+      REF(19, 20, PART.VALID(19, 20, "x"))
+    )
+  }
+
+  property("comments - block - between LET and BODY (at end of a line)") {
+    val code =
+      """let x = true # foo
+        |x""".stripMargin
+
+    parseOne(code) shouldBe BLOCK(
+      0,
+      20,
+      LET(0, 18, PART.VALID(4, 5, "x"), TRUE(8, 12), List.empty),
+      REF(19, 20, PART.VALID(19, 20, "x"))
+    )
+  }
+
+  property("comments - if - after condition") {
+    val code =
+      """if 10 < 15 # test
+        |then true else false""".stripMargin
+
+    parseOne(code) shouldBe IF(
+      0,
+      38,
+      BINARY_OP(3, 17, CONST_LONG(8, 10, 15), LT_OP, CONST_LONG(3, 5, 10)),
+      TRUE(23, 27),
+      FALSE(33, 38)
+    )
+  }
+
+  property("comments - pattern matching - after case") {
+    val code =
+      """match p {
+        |  case # test
+        |       p: PointA | PointB => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      77,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          57,
+          Some(PART.VALID(31, 32, "p")),
+          List(PART.VALID(34, 40, "PointA"), PART.VALID(43, 49, "PointB")),
+          TRUE(53, 57)
+        ),
+        MATCH_CASE(
+          60,
+          75,
+          None,
+          List.empty,
+          FALSE(70, 75)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - after variable") {
+    val code =
+      """match p {
+        |  case p # test
+        |       : PointA
+        |       | PointB => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      85,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          65,
+          Some(PART.VALID(17, 18, "p")),
+          List(PART.VALID(35, 41, "PointA"), PART.VALID(51, 57, "PointB")),
+          TRUE(61, 65)
+        ),
+        MATCH_CASE(
+          68,
+          83,
+          None,
+          List.empty,
+          FALSE(78, 83)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - before types") {
+    val code =
+      """match p {
+        |  case p: # test
+        |         PointA | PointB => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      79,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          59,
+          Some(PART.VALID(17, 18, "p")),
+          List(PART.VALID(36, 42, "PointA"), PART.VALID(45, 51, "PointB")),
+          TRUE(55, 59)
+        ),
+        MATCH_CASE(
+          62,
+          77,
+          None,
+          List.empty,
+          FALSE(72, 77)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - before a value's block") {
+    val code =
+      """match p {
+        |  case p: PointA | PointB # test
+        |         => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      79,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          59,
+          Some(PART.VALID(17, 18, "p")),
+          List(PART.VALID(20, 26, "PointA"), PART.VALID(29, 35, "PointB")),
+          TRUE(55, 59)
+        ),
+        MATCH_CASE(
+          62,
+          77,
+          None,
+          List.empty,
+          FALSE(72, 77)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - in a type definition - 1") {
+    val code =
+      """match p {
+        |  case p : PointA # foo
+        |         | PointB # bar
+        |         => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      94,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          74,
+          Some(PART.VALID(17, 18, "p")),
+          List(PART.VALID(21, 27, "PointA"), PART.VALID(45, 51, "PointB")),
+          TRUE(70, 74)
+        ),
+        MATCH_CASE(
+          77,
+          92,
+          None,
+          List.empty,
+          FALSE(87, 92)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - in a type definition - 2") {
+    val code =
+      """match p {
+        |  case p: PointA | # foo
+        |          PointB   # bar
+        |         => true
+        |  case _ => false
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      96,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          12,
+          76,
+          Some(PART.VALID(17, 18, "p")),
+          List(PART.VALID(20, 26, "PointA"), PART.VALID(45, 51, "PointB")),
+          TRUE(72, 76)
+        ),
+        MATCH_CASE(
+          79,
+          94,
+          None,
+          List.empty,
+          FALSE(89, 94)
+        )
+      )
+    )
+  }
+
+  property("comments - pattern matching - between cases") {
+    val code =
+      """match p {
+        |  # foo
+        |  case p: PointA | PointB => true
+        |  # bar
+        |  case _ => false
+        |  # baz
+        |}""".stripMargin
+    parseOne(code) shouldBe MATCH(
+      0,
+      87,
+      REF(6, 7, PART.VALID(6, 7, "p")),
+      List(
+        MATCH_CASE(
+          20,
+          59,
+          Some(PART.VALID(25, 26, "p")),
+          List(PART.VALID(28, 34, "PointA"), PART.VALID(37, 43, "PointB")),
+          TRUE(47, 51)
+        ),
+        MATCH_CASE(
+          62,
+          85,
+          None,
+          List.empty,
+          FALSE(72, 77)
+        )
+      )
+    )
+  }
+
+  property("comments - getter - before dot") {
+    val code =
+      """x # foo
+        |.y""".stripMargin
+
+    parseOne(code) shouldBe GETTER(
+      0,
+      10,
+      REF(0, 1, PART.VALID(0, 1, "x")),
+      PART.VALID(9, 10, "y")
+    )
+  }
+
+  property("comments - getter - after dot") {
+    val code =
+      """x. # foo
+        |y""".stripMargin
+
+    parseOne(code) shouldBe GETTER(
+      0,
+      10,
+      REF(0, 1, PART.VALID(0, 1, "x")),
+      PART.VALID(9, 10, "y")
+    )
+  }
+
+  property("comments - function call") {
+    val code =
+      """f(
+        | # foo
+        | 1 # bar
+        | # baz
+        | , 2
+        | # quux
+        |)""".stripMargin
+
+    parseOne(code) shouldBe FUNCTION_CALL(
+      0,
+      40,
+      PART.VALID(0, 1, "f"),
+      List(CONST_LONG(11, 12, 1), CONST_LONG(29, 30, 2))
+    )
+  }
+
+  property("comments - array") {
+    val code =
+      """xs[
+        | # foo
+        | 1
+        | # bar
+        |]""".stripMargin
+
+    parseOne(code) shouldBe FUNCTION_CALL(
+      0,
+      22,
+      PART.VALID(2, 22, "getElement"),
+      List(REF(0, 2, PART.VALID(0, 2, "xs")), CONST_LONG(12, 13, 1))
     )
   }
 }

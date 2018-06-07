@@ -1,7 +1,7 @@
 package com.wavesplatform.lang.v1.evaluator.ctx.impl
 
 import com.wavesplatform.lang.ExecutionError
-import com.wavesplatform.lang.v1.evaluator.ctx.{CaseObj, Val}
+import com.wavesplatform.lang.v1.evaluator.ctx.CaseObj
 import com.wavesplatform.lang.v1.traits.{DataType, Environment, Recipient}
 import scodec.bits.ByteVector
 
@@ -20,7 +20,7 @@ class EnvironmentFunctions(environment: Environment) {
 
   def addressFromString(str: String): Either[String, Option[ByteVector]] = {
     val base58String = if (str.startsWith(Prefix)) str.drop(Prefix.length) else str
-    Global.base58Decode(base58String) match {
+    Global.base58Decode(base58String, Global.MaxAddressLength) match {
       case Left(e) => Left(e)
       case Right(addressBytes) =>
         val version = addressBytes.head
@@ -39,8 +39,7 @@ class EnvironmentFunctions(environment: Environment) {
 
   def getData(addr: CaseObj, key: String, dataType: DataType): Either[String, Any] =
     for {
-      bytes <- addr.fields.get("bytes").fold[Either[String, Val]](Left("Can't find 'bytes'"))(Right(_))
-      rawAddressBytes = bytes.value
+      rawAddressBytes <- addr.fields.get("bytes").fold[Either[String, Any]](Left("Can't find 'bytes'"))(Right(_))
       addressBytes <- Try(rawAddressBytes.asInstanceOf[ByteVector].toArray).toEither.left.map(_.getMessage)
     } yield environment.data(addressBytes, key, dataType)
 

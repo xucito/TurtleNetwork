@@ -48,17 +48,20 @@ object Types {
   val issueTransactionType = PredefCaseType(
     "IssueTransaction",
     List(
-      "amount"           -> LONG,
-      "assetName"        -> BYTEVECTOR,
-      "assetDescription" -> BYTEVECTOR,
-      "reissuable"       -> BOOLEAN,
+      "quantity"    -> LONG,
+      "name"        -> BYTEVECTOR,
+      "description" -> BYTEVECTOR,
+      "reissuable"  -> BOOLEAN,
+      "decimals"    -> LONG,
+      "script"      -> optionByteVector
     ) ++ header ++ proven
   )
 
   val reissueTransactionType = PredefCaseType(
     "ReissueTransaction",
     List(
-      "amount"     -> LONG,
+      "quantity"   -> LONG,
+      "assetId"    -> BYTEVECTOR,
       "reissuable" -> BOOLEAN,
     ) ++ header ++ proven
   )
@@ -66,7 +69,8 @@ object Types {
   val burnTransactionType = PredefCaseType(
     "BurnTransaction",
     List(
-      "amount" -> LONG,
+      "quantity" -> LONG,
+      "assetId"  -> BYTEVECTOR
     ) ++ header ++ proven
   )
   val leaseTransactionType = PredefCaseType(
@@ -102,7 +106,8 @@ object Types {
   val sponsorFeeTransactionType = PredefCaseType(
     "SponsorFeeTransaction",
     List(
-      "minFee" -> optionLong
+      "assetId"              -> BYTEVECTOR,
+      "minSponsoredAssetFee" -> optionLong
     ) ++ header ++ proven
   )
 
@@ -149,16 +154,18 @@ object Types {
 
   val dataTransactionType = PredefCaseType(
     "DataTransaction",
-    List("dataEntries" -> listOfDataEntriesType) ++ header ++ proven
+    List("data" -> listOfDataEntriesType) ++ header ++ proven
   )
 
   val massTransferTransactionType = PredefCaseType(
     "MassTransferTransaction",
     List(
-      "feeAssetId"      -> optionByteVector,
-      "transferAssetId" -> optionByteVector,
-      "transfers"       -> listTransfers,
-      "attachment"      -> BYTEVECTOR
+      "feeAssetId"    -> optionByteVector,
+      "assetId"       -> optionByteVector,
+      "totalAmount"   -> LONG,
+      "transfers"     -> listTransfers,
+      "transferCount" -> LONG,
+      "attachment"    -> BYTEVECTOR
     ) ++ header ++ proven
   )
 
@@ -186,10 +193,10 @@ object Types {
     dataTransactionType
   )
 
-  val transactionTypes = obsoleteTransactionTypes ++ activeTransactionTypes
+  val transactionTypes = /*obsoleteTransactionTypes ++ */ activeTransactionTypes
 
   val outgoingTransactionType = UNION(activeTransactionTypes.map(_.typeRef))
   val anyTransactionType      = UNION(transactionTypes.map(_.typeRef))
 
-  val caseTypes = (Seq(addressType, aliasType, transfer) ++ transactionTypes)
+  val caseTypes = (Seq(addressType, aliasType, transfer) ++ dataEntryTypes ++ transactionTypes)
 }
