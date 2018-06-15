@@ -1,15 +1,15 @@
 package com.wavesplatform.lang.v1.evaluator.ctx.impl.waves
 
 import com.wavesplatform.lang.v1.compiler.Types._
-import com.wavesplatform.lang.v1.evaluator.ctx.PredefCaseType
+import com.wavesplatform.lang.v1.evaluator.ctx.CaseType
 
 object Types {
 
-  val addressType        = PredefCaseType("Address", List("bytes" -> BYTEVECTOR))
-  val aliasType          = PredefCaseType("Alias", List("alias" -> STRING))
+  val addressType        = CaseType("Address", List("bytes" -> BYTEVECTOR))
+  val aliasType          = CaseType("Alias", List("alias" -> STRING))
   val addressOrAliasType = UNION(addressType.typeRef, aliasType.typeRef)
 
-  val transfer = PredefCaseType("Transfer", List("recipient" -> addressOrAliasType, "amount" -> LONG))
+  val transfer = CaseType("Transfer", List("recipient" -> addressOrAliasType, "amount" -> LONG))
 
   val optionByteVector: OPTION = OPTION(BYTEVECTOR)
   val optionAddress            = OPTION(addressType.typeRef)
@@ -24,17 +24,18 @@ object Types {
     "version"   -> LONG,
   )
   val proven = List(
-    "senderPk"  -> BYTEVECTOR,
-    "bodyBytes" -> BYTEVECTOR,
-    "proofs"    -> listByteVector
+    "sender"          -> addressType.typeRef,
+    "senderPublicKey" -> BYTEVECTOR,
+    "bodyBytes"       -> BYTEVECTOR,
+    "proofs"          -> listByteVector
   )
 
-  val genesisTransactionType = PredefCaseType(
+  val genesisTransactionType = CaseType(
     "GenesisTransaction",
     List("amount" -> LONG, "recipient" -> addressOrAliasType) ++ header
   )
 
-  val transferTransactionType = PredefCaseType(
+  val transferTransactionType = CaseType(
     "TransferTransaction",
     List(
       "feeAssetId"      -> optionByteVector,
@@ -45,7 +46,7 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val issueTransactionType = PredefCaseType(
+  val issueTransactionType = CaseType(
     "IssueTransaction",
     List(
       "quantity"    -> LONG,
@@ -57,7 +58,7 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val reissueTransactionType = PredefCaseType(
+  val reissueTransactionType = CaseType(
     "ReissueTransaction",
     List(
       "quantity"   -> LONG,
@@ -66,14 +67,14 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val burnTransactionType = PredefCaseType(
+  val burnTransactionType = CaseType(
     "BurnTransaction",
     List(
       "quantity" -> LONG,
       "assetId"  -> BYTEVECTOR
     ) ++ header ++ proven
   )
-  val leaseTransactionType = PredefCaseType(
+  val leaseTransactionType = CaseType(
     "LeaseTransaction",
     List(
       "amount"    -> LONG,
@@ -81,21 +82,21 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val leaseCancelTransactionType = PredefCaseType(
+  val leaseCancelTransactionType = CaseType(
     "LeaseCancelTransaction",
     List(
       "leaseId" -> BYTEVECTOR,
     ) ++ header ++ proven
   )
 
-  val createAliasTransactionType = PredefCaseType(
+  val createAliasTransactionType = CaseType(
     "CreateAliasTransaction",
     List(
       "alias" -> STRING,
     ) ++ header ++ proven
   )
 
-  val paymentTransactionType = PredefCaseType(
+  val paymentTransactionType = CaseType(
     "PaymentTransaction",
     List(
       "amount"    -> LONG,
@@ -103,7 +104,7 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val sponsorFeeTransactionType = PredefCaseType(
+  val sponsorFeeTransactionType = CaseType(
     "SponsorFeeTransaction",
     List(
       "assetId"              -> BYTEVECTOR,
@@ -111,14 +112,17 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val buyType     = PredefCaseType("Buy", List.empty)
-  val sellType    = PredefCaseType("Buy", List.empty)
+  val buyType  = CaseType("Buy", List.empty)
+  val sellType = CaseType("Sell", List.empty)
+
   val ordTypeType = UNION(buyType.typeRef, sellType.typeRef)
 
-  val assetPairType = PredefCaseType("AssetPair", List("amountAsset" -> optionByteVector, "priceAsset" -> optionByteVector))
-  val orderType = PredefCaseType(
+  val assetPairType = CaseType("AssetPair", List("amountAsset" -> optionByteVector, "priceAsset" -> optionByteVector))
+  val orderType = CaseType(
     "Order",
     List(
+      "id"               -> BYTEVECTOR,
+      "sender"           -> addressType.typeRef,
       "senderPublicKey"  -> BYTEVECTOR,
       "matcherPublicKey" -> BYTEVECTOR,
       "assetPair"        -> assetPairType.typeRef,
@@ -131,7 +135,7 @@ object Types {
       "signature"        -> BYTEVECTOR
     )
   )
-  val exchangeTransactionType = PredefCaseType(
+  val exchangeTransactionType = CaseType(
     "ExchangeTransaction",
     List("buyOrder"       -> orderType.typeRef,
          "sellOrder"      -> orderType.typeRef,
@@ -142,7 +146,7 @@ object Types {
       ++ header ++ proven
   )
 
-  def buildDataEntryType(name: String, tpe: TYPE) = PredefCaseType(name + "DataEntry", List("key" -> STRING, "value" -> tpe))
+  def buildDataEntryType(name: String, tpe: TYPE) = CaseType(name + "DataEntry", List("key" -> STRING, "value" -> tpe))
 
   val strDataEntryType  = buildDataEntryType("Str", STRING)
   val boolDataEntryType = buildDataEntryType("Bool", BOOLEAN)
@@ -152,12 +156,12 @@ object Types {
 
   val listOfDataEntriesType = LIST(UNION(dataEntryTypes.map(_.typeRef)))
 
-  val dataTransactionType = PredefCaseType(
+  val dataTransactionType = CaseType(
     "DataTransaction",
     List("data" -> listOfDataEntriesType) ++ header ++ proven
   )
 
-  val massTransferTransactionType = PredefCaseType(
+  val massTransferTransactionType = CaseType(
     "MassTransferTransaction",
     List(
       "feeAssetId"    -> optionByteVector,
@@ -169,7 +173,7 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val setScriptTransactionType = PredefCaseType(
+  val setScriptTransactionType = CaseType(
     "SetScriptTransaction",
     List(
       "script" -> optionByteVector
@@ -198,5 +202,5 @@ object Types {
   val outgoingTransactionType = UNION(activeTransactionTypes.map(_.typeRef))
   val anyTransactionType      = UNION(transactionTypes.map(_.typeRef))
 
-  val caseTypes = (Seq(addressType, aliasType, transfer) ++ dataEntryTypes ++ transactionTypes)
+  val wavesTypes = Seq(addressType, aliasType, transfer, orderType, assetPairType) ++ dataEntryTypes ++ transactionTypes
 }

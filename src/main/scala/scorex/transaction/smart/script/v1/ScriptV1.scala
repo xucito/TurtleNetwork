@@ -3,18 +3,19 @@ package scorex.transaction.smart.script.v1
 import com.wavesplatform.crypto
 import com.wavesplatform.lang.ScriptVersion.Versions.V1
 import com.wavesplatform.lang.v1.compiler.Terms._
+import com.wavesplatform.lang.v1.evaluator.FunctionIds._
 import com.wavesplatform.lang.v1.evaluator.ctx.EvaluationContext
 import com.wavesplatform.lang.v1.{FunctionHeader, ScriptEstimator, Serde}
 import com.wavesplatform.state.ByteStr
 import monix.eval.Coeval
 import scorex.transaction.smart.script.Script
-import com.wavesplatform.lang.v1.evaluator.FunctionIds._
 
 object ScriptV1 {
-  private val functionCosts: Map[FunctionHeader, Long] = EvaluationContext.functionCosts(com.wavesplatform.utils.dummyContext.functions.values)
+  private val functionCosts: Map[FunctionHeader, Long] =
+    EvaluationContext.functionCosts(com.wavesplatform.utils.dummyEvaluationContext.functions.values)
 
   private val checksumLength = 4
-  private val maxComplexity  = 20 * functionCosts(FunctionHeader(SIGVERIFY))
+  private val maxComplexity  = 20 * functionCosts(FunctionHeader.Native(SIGVERIFY))
   private val maxSizeInBytes = 8 * 1024
 
   def validateBytes(bs: Array[Byte]): Either[String, Unit] =
@@ -22,7 +23,6 @@ object ScriptV1 {
 
   def apply(x: EXPR, checkSize: Boolean = true): Either[String, Script] =
     for {
-      //_                <- Either.cond(x.tpe == BOOLEAN, (), "Script should return BOOLEAN")
       scriptComplexity <- ScriptEstimator(functionCosts, x)
       _                <- Either.cond(scriptComplexity <= maxComplexity, (), s"Script is too complex: $scriptComplexity > $maxComplexity")
       s = new ScriptV1(x)

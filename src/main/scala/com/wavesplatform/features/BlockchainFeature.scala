@@ -17,7 +17,7 @@ object BlockchainFeatures {
     SmallerMinimalGeneratingBalance,
     NG,
     MassTransfer,
-//    SmartAccounts,
+    SmartAccounts,
     DataTransaction,
     BurnAnyTokens,
     FeeSponsorship,
@@ -26,5 +26,5 @@ object BlockchainFeatures {
 
   val implemented: Set[Short] = dict.keySet
 
-  def feature(id: Short) = dict(id)
+  def feature(id: Short): Option[BlockchainFeature] = dict.get(id)
 }

@@ -4,7 +4,7 @@ import scodec.bits.ByteVector
 
 case class Header(id: ByteVector, fee: Long, timestamp: Long, version: Long)
 
-case class Proven(h: Header, bodyBytes: ByteVector, senderPk: ByteVector, proofs: IndexedSeq[ByteVector])
+case class Proven(h: Header, sender: Recipient.Address, bodyBytes: ByteVector, senderPk: ByteVector, proofs: IndexedSeq[ByteVector])
 
 trait Recipient
 object Recipient {
@@ -29,7 +29,9 @@ object DataItem {
   case class Str(k: String, v: String)     extends DataItem
 }
 
-case class Ord(senderPublicKey: ByteVector,
+case class Ord(id: ByteVector,
+               sender: Recipient.Address,
+               senderPublicKey: ByteVector,
                matcherPublicKey: ByteVector,
                assetPair: APair,
                orderType: OrdType,

@@ -18,8 +18,9 @@ object Bindings {
 
   private def provenTxPart(tx: Proven): Map[String, Any] =
     Map(
-      "senderPk"  -> tx.senderPk,
-      "bodyBytes" -> tx.bodyBytes,
+      "sender"          -> senderObject(tx.sender),
+      "senderPublicKey" -> tx.senderPk,
+      "bodyBytes"       -> tx.bodyBytes,
       "proofs" -> {
         val existingProofs = tx.proofs
         val allProofs      = existingProofs ++ Seq.fill(8 - existingProofs.size)(ByteVector.empty)
@@ -29,8 +30,8 @@ object Bindings {
 
   private def mapRecipient(r: Recipient) =
     "recipient" -> (r match {
-      case Recipient.Alias(name)    => CaseObj(aliasType.typeRef, Map("alias"   -> name))
-      case Recipient.Address(bytes) => CaseObj(addressType.typeRef, Map("bytes" -> bytes))
+      case Recipient.Alias(name) => CaseObj(aliasType.typeRef, Map("alias" -> name))
+      case x: Recipient.Address  => senderObject(x)
     })
 
   def assetPair(ap: APair): CaseObj =
@@ -52,6 +53,8 @@ object Bindings {
     CaseObj(
       orderType.typeRef,
       Map(
+        "id"               -> ord.id,
+        "sender"           -> senderObject(ord.sender),
         "senderPublicKey"  -> ord.senderPublicKey,
         "matcherPublicKey" -> ord.matcherPublicKey,
         "assetPair"        -> assetPair(ord.assetPair),
@@ -65,12 +68,14 @@ object Bindings {
       )
     )
 
+  def senderObject(sender: Recipient.Address): CaseObj = CaseObj(addressType.typeRef, Map("bytes" -> sender.bytes))
+
   def transactionObject(tx: Tx): CaseObj =
     tx match {
       case Tx.Genesis(h, amount, recipient) =>
         CaseObj(genesisTransactionType.typeRef, Map("amount" -> amount) ++ headerPart(h) + mapRecipient(recipient))
       case Tx.Payment(p, amount, recipient) =>
-        CaseObj(genesisTransactionType.typeRef, Map("amount" -> amount) ++ provenTxPart(p) + mapRecipient(recipient))
+        CaseObj(paymentTransactionType.typeRef, Map("amount" -> amount) ++ provenTxPart(p) + mapRecipient(recipient))
       case Tx.Transfer(p, feeAssetId, transferAssetId, amount, recipient, attachment) =>
         CaseObj(
           transferTransactionType.typeRef,
@@ -133,10 +138,9 @@ object Bindings {
         CaseObj(
           massTransferTransactionType.typeRef,
           Map(
-            "transfers" -> (
-              transfers
-                .map(bv => CaseObj(transfer.typeRef, Map(mapRecipient(bv.recipient), "amount" -> bv.amount)))
-                .asInstanceOf[listTransfers.Underlying]),
+            "transfers" -> (transfers
+              .map(bv => CaseObj(transfer.typeRef, Map(mapRecipient(bv.recipient), "amount" -> bv.amount)))
+              .asInstanceOf[listTransfers.Underlying]),
             "assetId"       -> assetId.asInstanceOf[optionByteVector.Underlying],
             "transferCount" -> transferCount,
             "totalAmount"   -> totalAmount,
@@ -144,13 +148,11 @@ object Bindings {
           ) ++ provenTxPart(p)
         )
       case SetScript(p, scriptOpt) =>
-        CaseObj(setScriptTransactionType.typeRef,
-                Map("script" -> scriptOpt.asInstanceOf[optionByteVector.Underlying]) ++ provenTxPart(p))
+        CaseObj(setScriptTransactionType.typeRef, Map("script" -> scriptOpt.asInstanceOf[optionByteVector.Underlying]) ++ provenTxPart(p))
       case Sponsorship(p, assetId, minSponsoredAssetFee) =>
         CaseObj(
           sponsorFeeTransactionType.typeRef,
-          Map("assetId"              -> assetId,
-              "minSponsoredAssetFee" -> minSponsoredAssetFee.asInstanceOf[optionLong.Underlying]) ++ provenTxPart(p)
+          Map("assetId" -> assetId, "minSponsoredAssetFee" -> minSponsoredAssetFee.asInstanceOf[optionLong.Underlying]) ++ provenTxPart(p)
         )
       case Data(p, data) =>
         CaseObj(
