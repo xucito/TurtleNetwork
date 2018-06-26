@@ -1,5 +1,6 @@
 package com.wavesplatform.database
 
+import cats.kernel.Monoid
 import com.google.common.cache.CacheBuilder
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
@@ -76,6 +77,13 @@ object LevelDBWriter {
       db.get(historyKey)
         .headOption
         .exists(h => db.has(v(h)))
+  }
+
+  implicit class RWExt(val db: RW) extends AnyVal {
+    def fromHistory[A](historyKey: Key[Seq[Int]], valueKey: Int => Key[A]): Option[A] =
+      for {
+        lastChange <- db.get(historyKey).headOption
+      } yield db.get(valueKey(lastChange))
   }
 }
 
@@ -192,6 +200,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
                                   leaseBalances: Map[BigInt, LeaseBalance],
                                   leaseStates: Map[ByteStr, Boolean],
                                   transactions: Map[ByteStr, (Transaction, Set[BigInt])],
+                                  addressTransactions: Map[BigInt, List[(Int, ByteStr)]],
                                   reissuedAssets: Map[ByteStr, AssetInfo],
                                   filledQuantity: Map[ByteStr, VolumeAndFee],
                                   scripts: Map[BigInt, Option[Script]],
@@ -270,7 +279,10 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
     }
 
     for ((assetId, assetInfo) <- reissuedAssets) {
-      rw.put(Keys.assetInfo(assetId)(height), assetInfo)
+      val combinedAssetInfo = rw.fromHistory(Keys.assetInfoHistory(assetId), Keys.assetInfo(assetId)).fold(assetInfo) { p =>
+        Monoid.combine(p, assetInfo)
+      }
+      rw.put(Keys.assetInfo(assetId)(height), combinedAssetInfo)
       expiredKeys ++= updateHistory(rw, Keys.assetInfoHistory(assetId), threshold, Keys.assetInfo(assetId))
     }
 
@@ -303,12 +315,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       }
     }
 
-    val accountTransactions = (for {
-      (id, (tx, addresses)) <- transactions.toSeq
-      addressId             <- addresses
-    } yield (addressId, (tx.builder.typeId.toInt, id))).groupBy(_._1).mapValues(_.map(_._2))
-
-    for ((addressId, txs) <- accountTransactions) {
+    for ((addressId, txs) <- addressTransactions) {
       rw.put(Keys.addressTransactionIds(height, addressId), txs)
     }
 
@@ -581,6 +588,7 @@ class LevelDBWriter(writableDB: DB, fs: FunctionalitySettings, val maxCacheSize:
       .groupBy(identity)
       .mapValues(_.size)
   }
+
   override def assetDistribution(assetId: ByteStr): Map[Address, Long] = readOnly { db =>
     (for {
       seqNr     <- (1 to db.get(Keys.addressesForAssetSeqNr(assetId))).par

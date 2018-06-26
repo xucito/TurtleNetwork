@@ -11,9 +11,9 @@ object Types {
 
   val transfer = CaseType("Transfer", List("recipient" -> addressOrAliasType, "amount" -> LONG))
 
-  val optionByteVector: OPTION = OPTION(BYTEVECTOR)
-  val optionAddress            = OPTION(addressType.typeRef)
-  val optionLong: OPTION       = OPTION(LONG)
+  val optionByteVector         = UNION(BYTEVECTOR, UNIT)
+  val optionAddress            = UNION(addressType.typeRef, UNIT)
+  val optionLong               = UNION(LONG, UNIT)
   val listByteVector: LIST     = LIST(BYTEVECTOR)
   val listTransfers            = LIST(transfer.typeRef)
 
@@ -148,13 +148,13 @@ object Types {
 
   def buildDataEntryType(name: String, tpe: TYPE) = CaseType(name + "DataEntry", List("key" -> STRING, "value" -> tpe))
 
-  val strDataEntryType  = buildDataEntryType("Str", STRING)
-  val boolDataEntryType = buildDataEntryType("Bool", BOOLEAN)
-  val bvDataEntryType   = buildDataEntryType("ByteVector", BYTEVECTOR)
-  val longDataEntryType = buildDataEntryType("Long", LONG)
-  val dataEntryTypes    = List(strDataEntryType, boolDataEntryType, bvDataEntryType, longDataEntryType)
+  val strDataEntryType  = buildDataEntryType("String", STRING)
+  val boolDataEntryType = buildDataEntryType("Boolean", BOOLEAN)
+  val binDataEntryType   = buildDataEntryType("Binary", BYTEVECTOR)
+  val intDataEntryType = buildDataEntryType("Integer", LONG)
+  val dataEntryTypes    = List(strDataEntryType, boolDataEntryType, binDataEntryType, intDataEntryType)
 
-  val listOfDataEntriesType = LIST(UNION(dataEntryTypes.map(_.typeRef)))
+  val listOfDataEntriesType = LIST(UNION.create(dataEntryTypes.map(_.typeRef)))
 
   val dataTransactionType = CaseType(
     "DataTransaction",
@@ -165,7 +165,7 @@ object Types {
     "MassTransferTransaction",
     List(
       "feeAssetId"    -> optionByteVector,
-      "assetId"       -> optionByteVector,
+      "transferAssetId"       -> optionByteVector,
       "totalAmount"   -> LONG,
       "transfers"     -> listTransfers,
       "transferCount" -> LONG,
@@ -199,8 +199,8 @@ object Types {
 
   val transactionTypes = /*obsoleteTransactionTypes ++ */ activeTransactionTypes
 
-  val outgoingTransactionType = UNION(activeTransactionTypes.map(_.typeRef))
-  val anyTransactionType      = UNION(transactionTypes.map(_.typeRef))
+  val outgoingTransactionType = UNION.create(activeTransactionTypes.map(_.typeRef))
+  val anyTransactionType      = UNION.create(transactionTypes.map(_.typeRef))
 
   val wavesTypes = Seq(addressType, aliasType, transfer, orderType, assetPairType) ++ dataEntryTypes ++ transactionTypes
 }

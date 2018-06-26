@@ -22,6 +22,7 @@ import scorex.api.http.leasing._
 import scorex.transaction.ValidationError.GenericError
 import scorex.transaction._
 import scorex.transaction.assets._
+import scorex.transaction.assets.exchange.ExchangeTransaction
 import scorex.transaction.lease._
 import scorex.transaction.smart.SetScriptTransaction
 import scorex.transaction.transfer._
@@ -76,10 +77,10 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               path(Segment) { limitStr =>
                 Exception.allCatch.opt(limitStr.toInt) match {
                   case Some(limit) if limit > 0 && limit <= MaxTransactionsPerRequest =>
-                    complete(Json.arr(JsArray(blockchain.addressTransactions(a, Set.empty, limit, 0).map {
-                      case (h, tx) =>
-                        txToCompactJson(a, tx) + ("height" -> JsNumber(h))
-                    })))
+                    complete(
+                      Json.arr(JsArray(blockchain
+                        .addressTransactions(a, Set.empty, limit, 0)
+                        .map({ case (h, tx) => txToCompactJson(a, tx) + ("height" -> JsNumber(h)) }))))
                   case Some(limit) if limit > MaxTransactionsPerRequest =>
                     complete(TooBigArrayAllocation)
                   case _ =>
@@ -264,7 +265,7 @@ case class TransactionsApiRoute(settings: RestAPISettings,
               case DataTransaction          => jsv.as[SignedDataRequest].toTx
               case SetScriptTransaction     => jsv.as[SignedSetScriptRequest].toTx
               case SponsorFeeTransaction    => jsv.as[SignedSponsorFeeRequest].toTx
-
+              case ExchangeTransaction      => jsv.as[SignedExchangeRequest].toTx
             }
         }
         doBroadcast(r)
