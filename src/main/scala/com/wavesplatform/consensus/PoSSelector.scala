@@ -38,9 +38,9 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
     val pc = pos(height)
 
     if (fairPosActivated(height))
-    getHit(height, accountPublicKey)
-      .map(pc.calculateDelay(_, refBlockBT, balance)+2000)
-      .toRight(GenericError("No blocks in blockchain"))
+      getHit(height, accountPublicKey)
+        .map(pc.calculateDelay(_, refBlockBT, balance) + 2000)
+        .toRight(GenericError("No blocks in blockchain"))
     else
       getHit(height, accountPublicKey)
         .map(pc.calculateDelay(_, refBlockBT, balance))
