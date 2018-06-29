@@ -42,13 +42,13 @@ package object validation {
       )
   }
 
-//  private def validAssetChar(c: Byte): Boolean =
-//    c.toChar != '/' && c.toChar != ':' && c.toChar != '.'
+  private def validAssetChar(c: Byte): Boolean =
+    c != '/'.toByte && c != ':'.toByte && c != '.'.toByte
 
   def validateName(name: Array[Byte]): Validated[Array[Byte]] = {
     Validated
       .condNel(
-        name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength && !name contains '/' ,//&& name.forall(validAssetChar)
+        name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength && name.forall(validAssetChar),
         name,
         ValidationError.InvalidName
       )
