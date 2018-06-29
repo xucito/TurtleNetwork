@@ -42,8 +42,8 @@ package object validation {
       )
   }
 
-  private def validAssetChar(c: Char): Boolean =
-    (c != '/' && c != ':' && c != '.'
+  private def validAssetChar(c: Byte): Boolean =
+    c.toChar != '/' && c.toChar != ':' && c.toChar != '.'
 
   def validateName(name: Array[Byte]): Validated[Array[Byte]] = {
     Validated
