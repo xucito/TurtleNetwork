@@ -2,7 +2,7 @@ package com.wavesplatform.it.sync.transactions
 
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.api.UnexpectedStatusCodeException
-import com.wavesplatform.it.sync.{calcDataFee, fee}
+import com.wavesplatform.it.sync.{calcDataFee, minFee}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
 import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry, StringDataEntry}
@@ -36,12 +36,12 @@ class DataTransactionSuite extends BaseTransactionSuite {
     notMiner.assertBalances(firstAddress, balance1, eff1)
 
     val leaseAmount = 1.TN
-    val leaseId     = sender.lease(firstAddress, secondAddress, leaseAmount, fee).id
+    val leaseId     = sender.lease(firstAddress, secondAddress, leaseAmount, minFee).id
     nodes.waitForHeightAriseAndTxPresent(leaseId)
 
     assertBadRequestAndResponse(sender.putData(firstAddress, data, balance1 - leaseAmount), "negative effective balance")
     nodes.waitForHeightArise()
-    notMiner.assertBalances(firstAddress, balance1 - fee, eff1 - leaseAmount - fee)
+    notMiner.assertBalances(firstAddress, balance1 - minFee, eff1 - leaseAmount - minFee)
   }
 
   test("invalid transaction should not be in UTX or blockchain") {
@@ -157,21 +157,23 @@ class DataTransactionSuite extends BaseTransactionSuite {
     sender.getData(thirdAddress) shouldBe List.empty
   }
 
-  test("data definition corner cases") {
-    val noDataTx = sender.putData(thirdAddress, List.empty, calcDataFee(List.empty)).id
-    nodes.waitForHeightAriseAndTxPresent(noDataTx)
-    sender.getData(thirdAddress) shouldBe List.empty
+  test("update type for dataEntry") {
+    val nonLatinKey = "\u05EA\u05E8\u05D1\u05D5\u05EA, \u05E1\u05E4\u05D5\u05E8\u05D8 \u05D5\u05EA\u05D9\u05D9\u05E8\u05D5\u05EA"
+    val boolData    = List(BooleanDataEntry(nonLatinKey, true))
+    val boolDataFee = calcDataFee(boolData)
+    val firstTx     = sender.putData(firstAddress, boolData, boolDataFee).id
+    nodes.waitForHeightAriseAndTxPresent(firstTx)
+    sender.getData(firstAddress, nonLatinKey) shouldBe boolData.head
 
-    val nonLatinKey   = "\u05EA\u05E8\u05D1\u05D5\u05EA, \u05E1\u05E4\u05D5\u05E8\u05D8 \u05D5\u05EA\u05D9\u05D9\u05E8\u05D5\u05EA"
-    val typeChange    = List(BooleanDataEntry(nonLatinKey, true))
-    val typeChangeFee = calcDataFee(typeChange)
-    val typeChangeTx  = sender.putData(thirdAddress, typeChange, typeChangeFee).id
-    nodes.waitForHeightAriseAndTxPresent(typeChangeTx)
-    sender.getData(thirdAddress, nonLatinKey) shouldBe typeChange.head
+    val longData    = List(IntegerDataEntry(nonLatinKey, 100500))
+    val longDataFee = calcDataFee(longData)
+    val secondTx    = sender.putData(firstAddress, longData, longDataFee).id
+    nodes.waitForHeightAriseAndTxPresent(secondTx)
+    sender.getData(firstAddress, nonLatinKey) shouldBe longData.head
   }
 
   test("malformed JSON") {
-    def request(item: JsObject) = Json.obj("version" -> 1, "sender"   -> secondAddress, "fee" -> fee, "data" -> Seq(item))
+    def request(item: JsObject) = Json.obj("version" -> 1, "sender"   -> secondAddress, "fee" -> minFee, "data" -> Seq(item))
     val validItem               = Json.obj("key"     -> "key", "type" -> "integer", "value"   -> 8)
 
     assertBadRequestAndResponse(sender.postJson("/addresses/data", request(validItem - "key")), "key is missing")
@@ -242,6 +244,8 @@ class DataTransactionSuite extends BaseTransactionSuite {
 
     assertBadRequestAndResponse(sender.putData(firstAddress, data, calcDataFee(data)), TooBig)
     assertBadRequestAndResponse(sender.putData(firstAddress, List(IntegerDataEntry("", 4)), 100000), "Empty key found")
+    assertBadRequestAndResponse(sender.putData(firstAddress, List(IntegerDataEntry("abc", 4), IntegerDataEntry("abc", 5)), 100000),
+                                "Duplicate keys found")
 
     val extraValueData = List(BinaryDataEntry("key", ByteStr(Array.fill(MaxValueSize + 1)(1.toByte))))
     assertBadRequestAndResponse(sender.putData(firstAddress, extraValueData, calcDataFee(extraValueData)), TooBig)
@@ -258,5 +262,40 @@ class DataTransactionSuite extends BaseTransactionSuite {
     val tooManyEntriesData = List.tabulate(MaxEntryCount + 1)(n => IntegerDataEntry("key", 88))
     assertBadRequestAndResponse(sender.putData(firstAddress, tooManyEntriesData, calcDataFee(tooManyEntriesData)), TooBig)
     nodes.waitForHeightArise()
+  }
+
+  test("try to put empty data") {
+    val noDataTx = sender.putData(thirdAddress, List.empty, calcDataFee(List.empty)).id
+    nodes.waitForHeightAriseAndTxPresent(noDataTx)
+    sender.getData(thirdAddress) shouldBe List.empty
+  }
+
+  test("try to make address with 1000 DataEntries") {
+    val dataSet = 0 to 200 flatMap (i =>
+      List(
+        IntegerDataEntry(s"int$i", 1000 + i),
+        BooleanDataEntry(s"bool$i", false),
+        BinaryDataEntry(s"blob$i", ByteStr(Array[Byte](127.toByte, 0, 1, 1))),
+        StringDataEntry(s"str$i", s"hi there! + $i"),
+        IntegerDataEntry(s"integer$i", 1000 - i)
+      ))
+
+    val dataAllTypes = dataSet.toList
+
+    for (i <- 0 to 900 by 100) {
+      val dataTx = dataAllTypes.slice(i, i + 100)
+      val fee    = calcDataFee(dataTx)
+      val txId   = sender.putData(thirdAddress, dataTx, fee).id
+      nodes.waitForHeightAriseAndTxPresent(txId)
+    }
+
+    val r = scala.util.Random.nextInt(199)
+    sender.getData(thirdAddress, s"int$r") shouldBe IntegerDataEntry(s"int$r", 1000 + r)
+    sender.getData(thirdAddress, s"bool$r") shouldBe BooleanDataEntry(s"bool$r", false)
+    sender.getData(thirdAddress, s"blob$r") shouldBe BinaryDataEntry(s"blob$r", ByteStr(Array[Byte](127.toByte, 0, 1, 1)))
+    sender.getData(thirdAddress, s"str$r") shouldBe StringDataEntry(s"str$r", s"hi there! + $r")
+    sender.getData(thirdAddress, s"integer$r") shouldBe IntegerDataEntry(s"integer$r", 1000 - r)
+
+    sender.getData(thirdAddress).size shouldBe 1000
   }
 }

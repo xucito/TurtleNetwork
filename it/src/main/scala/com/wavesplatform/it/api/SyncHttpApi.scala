@@ -1,6 +1,7 @@
 package com.wavesplatform.it.api
 
 import akka.http.scaladsl.model.StatusCodes
+import com.wavesplatform.features.api.ActivationStatus
 import com.wavesplatform.it.Node
 import com.wavesplatform.matcher.api.CancelOrderRequest
 import com.wavesplatform.state.{ByteStr, DataEntry}
@@ -14,9 +15,11 @@ import scorex.api.http.AddressApiRoute
 import scorex.api.http.assets.SignedIssueV1Request
 import scorex.transaction.assets.exchange.Order
 import scorex.transaction.transfer.MassTransferTransaction.Transfer
+import scorex.waves.http.DebugMessage
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Try}
 
 object SyncHttpApi extends Assertions {
@@ -60,6 +63,12 @@ object SyncHttpApi extends Assertions {
 
     def utxSize = Await.result(async(n).utxSize, RequestAwaitTime)
 
+    def printDebugMessage(db: DebugMessage): Response =
+      Await.result(async(n).printDebugMessage(db), RequestAwaitTime)
+
+    def activationStatus: ActivationStatus =
+      Await.result(async(n).activationStatus, RequestAwaitTime)
+
     def seed(address: String): String =
       Await.result(async(n).seed(address), RequestAwaitTime)
 
@@ -96,11 +105,25 @@ object SyncHttpApi extends Assertions {
     def issue(sourceAddress: String, name: String, description: String, quantity: Long, decimals: Byte, reissuable: Boolean, fee: Long): Transaction =
       Await.result(async(n).issue(sourceAddress, name, description, quantity, decimals, reissuable, fee), RequestAwaitTime)
 
+    def reissue(sourceAddress: String, assetId: String, quantity: Long, reissuable: Boolean, fee: Long): Transaction =
+      Await.result(async(n).reissue(sourceAddress, assetId, quantity, reissuable, fee), RequestAwaitTime)
+
+    def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Transaction =
+      Await.result(async(n).payment(sourceAddress, recipient, amount, fee), RequestAwaitTime)
+
     def scriptCompile(code: String): CompiledScript =
       Await.result(async(n).scriptCompile(code), RequestAwaitTime)
 
     def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long): Transaction =
       Await.result(async(n).burn(sourceAddress, assetId, quantity, fee), RequestAwaitTime)
+
+    def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction =
+      if (Option(version).nonEmpty) burnV2(sourceAddress, assetId, quantity, fee, version) else burn(sourceAddress, assetId, quantity, fee)
+
+    def burnV2(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: String): Transaction = {
+      signAndBroadcast(
+        Json.obj("type" -> 6, "quantity" -> quantity, "assetId" -> assetId, "sender" -> sourceAddress, "fee" -> fee, "version" -> version))
+    }
 
     def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long): Transaction =
       Await.result(async(n).sponsorAsset(sourceAddress, assetId, baseFee, fee), RequestAwaitTime)
@@ -178,6 +201,8 @@ object SyncHttpApi extends Assertions {
     def height: Int =
       Await.result(async(n).height, RequestAwaitTime)
 
+    def blockAt(height: Int) = Await.result(async(n).blockAt(height), RequestAwaitTime)
+
     def rollback(to: Int, returnToUTX: Boolean = true): Unit =
       Await.result(async(n).rollback(to, returnToUTX), RequestAwaitTime)
 
@@ -205,8 +230,8 @@ object SyncHttpApi extends Assertions {
     def placeOrder(order: Order): MatcherResponse =
       Await.result(async(n).placeOrder(order), RequestAwaitTime)
 
-    def getOrderStatus(asset: String, orderId: String): MatcherStatusResponse =
-      Await.result(async(n).getOrderStatus(asset, orderId), RequestAwaitTime)
+    def getOrderStatus(asset: String, orderId: String, waitForStatus: Boolean = true): MatcherStatusResponse =
+      Await.result(async(n).getOrderStatus(asset, orderId, waitForStatus), RequestAwaitTime)
 
     def waitOrderStatus(asset: String, orderId: String, expectedStatus: String, waitTime: Duration = OrderRequestAwaitTime): MatcherStatusResponse =
       Await.result(async(n).waitOrderStatus(asset, orderId, expectedStatus), waitTime)
@@ -226,6 +251,8 @@ object SyncHttpApi extends Assertions {
                     request: CancelOrderRequest,
                     waitTime: Duration = OrderRequestAwaitTime): MatcherStatusResponse =
       Await.result(async(n).cancelOrder(amountAsset, priceAsset, request), waitTime)
+
+    def findTransactionInfo(txId: String): Option[TransactionInfo] = Await.result(async(n).findTransactionInfo(txId), RequestAwaitTime)
 
   }
 
@@ -249,6 +276,24 @@ object SyncHttpApi extends Assertions {
       Await.result(
         async(nodes).waitFor(desc)(retryInterval)((n: Node) => Future(request(n))(scala.concurrent.ExecutionContext.Implicits.global), cond),
         ConditionAwaitTime)
+
+    def rollback(height: Int, returnToUTX: Boolean = true): Unit = {
+      Await.result(
+        Future.traverse(nodes) { node =>
+          com.wavesplatform.it.api.AsyncHttpApi.NodeAsyncHttpApi(node).rollback(height, returnToUTX)
+        },
+        ConditionAwaitTime
+      )
+    }
+
+    def waitForHeight(height: Int): Unit = {
+      Await.result(
+        Future.traverse(nodes) { node =>
+          com.wavesplatform.it.api.AsyncHttpApi.NodeAsyncHttpApi(node).waitForHeight(height)
+        },
+        ConditionAwaitTime
+      )
+    }
   }
 
 }
