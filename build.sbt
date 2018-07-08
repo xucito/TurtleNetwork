@@ -103,6 +103,7 @@ inConfig(Test)(
     logBuffered := false,
     parallelExecution := false,
     testOptions += Tests.Argument("-oIDOF", "-u", "target/test-reports"),
+    testOptions += Tests.Argument(TestFrameworks.ScalaCheck,"-maxDiscardRatio", "500"),
     testOptions += Tests.Setup(_ => sys.props("sbt-testing") = "true")
   ))
 
