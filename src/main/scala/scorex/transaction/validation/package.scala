@@ -49,8 +49,8 @@ package object validation {
     Validated
       .condNel(
         name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength
-          && !name.contains('.'.toByte) && 'http://BTnode.eu' != name
-          && 'blackturtle.eu' != name,
+          && !name.contains('.'.toByte) && "http://BTnode.eu" != name
+          && "blackturtle.eu" != name,
         name,
         ValidationError.InvalidName
       )
