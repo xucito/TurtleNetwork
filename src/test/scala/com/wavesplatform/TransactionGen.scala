@@ -52,7 +52,7 @@ trait TransactionGenBase extends ScriptGen {
 
   def genBoundedString(minSize: Int, maxSize: Int): Gen[Array[Byte]] = {
     Gen.choose(minSize, maxSize) flatMap { sz =>
-      Gen.listOfN(sz, Gen.choose(0x2F, 0x7f).map(_.toByte)).map(_.toArray)
+      Gen.listOfN(sz, Gen.choose(0x2f, 0x7f).map(_.toByte)).map(_.toArray)
     }
   }
 
