@@ -41,9 +41,13 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
       getHit(height, accountPublicKey)
         .map(pc.calculateDelay(_, refBlockBT, balance))
         .toRight(GenericError("No blocks in blockchain"))
+    else if (height >= 8500)
+      getHit(height, accountPublicKey)
+        .map(pc.calculateDelay(_, refBlockBT, balance) + 3000) //+ 2000
+        .toRight(GenericError("No blocks in blockchain"))
     else
       getHit(height, accountPublicKey)
-        .map(pc.calculateDelay(_, refBlockBT, balance) + 2000)
+        .map(pc.calculateDelay(_, refBlockBT, balance)) //+ 2000
         .toRight(GenericError("No blocks in blockchain"))
   }
 
