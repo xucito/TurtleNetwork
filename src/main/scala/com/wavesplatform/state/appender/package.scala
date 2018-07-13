@@ -96,7 +96,7 @@ package object appender extends ScorexLogging {
 
     for {
       height <- blockchain.heightOf(block.reference).orElse(height<=oldChain).toRight(GenericError(s"height: history does not contain parent ${block.reference}"))
-      parent <- blockchain.parent(block).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
+      parent <- blockchain.parent(block).orElse(height<=oldChain).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
       grandParent = blockchain.parent(parent, 2)
       effectiveBalance <- genBalance(height).left.map(GenericError(_))
       _                <- validateBlockVersion(height, block, settings.blockchainSettings.functionalitySettings)
