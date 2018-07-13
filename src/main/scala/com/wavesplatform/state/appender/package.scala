@@ -26,7 +26,7 @@ package object appender extends ScorexLogging {
     8501   -> ByteStr.decodeBase58("XTF11mEcSAs5Mr2vXwnzZeW7pzmQo7xdQfi7GtWDQQUo8ZPPwTGNs9P2rHnNbGZUXJeheTSWNnqdixHQcrfSbt4").get,
     8502   -> ByteStr.decodeBase58("3P24zcsKJCyJz65qjotmVWbArbPzgTWRDjH6LZHnxQXqjHSQi2V4DhviEnjxwkcgDo4Ehb2dRTbT6bSSVTZeSVsA").get,
   )
-  private val oldChain = 128000
+  //private val oldChain = 128000
 
   private[appender] def processAndBlacklistOnFailure[A, B](
       ch: Channel,
@@ -94,9 +94,10 @@ package object appender extends ScorexLogging {
 
     val blockTime = block.timestamp
 
-    for {
-      height <- blockchain.heightOf(block.reference).orElse(height<=oldChain).toRight(GenericError(s"height: history does not contain parent ${block.reference}"))
-      parent <- blockchain.parent(block).orElse(height<=oldChain).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
+    for { //orElse(height<=oldChain).
+      height <- blockchain.heightOf(block.reference).toRight(GenericError(s"height: history does not contain parent ${block.reference}"))
+      //.orElse(height<=oldChain)
+      parent <- blockchain.parent(block).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
       grandParent = blockchain.parent(parent, 2)
       effectiveBalance <- genBalance(height).left.map(GenericError(_))
       _                <- validateBlockVersion(height, block, settings.blockchainSettings.functionalitySettings)
@@ -114,7 +115,7 @@ package object appender extends ScorexLogging {
   private def checkExceptions(height: Int, block: Block): Either[ValidationError, Unit] = {
     Either
       .cond(
-        exceptions.contains((height, block.uniqueId))||height<=oldChain,
+        exceptions.contains((height, block.uniqueId)),//||height<=oldChain,
         (),
         GenericError(s"Block time ${block.timestamp} less than expected")
       )

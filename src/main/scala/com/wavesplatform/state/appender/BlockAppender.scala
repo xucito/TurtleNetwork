@@ -21,10 +21,10 @@ import scorex.utils.{ScorexLogging, Time}
 import scala.util.Right
 
 object BlockAppender extends ScorexLogging with Instrumented {
-  private val exceptions = List(
-    ByteStr.decodeBase58("5EmZvVfuA8QQwrnMyyGcjm1sSQ2YvcJL9aiEaAoKoJhcTxp8kYq1ADaY1qt88pfR2mkAes6BjXupiPQVZBiqQkSY").get,
-    ByteStr.decodeBase58("2E32Qc9xCgK9he71Kh7fiVgh5mjsfkHCqEdJh8n1MTEKMBKX6Dr5bdi6VuwvBApSFTo9iq3WuKpVD96zAFWniiVS").get,
-  )
+//  private val exceptions = List(
+//    ByteStr.decodeBase58("5EmZvVfuA8QQwrnMyyGcjm1sSQ2YvcJL9aiEaAoKoJhcTxp8kYq1ADaY1qt88pfR2mkAes6BjXupiPQVZBiqQkSY").get,
+//    ByteStr.decodeBase58("2E32Qc9xCgK9he71Kh7fiVgh5mjsfkHCqEdJh8n1MTEKMBKX6Dr5bdi6VuwvBApSFTo9iq3WuKpVD96zAFWniiVS").get,
+//  )
   def apply(checkpoint: CheckpointService,
             blockchainUpdater: BlockchainUpdater with Blockchain,
             time: Time,
@@ -35,7 +35,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
     Task {
       measureSuccessful(
         blockProcessingTimeStats, {
-          if (blockchainUpdater.isLastBlockId(newBlock.reference)||newBlock.timestamp >= 1531517781 ||exceptions.contains(newBlock.uniqueId)) {
+          if (blockchainUpdater.isLastBlockId(newBlock.reference)) { //||newBlock.timestamp >= 1531517781 ||exceptions.contains(newBlock.uniqueId)
             appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings)(newBlock).map(_ => Some(blockchainUpdater.score))
           } else if (blockchainUpdater.contains(newBlock.uniqueId)) {
             Right(None)
