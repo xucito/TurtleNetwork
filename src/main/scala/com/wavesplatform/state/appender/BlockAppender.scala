@@ -34,7 +34,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
     Task {
       measureSuccessful(
         blockProcessingTimeStats, {
-          if (blockchainUpdater.isLastBlockId(newBlock.reference)||exceptions.contains(block.uniqueId)) {
+          if (blockchainUpdater.isLastBlockId(newBlock.reference)||exceptions.contains(newBlock.uniqueId)) {
             appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings)(newBlock).map(_ => Some(blockchainUpdater.score))
           } else if (blockchainUpdater.contains(newBlock.uniqueId)) {
             Right(None)
