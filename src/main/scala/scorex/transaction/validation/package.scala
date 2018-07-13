@@ -48,9 +48,9 @@ package object validation {
   def validateName(name: Array[Byte]): Validated[Array[Byte]] = {
     Validated
       .condNel(
-        name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength
-          && (!name.contains('.'.toByte) || "http://BTnode.eu".getBytes() == name
-            || "blackturtle.eu".getBytes() == name),
+        name.length >= MinAssetNameLength && name.length <= MaxAssetNameLength, //&& (!name.contains('.'.toByte) || "http://BTnode.eu".getBytes() == name
+       // || "blackturtle.eu".getBytes() == name),
+
         name,
         ValidationError.InvalidName
       )
