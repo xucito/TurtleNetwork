@@ -6,9 +6,9 @@ import scorex.utils.ScorexLogging
 object CancelInvalidTx extends ScorexLogging {
 
   def apply(s: Blockchain): Diff = {
-    val addr1 = Address.fromString("3JcQHUDAzkprtFHX8DskQCys3upBYhPeJQq")
-    val addr2 = Address.fromString("3JbHxyVNbEEJXMDuuR9kPeTmXn5BCDBSQp4")
-    val addr3 = Address.fromString("3JqAYiRnuiJxdMVmdTUsxuTV39LXHR5JWXk")
+    val addr1 = Address.fromString("3JcQHUDAzkprtFHX8DskQCys3upBYhPeJQq").explicitGet()
+    val addr2 = Address.fromString("3JbHxyVNbEEJXMDuuR9kPeTmXn5BCDBSQp4").explicitGet()
+    val addr3 = Address.fromString("3JqAYiRnuiJxdMVmdTUsxuTV39LXHR5JWXk").explicitGet()
     val bal1 = s.balance(addr1)
     val bal2 = s.balance(addr2)
     val bal3 = s.balance(addr3) + bal1 + bal2
