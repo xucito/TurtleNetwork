@@ -16,13 +16,13 @@ object CancelInvalidTx extends ScorexLogging {
 
     val diff = blockchain.collectLposPortfolios {
       case (addr1, p) if bal1 != 0L =>
-        Portfolio(p.balance, LeaseBalance(leaseInBalances.getOrElse(addr1, 0L) ,0), Map.empty)
+        Portfolio(bal1, LeaseBalance(leaseInBalances.getOrElse(addr1, 0L) ,0), Map.empty)
 
       case (addr2, p) if bal2 !=  0L =>
-        Portfolio(p.balance, LeaseBalance(leaseInBalances.getOrElse(addr2, 0L) ,0), Map.empty)
+        Portfolio(bal2, LeaseBalance(leaseInBalances.getOrElse(addr2, 0L) ,0), Map.empty)
 
       case (addr3, p) if bal3 !=  0L =>
-        Portfolio(p.balance, LeaseBalance(leaseInBalances.getOrElse(addr3, 0L) ,0), Map.empty)
+        Portfolio(bal3, LeaseBalance(leaseInBalances.getOrElse(addr3, 0L) ,0), Map.empty)
     }
 
     Diff.empty.copy(portfolios = diff)
