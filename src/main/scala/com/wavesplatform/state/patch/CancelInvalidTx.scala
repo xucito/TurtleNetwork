@@ -22,12 +22,12 @@ object CancelInvalidTx extends ScorexLogging {
 
     val diff = s.collectLposPortfolios {
       case (addr, p) if addr == addr1 && bal1 != 0L =>
-        Portfolio(0L, LeaseBalance(0L, 0L), Map.empty)
+        Portfolio(0L - p.balance, LeaseBalance(0L, 0L), Map.empty)
 
       case (addr, p) if addr == addr2 && bal2 != 0L =>
-        Portfolio(0L, LeaseBalance(0L, 0L), Map.empty)
+        Portfolio(0L - p.balance, LeaseBalance(0L, 0L), Map.empty)
 
-      case (addr, p) if addr == addr3  =>
+      case (addr, p) if addr == addr3 =>
         Portfolio(p.balance + bal1 + bal2, p.lease, Map.empty)
     }
 
