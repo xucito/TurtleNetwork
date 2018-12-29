@@ -26,9 +26,9 @@ import scala.util.Random
 
 class OrderBookActorSpecification extends MatcherSpec("OrderBookActor") with NTPTime with ImplicitSender with MatcherTestData with PathMockFactory {
 
-  private val txFactory = new ExchangeTransactionCreator(EmptyBlockchain, MatcherAccount, matcherSettings, ntpTime).createTransaction _
-  private val obc       = new ConcurrentHashMap[AssetPair, OrderBook]
-  private val md        = new ConcurrentHashMap[AssetPair, MarketStatus]
+  private val txFactory                                        = new ExchangeTransactionCreator(EmptyBlockchain, MatcherAccount, matcherSettings, ntpTime).createTransaction _
+  private val obc                                              = new ConcurrentHashMap[AssetPair, OrderBook]
+  private val md                                               = new ConcurrentHashMap[AssetPair, MarketStatus]
   private def update(ap: AssetPair)(snapshot: OrderBook): Unit = obc.put(ap, snapshot)
 
   private def getOrders(actor: ActorRef) = {

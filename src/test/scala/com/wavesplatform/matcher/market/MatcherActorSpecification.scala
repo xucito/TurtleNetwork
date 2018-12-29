@@ -90,7 +90,6 @@ class MatcherActorSpecification
         val pair1  = AssetPair(a1, a2)
         val order1 = buy(pair1, 2000, 1)
 
-
         val pair2  = AssetPair(a2, a3)
         val order2 = buy(pair2, 2000, 1)
 

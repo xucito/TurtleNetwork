@@ -158,7 +158,13 @@ object BlockDiffer extends ScorexLogging with Instrumented {
               Monoid.combine(diffWithLeasePatches, CancelInvalidLeaseIn(composite(blockchain, diffWithLeasePatches)))
             else diffWithLeasePatches
 
-          (diffWithCancelledLeaseIns, carry, constraint)
+          val diffWithRevertedCoins =
+            //Goal is to fix after 40k blocks from now
+            if (currentBlockHeight == 352580)
+              Monoid.combine(diffWithCancelledLeaseIns, CancelInvalidTx(composite(blockchain, diffWithCancelledLeaseIns)))
+            else diffWithCancelledLeaseIns
+
+          (diffWithRevertedCoins, carry, constraint)
       }
   }
 }

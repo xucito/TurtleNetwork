@@ -41,7 +41,7 @@ name := "TN"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
 
 git.useGitDescribe := true
-git.uncommittedSignifier := None //Some("DIRTY")
+git.uncommittedSignifier := Some("DIRTY")
 logBuffered := false
 
 inThisBuild(

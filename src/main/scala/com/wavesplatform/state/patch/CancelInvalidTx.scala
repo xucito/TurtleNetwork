@@ -1,8 +1,8 @@
 package com.wavesplatform.state.patch
 
+import com.wavesplatform.account.Address
 import com.wavesplatform.state.{Blockchain, Diff, EitherExt2, LeaseBalance, Portfolio}
-import scorex.account.Address
-import scorex.utils.ScorexLogging
+import com.wavesplatform.utils.ScorexLogging
 
 object CancelInvalidTx extends ScorexLogging {
 
