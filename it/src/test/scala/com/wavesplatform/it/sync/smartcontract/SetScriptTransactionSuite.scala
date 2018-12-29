@@ -2,30 +2,24 @@ package com.wavesplatform.it.sync.smartcontract
 
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
-import com.wavesplatform.it.sync.{minFee, transferAmount}
+import com.wavesplatform.it.sync.{minFee, setScriptFee, transferAmount}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.lang.v1.compiler.CompilerV1
-import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.state._
-import com.wavesplatform.utils.dummyCompilerContext
+import com.wavesplatform.transaction.Proofs
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.ScriptCompiler
+import com.wavesplatform.transaction.transfer._
 import org.scalatest.CancelAfterFailure
-import play.api.libs.json.{JsNumber, Json}
-import scorex.account.PrivateKeyAccount
-import scorex.transaction.Proofs
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.smart.script.v1.ScriptV1
-import scorex.transaction.transfer._
+import play.api.libs.json.Json
 
 class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
-  private def pkFromAddress(address: String) = PrivateKeyAccount.fromSeed(sender.seed(address)).explicitGet()
-
   private val fourthAddress: String = sender.createAddress()
 
-  private val acc0 = pkFromAddress(firstAddress)
-  private val acc1 = pkFromAddress(secondAddress)
-  private val acc2 = pkFromAddress(thirdAddress)
-  private val acc3 = pkFromAddress(fourthAddress)
+  private val acc0 = pkByAddress(firstAddress)
+  private val acc1 = pkByAddress(secondAddress)
+  private val acc2 = pkByAddress(thirdAddress)
+  private val acc3 = pkByAddress(fourthAddress)
 
   test("setup acc0 with 1 TN") {
     val tx =
@@ -44,35 +38,32 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
         .explicitGet()
 
     val transferId = sender
-      .signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt)))
+      .signedBroadcast(tx.json())
       .id
     nodes.waitForHeightAriseAndTxPresent(transferId)
   }
 
   test("set acc0 as 2of2 multisig") {
-    val scriptText = {
-      val untyped = Parser(s"""
+    val scriptText = s"""
+        match tx {
+          case t: Transaction => {
+            let A = base58'${ByteStr(acc1.publicKey)}'
+            let B = base58'${ByteStr(acc2.publicKey)}'
+            let AC = sigVerify(tx.bodyBytes,tx.proofs[0],A)
+            let BC = sigVerify(tx.bodyBytes,tx.proofs[1],B)
+            AC && BC
+          }
+          case _ => false
+        }
+      """.stripMargin
 
-        let A = base58'${ByteStr(acc1.publicKey)}'
-        let B = base58'${ByteStr(acc2.publicKey)}'
-
-        let AC = sigVerify(tx.bodyBytes,tx.proofs[0],A)
-        let BC = sigVerify(tx.bodyBytes,tx.proofs[1],B)
-
-         AC && BC
-
-      """.stripMargin).get.value
-      assert(untyped.size == 1)
-      CompilerV1(dummyCompilerContext, untyped.head).explicitGet()._1
-    }
-
-    val script = ScriptV1(scriptText).explicitGet()
+    val script = ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), minFee, System.currentTimeMillis())
+      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), setScriptFee, System.currentTimeMillis())
       .explicitGet()
 
     val setScriptId = sender
-      .signedBroadcast(setScriptTransaction.json() + ("type" -> JsNumber(SetScriptTransaction.typeId.toInt)))
+      .signedBroadcast(setScriptTransaction.json())
       .id
 
     nodes.waitForHeightAriseAndTxPresent(setScriptId)
@@ -102,7 +93,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           attachment = Array.emptyByteArray
         )
         .explicitGet()
-    assertBadRequest(sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))))
+    assertBadRequest(sender.signedBroadcast(tx.json()))
   }
 
   test("can send from acc0 using multisig of acc1 and acc2") {
@@ -127,7 +118,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val signed = unsigned.copy(proofs = Proofs(Seq(sig1, sig2)))
 
     val versionedTransferId =
-      sender.signedBroadcast(signed.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+      sender.signedBroadcast(signed.json()).id
 
     nodes.waitForHeightAriseAndTxPresent(versionedTransferId)
   }
@@ -148,7 +139,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
     val signed = unsigned.copy(proofs = Proofs(Seq(sig1, sig2)))
     val clearScriptId = sender
-      .signedBroadcast(signed.json() + ("type" -> JsNumber(SetScriptTransaction.typeId.toInt)))
+      .signedBroadcast(signed.json())
       .id
 
     nodes.waitForHeightAriseAndTxPresent(clearScriptId)
@@ -169,7 +160,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           attachment = Array.emptyByteArray
         )
         .explicitGet()
-    val txId = sender.signedBroadcast(tx.json() + ("type" -> JsNumber(TransferTransactionV2.typeId.toInt))).id
+    val txId = sender.signedBroadcast(tx.json()).id
     nodes.waitForHeightAriseAndTxPresent(txId)
   }
 }

@@ -3,12 +3,12 @@ package com.wavesplatform.metrics
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
+import com.wavesplatform.utils.{ScorexLogging, Time}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
 import org.influxdb.dto.Point
 import org.influxdb.{InfluxDB, InfluxDBFactory}
-import scorex.utils.{ScorexLogging, TimeImpl}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
@@ -28,24 +28,25 @@ object Metrics extends ScorexLogging {
   private implicit val scheduler: SchedulerService = Scheduler.singleThread("metrics")
 
   private var settings: Settings   = _
+  private var time: Time           = _
   private var db: Option[InfluxDB] = None
-  private val time                 = new TimeImpl
 
-  def start(config: Settings): Future[Boolean] =
+  def start(config: Settings, thatTime: Time): Future[Boolean] =
     Task {
       db.foreach { dbc =>
         try {
           db = None
           dbc.close()
         } catch {
-          case e: Throwable => log.warn(s"Failed to close InfluxDB (${e.getMessage()})")
+          case e: Throwable => log.warn(s"Failed to close InfluxDB (${e.getMessage})")
         }
       }
       settings = config
+      time = thatTime
       if (settings.enable) {
         import config.{influxDb => dbSettings}
 
-        log.info(s"Metrics are enabled and will be sent to ${dbSettings.uri}/${dbSettings.db}")
+        log.info(s"Precise metrics are enabled and will be sent to ${dbSettings.uri}/${dbSettings.db}")
         try {
           val x = if (dbSettings.username.nonEmpty && dbSettings.password.nonEmpty) {
             InfluxDBFactory.connect(
@@ -68,7 +69,7 @@ object Metrics extends ScorexLogging {
               log.warn("Can't connect to InfluxDB", e)
           }
         } catch {
-          case e: Throwable => log.warn(s"Failed to connect to InfluxDB (${e.getMessage()})")
+          case e: Throwable => log.warn(s"Failed to connect to InfluxDB (${e.getMessage})")
         }
       }
 
@@ -78,7 +79,6 @@ object Metrics extends ScorexLogging {
   def shutdown(): Unit =
     Task {
       db.foreach(_.close())
-      time.close()
     }.runAsyncLogErr
 
   def write(b: Point.Builder): Unit = {
@@ -95,7 +95,7 @@ object Metrics extends ScorexLogging {
               .time(ts, TimeUnit.MILLISECONDS)
               .build())
         } catch {
-          case e: Throwable => log.warn(s"Failed to send data to InfluxDB (${e.getMessage()})")
+          case e: Throwable => log.warn(s"Failed to send data to InfluxDB (${e.getMessage})")
         }
       }.runAsyncLogErr
     }

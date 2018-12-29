@@ -10,12 +10,18 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import cats.instances.all._
 import com.typesafe.config._
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.actor.RootActorSystem
+import com.wavesplatform.api.http._
+import com.wavesplatform.api.http.alias.{AliasApiRoute, AliasBroadcastApiRoute}
+import com.wavesplatform.api.http.assets.{AssetsApiRoute, AssetsBroadcastApiRoute}
+import com.wavesplatform.api.http.leasing.{LeaseApiRoute, LeaseBroadcastApiRoute}
 import com.wavesplatform.consensus.PoSSelector
+import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
 import com.wavesplatform.db.openDB
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
-import com.wavesplatform.http.NodeApiRoute
+import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute, WavesApiRoute}
 import com.wavesplatform.matcher.Matcher
 import com.wavesplatform.metrics.Metrics
 import com.wavesplatform.mining.{Miner, MinerImpl}
@@ -23,12 +29,15 @@ import com.wavesplatform.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import com.wavesplatform.network._
 import com.wavesplatform.settings._
 import com.wavesplatform.state.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
-import com.wavesplatform.utils.{SystemInformationReporter, forceStopApplication}
+import com.wavesplatform.utils.{NTP, ScorexLogging, SystemInformationReporter, forceStopApplication}
 import com.wavesplatform.utx.{MatcherUtxPool, UtxPool, UtxPoolImpl}
+import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
+import kamon.influxdb.CustomInfluxDBReporter
+import kamon.system.SystemMetrics
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler._
 import monix.execution.schedulers.SchedulerService
@@ -36,23 +45,12 @@ import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 import org.influxdb.dto.Point
 import org.slf4j.bridge.SLF4JBridgeHandler
-import scorex.account.AddressScheme
-import scorex.api.http._
-import scorex.api.http.alias.{AliasApiRoute, AliasBroadcastApiRoute}
-import scorex.api.http.assets.{AssetsApiRoute, AssetsBroadcastApiRoute}
-import scorex.api.http.leasing.{LeaseApiRoute, LeaseBroadcastApiRoute}
-import scorex.consensus.nxt.api.http.NxtConsensusApiRoute
-import scorex.transaction._
-import scorex.utils.{NTP, ScorexLogging, Time}
-import scorex.wallet.Wallet
-import scorex.waves.http.{DebugApiRoute, WavesApiRoute}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.reflect.runtime.universe._
 import scala.util.Try
 
-class Application(val actorSystem: ActorSystem, val settings: WavesSettings, configRoot: ConfigObject) extends ScorexLogging {
+class Application(val actorSystem: ActorSystem, val settings: WavesSettings, configRoot: ConfigObject, time: NTP) extends ScorexLogging {
 
   import monix.execution.Scheduler.Implicits.{global => scheduler}
 
@@ -60,7 +58,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
 
   private val LocalScoreBroadcastDebounce = 1.second
 
-  private val blockchainUpdater = StorageFactory(settings, db, NTP)
+  private val blockchainUpdater = StorageFactory(settings, db, time)
 
   private val checkpointService = new CheckpointServiceImpl(db, settings.checkpointsSettings)
   private lazy val upnp         = new UPnP(settings.networkSettings.uPnPSettings) // don't initialize unless enabled
@@ -99,24 +97,13 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     if (wallet.privateKeyAccounts.isEmpty)
       wallet.generateNewAccounts(1)
 
-    val feeCalculator          = new FeeCalculator(settings.feesSettings, blockchainUpdater)
-    val time: Time             = NTP
     val establishedConnections = new ConcurrentHashMap[Channel, PeerInfo]
     val allChannels            = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
     val innerUtxStorage =
-      new UtxPoolImpl(time, blockchainUpdater, feeCalculator, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
+      new UtxPoolImpl(time, blockchainUpdater, settings.blockchainSettings.functionalitySettings, settings.utxSettings)
 
     matcher = if (settings.matcherSettings.enable) {
-      val m = new Matcher(actorSystem,
-                          wallet,
-                          innerUtxStorage,
-                          allChannels,
-                          blockchainUpdater,
-                          settings.blockchainSettings,
-                          settings.restAPISettings,
-                          settings.matcherSettings)
-      m.runMatcher()
-      Some(m)
+      Matcher(actorSystem, time, wallet, innerUtxStorage, allChannels, blockchainUpdater, settings)
     } else None
 
     val utxStorage =
@@ -226,7 +213,13 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
         BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels, c => processCheckpoint(None, c)),
-        TransactionsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
+        TransactionsApiRoute(settings.restAPISettings,
+                             settings.blockchainSettings.functionalitySettings,
+                             wallet,
+                             blockchainUpdater,
+                             utxStorage,
+                             allChannels,
+                             time),
         NxtConsensusApiRoute(settings.restAPISettings, blockchainUpdater, settings.blockchainSettings.functionalitySettings),
         WalletApiRoute(settings.restAPISettings, wallet),
         PaymentApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
@@ -241,6 +234,8 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
                         settings.blockchainSettings.functionalitySettings),
         DebugApiRoute(
           settings,
+          time,
+          blockchainUpdater,
           wallet,
           blockchainUpdater,
           peerDatabase,
@@ -265,25 +260,20 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         AliasBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels)
       )
 
-      val apiTypes = Seq(
-        typeOf[NodeApiRoute],
-        typeOf[BlocksApiRoute],
-        typeOf[TransactionsApiRoute],
-        typeOf[NxtConsensusApiRoute],
-        typeOf[WalletApiRoute],
-        typeOf[PaymentApiRoute],
-        typeOf[UtilsApiRoute],
-        typeOf[PeersApiRoute],
-        typeOf[AddressApiRoute],
-        typeOf[DebugApiRoute],
-        typeOf[WavesApiRoute],
-        typeOf[AssetsApiRoute],
-        typeOf[ActivationApiRoute],
-        typeOf[AssetsBroadcastApiRoute],
-        typeOf[LeaseApiRoute],
-        typeOf[LeaseBroadcastApiRoute],
-        typeOf[AliasApiRoute],
-        typeOf[AliasBroadcastApiRoute]
+      val apiTypes: Set[Class[_]] = Set(
+        classOf[NodeApiRoute],
+        classOf[BlocksApiRoute],
+        classOf[TransactionsApiRoute],
+        classOf[NxtConsensusApiRoute],
+        classOf[WalletApiRoute],
+        classOf[UtilsApiRoute],
+        classOf[PeersApiRoute],
+        classOf[AddressApiRoute],
+        classOf[DebugApiRoute],
+        classOf[AssetsApiRoute],
+        classOf[ActivationApiRoute],
+        classOf[LeaseApiRoute],
+        classOf[AliasApiRoute]
       )
       val combinedRoute = CompositeHttpService(actorSystem, apiTypes, apiRoutes, settings.restAPISettings).loggingCompositeRoute
       val httpFuture    = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
@@ -293,7 +283,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
 
     //on unexpected shutdown
     sys.addShutdownHook {
-      Kamon.shutdown()
+      Await.ready(Kamon.stopAllReporters(), 20.seconds)
       Metrics.shutdown()
       shutdown(utxStorage, network)
     }
@@ -318,12 +308,13 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         upnp.deletePort(addr.getPort)
       }
 
-      matcher.foreach(_.shutdownMatcher())
+      matcher.foreach(_.shutdown())
 
       log.debug("Closing peer database")
       peerDatabase.close()
 
       Try(Await.result(actorSystem.terminate(), 2.minute)).failed.map(e => log.error("Failed to terminate actor system", e))
+      log.debug("Node's actor system shutdown successful")
 
       blockchainUpdater.shutdown()
       rxExtensionLoaderShutdown.foreach(_.shutdown())
@@ -340,13 +331,15 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       log.info("Closing storage")
       db.close()
 
+      time.close()
       log.info("Shutdown complete")
     }
   }
 
   private def shutdownAndWait(scheduler: SchedulerService, name: String, timeout: FiniteDuration = 1.minute): Unit = {
+    log.debug(s"Shutting down $name")
     scheduler.shutdown()
-    val r = Await.result(scheduler.awaitTermination(timeout, global), Duration.Inf)
+    val r = Await.result(scheduler.awaitTermination(timeout, global), 2 * timeout)
     if (r)
       log.info(s"$name was shutdown successfully")
     else
@@ -411,8 +404,21 @@ object Application extends ScorexLogging {
     }
 
     val settings = WavesSettings.fromConfig(config)
-    Kamon.start(config)
-    val isMetricsStarted = Metrics.start(settings.metrics)
+
+    // Initialize global var with actual address scheme
+    AddressScheme.current = new AddressScheme {
+      override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
+    }
+
+    if (config.getBoolean("kamon.enable")) {
+      log.info("Aggregated metrics are enabled")
+      Kamon.reconfigure(config)
+      Kamon.addReporter(new CustomInfluxDBReporter())
+      SystemMetrics.startCollecting()
+    }
+
+    val time             = new NTP(settings.ntpServer)
+    val isMetricsStarted = Metrics.start(settings.metrics, time)
 
     RootActorSystem.start("wavesplatform", config) { actorSystem =>
       import actorSystem.dispatcher
@@ -433,14 +439,9 @@ object Application extends ScorexLogging {
         }
       }
 
-      // Initialize global var with actual address scheme
-      AddressScheme.current = new AddressScheme {
-        override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
-      }
-
       log.info(s"${Constants.AgentName} Blockchain Id: ${settings.blockchainSettings.addressSchemeCharacter}")
 
-      new Application(actorSystem, settings, config.root()).run()
+      new Application(actorSystem, settings, config.root(), time).run()
     }
   }
 }

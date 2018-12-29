@@ -4,86 +4,37 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeoutException
 
+import com.wavesplatform.api.http.alias.CreateAliasV1Request
+import com.wavesplatform.api.http.assets._
+import com.wavesplatform.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
+import com.wavesplatform.api.http.{AddressApiRoute, ConnectReq, DataRequest}
 import com.wavesplatform.features.api.ActivationStatus
-import com.wavesplatform.http.api_key
+import com.wavesplatform.http.DebugApiRoute._
+import com.wavesplatform.http.DebugMessage._
+import com.wavesplatform.http.{DebugMessage, RollbackParams, api_key}
 import com.wavesplatform.it.Node
 import com.wavesplatform.it.util.GlobalTimer.{instance => timer}
 import com.wavesplatform.it.util._
-import com.wavesplatform.matcher.api.CancelOrderRequest
-import com.wavesplatform.state.{ByteStr, DataEntry, Portfolio}
+import com.wavesplatform.state.{DataEntry, EitherExt2, Portfolio}
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
+import com.wavesplatform.transaction.transfer._
 import org.asynchttpclient.Dsl.{get => _get, post => _post}
 import org.asynchttpclient._
 import org.asynchttpclient.util.HttpConstants
 import org.scalactic.source.Position
 import org.scalatest.{Assertions, Matchers}
-import play.api.libs.json.Json.{parse, stringify, toJson}
+import play.api.libs.json.Json.{stringify, toJson}
 import play.api.libs.json._
-import scorex.api.http.PeersApiRoute.{ConnectReq, connectFormat}
-import scorex.api.http.alias.CreateAliasV1Request
-import scorex.api.http.assets._
-import scorex.api.http.leasing.{LeaseCancelV1Request, LeaseV1Request, SignedLeaseCancelV1Request, SignedLeaseV1Request}
-import scorex.api.http.{AddressApiRoute, DataRequest}
-import scorex.transaction.transfer.MassTransferTransaction.Transfer
-import scorex.transaction.assets.exchange.Order
-import scorex.transaction.transfer._
-import scorex.waves.http.DebugApiRoute._
-import scorex.waves.http.DebugMessage._
-import scorex.waves.http.{DebugMessage, RollbackParams}
-
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.traverse
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object AsyncHttpApi extends Assertions {
 
   implicit class NodeAsyncHttpApi(n: Node) extends Assertions with Matchers {
-
-    def matcherGet(path: String,
-                   f: RequestBuilder => RequestBuilder = identity,
-                   statusCode: Int = HttpConstants.ResponseStatusCodes.OK_200,
-                   waitForStatus: Boolean = false): Future[Response] =
-      retrying(f(_get(s"${n.matcherApiEndpoint}$path")).build(), statusCode = statusCode, waitForStatus = waitForStatus)
-
-    def matcherGetWithSignature(path: String, ts: Long, signature: ByteStr, f: RequestBuilder => RequestBuilder = identity): Future[Response] =
-      retrying {
-        _get(s"${n.matcherApiEndpoint}$path")
-          .setHeader("Timestamp", ts)
-          .setHeader("Signature", signature)
-          .build()
-      }
-
-    def matcherGetStatusCode(path: String, statusCode: Int): Future[MessageMatcherResponse] =
-      matcherGet(path, statusCode = statusCode).as[MessageMatcherResponse]
-
-    def matcherPost[A: Writes](path: String, body: A): Future[Response] =
-      post(s"${n.matcherApiEndpoint}$path", (rb: RequestBuilder) => rb.setHeader("Content-type", "application/json").setBody(stringify(toJson(body))))
-
-    def getOrderStatus(asset: String, orderId: String, waitForStatus: Boolean = true): Future[MatcherStatusResponse] =
-      matcherGet(s"/matcher/orderbook/$asset/TN/$orderId", waitForStatus = waitForStatus).as[MatcherStatusResponse]
-
-    def getOrderBook(asset: String): Future[OrderBookResponse] =
-      matcherGet(s"/matcher/orderbook/$asset/TN").as[OrderBookResponse]
-
-    def getOrderbookByPublicKey(publicKey: String, timestamp: Long, signature: ByteStr): Future[Seq[OrderbookHistory]] =
-      matcherGetWithSignature(s"/matcher/orderbook/$publicKey", timestamp, signature).as[Seq[OrderbookHistory]]
-
-    def getOrderbookByPublicKeyActive(publicKey: String, timestamp: Long, signature: ByteStr): Future[Seq[OrderbookHistory]] =
-      matcherGetWithSignature(s"/matcher/orderbook/$publicKey?activeOnly=true", timestamp, signature).as[Seq[OrderbookHistory]]
-
-    def waitOrderStatus(assetId: String,
-                        orderId: String,
-                        expectedStatus: String,
-                        retryInterval: FiniteDuration = 1.second): Future[MatcherStatusResponse] = {
-      waitFor[MatcherStatusResponse](s"order(asset=$assetId, orderId=$orderId) status == $expectedStatus")(_.getOrderStatus(assetId, orderId),
-                                                                                                           _.status == expectedStatus,
-                                                                                                           5.seconds)
-    }
-
-    def getReservedBalance(publicKey: String, timestamp: Long, signature: ByteStr): Future[Map[String, Long]] =
-      matcherGetWithSignature(s"/matcher/balance/reserved/$publicKey", timestamp, signature).as[Map[String, Long]]
 
     def get(path: String, f: RequestBuilder => RequestBuilder = identity): Future[Response] =
       retrying(f(_get(s"${n.nodeApiEndpoint}$path")).build())
@@ -153,7 +104,7 @@ object AsyncHttpApi extends Assertions {
           .toScala
           .map(Option(_))
           .recoverWith {
-            case (_: IOException | _: TimeoutException) => Future(None)
+            case _: IOException | _: TimeoutException => Future(None)
           }
 
       def cond(ropt: Option[Response]) = ropt.exists { r =>
@@ -165,6 +116,9 @@ object AsyncHttpApi extends Assertions {
 
     def waitForPeers(targetPeersCount: Int): Future[Seq[Peer]] =
       waitFor[Seq[Peer]](s"connectedPeers.size >= $targetPeersCount")(_.connectedPeers, _.lengthCompare(targetPeersCount) >= 0, 1.second)
+
+    def waitForBlackList(blackListSize: Int): Future[Seq[BlacklistedPeer]] =
+      waitFor[Seq[BlacklistedPeer]](s"blacklistedPeers > $blackListSize")(_.blacklistedPeers, _.lengthCompare(blackListSize) > 0, 500.millis)
 
     def height: Future[Int] = get("/blocks/height").as[JsValue].map(v => (v \ "height").as[Int])
 
@@ -190,6 +144,10 @@ object AsyncHttpApi extends Assertions {
 
     def balance(address: String): Future[Balance] = get(s"/addresses/balance/$address").as[Balance]
 
+    def balanceDetails(address: String): Future[BalanceDetails] = get(s"/addresses/balance/details/$address").as[BalanceDetails]
+
+    def getAddresses: Future[Seq[String]] = get(s"/addresses").as[Seq[String]]
+
     def scriptInfo(address: String): Future[AddressApiRoute.AddressScriptInfo] =
       get(s"/addresses/scriptInfo/$address").as[AddressApiRoute.AddressScriptInfo]
 
@@ -199,8 +157,8 @@ object AsyncHttpApi extends Assertions {
       case Failure(ex)                                       => Failure(ex)
     }
 
-    def waitForTransaction(txId: String, retryInterval: FiniteDuration = 1.second): Future[TransactionInfo] =
-      waitFor[Option[TransactionInfo]](s"transaction $txId")(
+    def waitForTransaction(txId: String, retryInterval: FiniteDuration = 1.second): Future[TransactionInfo] = {
+      val condition = waitFor[Option[TransactionInfo]](s"transaction $txId")(
         _.transactionInfo(txId).transform {
           case Success(tx)                                       => Success(Some(tx))
           case Failure(UnexpectedStatusCodeException(_, 404, _)) => Success(None)
@@ -210,6 +168,9 @@ object AsyncHttpApi extends Assertions {
         retryInterval
       ).map(_.get)
 
+      condition
+    }
+
     def waitForUtxIncreased(fromSize: Int): Future[Int] = waitFor[Int](s"utxSize > $fromSize")(
       _.utxSize,
       _ > fromSize,
@@ -218,7 +179,25 @@ object AsyncHttpApi extends Assertions {
 
     def waitForHeight(expectedHeight: Int): Future[Int] = waitFor[Int](s"height >= $expectedHeight")(_.height, h => h >= expectedHeight, 5.seconds)
 
+    def rawTransactionInfo(txId: String): Future[JsValue] = get(s"/transactions/info/$txId").map(r => Json.parse(r.getResponseBody))
+
     def transactionInfo(txId: String): Future[TransactionInfo] = get(s"/transactions/info/$txId").as[TransactionInfo]
+
+    def transactionsByAddress(address: String, limit: Int): Future[Seq[Seq[TransactionInfo]]] =
+      get(s"/transactions/address/$address/limit/$limit").as[Seq[Seq[TransactionInfo]]]
+
+    def assetDistribution(asset: String,
+                          initialHeight: Option[Int],
+                          limit: Option[Int] = None,
+                          after: Option[String] = None): Future[Map[String, Long]] = {
+      val h   = if (initialHeight.isDefined) s"/${initialHeight.get}" else ""
+      val l   = if (limit.isDefined) s"/limit/${limit.get}" else ""
+      val a   = if (after.isDefined) s"?after=${after.get}" else ""
+      val req = s"/assets/$asset/distribution" + h + l + a
+      println(req)
+
+      get(req).as[Map[String, Long]]
+    }
 
     def effectiveBalance(address: String): Future[Balance] = get(s"/addresses/effectiveBalance/$address").as[Balance]
 
@@ -227,17 +206,50 @@ object AsyncHttpApi extends Assertions {
                  amount: Long,
                  fee: Long,
                  assetId: Option[String] = None,
-                 feeAssetId: Option[String] = None): Future[Transaction] =
-      postJson("/assets/transfer", TransferV1Request(assetId, feeAssetId, amount, fee, sourceAddress, None, recipient)).as[Transaction]
+                 feeAssetId: Option[String] = None,
+                 version: Byte = 2): Future[Transaction] = {
+      version match {
+        case 2 =>
+          postJson("/assets/transfer", TransferV2Request(version, assetId, amount, feeAssetId, fee, sourceAddress, None, recipient)).as[Transaction]
+        case _ => postJson("/assets/transfer", TransferV1Request(assetId, feeAssetId, amount, fee, sourceAddress, None, recipient)).as[Transaction]
+      }
+    }
 
     def payment(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
       postJson("/TN/payment", PaymentRequest(amount, fee, sourceAddress, recipient)).as[Transaction]
 
-    def lease(sourceAddress: String, recipient: String, amount: Long, fee: Long): Future[Transaction] =
-      postJson("/leasing/lease", LeaseV1Request(sourceAddress, amount, fee, recipient)).as[Transaction]
+    def lease(sourceAddress: String, recipient: String, amount: Long, fee: Long, version: Byte = 2): Future[Transaction] = {
+      version match {
+        case 2 => { //TODO: @monroid refactor after https://wavesplatform.atlassian.net/browse/NODE-1222 fix
+          signAndBroadcast(
+            Json.obj(
+              "type"      -> 8,
+              "sender"    -> sourceAddress,
+              "amount"    -> amount,
+              "recipient" -> recipient,
+              "fee"       -> fee,
+              "version"   -> version
+            ))
+        }
+        case _ => postJson("/leasing/lease", LeaseV1Request(sourceAddress, amount, fee, recipient)).as[Transaction]
+      }
+    }
 
-    def cancelLease(sourceAddress: String, leaseId: String, fee: Long): Future[Transaction] =
-      postJson("/leasing/cancel", LeaseCancelV1Request(sourceAddress, leaseId, fee)).as[Transaction]
+    def cancelLease(sourceAddress: String, leaseId: String, fee: Long, version: Byte = 2): Future[Transaction] = {
+      version match {
+        case 2 => { //TODO: @monroid refactor after https://wavesplatform.atlassian.net/browse/NODE-1222 fix
+          signAndBroadcast(
+            Json.obj(
+              "type"    -> 9,
+              "sender"  -> sourceAddress,
+              "txId"    -> leaseId,
+              "fee"     -> fee,
+              "version" -> version
+            ))
+        }
+        case _ => postJson("/leasing/cancel", LeaseCancelV1Request(sourceAddress, leaseId, fee)).as[Transaction]
+      }
+    }
 
     def activeLeases(sourceAddress: String) = get(s"/leasing/active/$sourceAddress").as[Seq[Transaction]]
 
@@ -247,8 +259,41 @@ object AsyncHttpApi extends Assertions {
               quantity: Long,
               decimals: Byte,
               reissuable: Boolean,
-              fee: Long): Future[Transaction] =
-      postJson("/assets/issue", IssueV1Request(sourceAddress, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
+              fee: Long,
+              version: Byte = 2,
+              script: Option[String] = None): Future[Transaction] = {
+      version match {
+        case 2 => { //TODO: @monroid refactor after https://wavesplatform.atlassian.net/browse/NODE-1222 fix
+          val js = Json.obj(
+            "type"        -> 3,
+            "name"        -> name,
+            "quantity"    -> quantity,
+            "description" -> description,
+            "sender"      -> sourceAddress,
+            "decimals"    -> decimals,
+            "reissuable"  -> reissuable,
+            "fee"         -> fee,
+            "version"     -> version
+          )
+
+          val jsUpdated = if (script.isDefined) js ++ Json.obj("script" -> JsString(script.get)) else js
+          signAndBroadcast(jsUpdated)
+        }
+        case _ => postJson("/assets/issue", IssueV1Request(sourceAddress, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
+      }
+    }
+
+    def setAssetScript(assetId: String, sender: String, fee: Long, script: Option[String] = None): Future[Transaction] = {
+      signAndBroadcast(
+        Json.obj(
+          "type"    -> 15,
+          "version" -> 1,
+          "assetId" -> assetId,
+          "sender"  -> sender,
+          "fee"     -> fee,
+          "script"  -> script
+        ))
+    }
 
     def scriptCompile(code: String) = post("/utils/script/compile", code).as[CompiledScript]
 
@@ -264,8 +309,8 @@ object AsyncHttpApi extends Assertions {
     def assetsBalance(address: String): Future[FullAssetsInfo] =
       get(s"/assets/balance/$address").as[FullAssetsInfo]
 
-    def assetsDetails(assetId: String): Future[AssetInfo] =
-      get(s"/assets/details/$assetId").as[AssetInfo]
+    def assetsDetails(assetId: String, fullInfo: Boolean = false): Future[AssetInfo] =
+      get(s"/assets/details/$assetId?full=$fullInfo").as[AssetInfo]
 
     def sponsorAsset(sourceAddress: String, assetId: String, minSponsoredAssetFee: Long, fee: Long): Future[Transaction] =
       postJson("/assets/sponsor", SponsorFeeRequest(1, sourceAddress, assetId, Some(minSponsoredAssetFee), fee)).as[Transaction]
@@ -313,7 +358,10 @@ object AsyncHttpApi extends Assertions {
     def signedIssue(issue: SignedIssueV1Request): Future[Transaction] =
       postJson("/assets/broadcast/issue", issue).as[Transaction]
 
-    def batchSignedTransfer(transfers: Seq[SignedTransferV1Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
+    def signedIssue(issue: SignedIssueV2Request): Future[Transaction] =
+      signedBroadcast(issue.toTx.explicitGet().json())
+
+    def batchSignedTransfer(transfers: Seq[SignedTransferV2Request], timeout: FiniteDuration = 1.minute): Future[Seq[Transaction]] = {
       val request = _post(s"${n.nodeApiEndpoint}/assets/broadcast/batch-transfer")
         .setHeader("Content-type", "application/json")
         .withApiKey(n.apiKey)
@@ -438,23 +486,6 @@ object AsyncHttpApi extends Assertions {
                    reissuable: Boolean): Future[Transaction] =
       postJson("/assets/issue", IssueV1Request(address, name, description, quantity, decimals, reissuable, fee)).as[Transaction]
 
-    def placeOrder(order: Order): Future[MatcherResponse] =
-      matcherPost("/matcher/orderbook", order.json()).as[MatcherResponse]
-
-    def expectIncorrectOrderPlacement(order: Order, expectedStatusCode: Int, expectedStatus: String): Future[Boolean] =
-      matcherPost("/matcher/orderbook", order.json()) transform {
-        case Failure(UnexpectedStatusCodeException(_, `expectedStatusCode`, responseBody)) =>
-          Try(parse(responseBody).as[MatcherStatusResponse]) match {
-            case Success(mr) if mr.status == expectedStatus => Success(true)
-            case Failure(f)                                 => Failure(new RuntimeException(s"Failed to parse response: $f"))
-          }
-        case Success(r) => Failure(new RuntimeException(s"Unexpected matcher response: (${r.getStatusCode}) ${r.getResponseBody}"))
-        case _          => Failure(new RuntimeException(s"Unexpected failure from matcher"))
-      }
-
-    def cancelOrder(amountAsset: String, priceAsset: String, request: CancelOrderRequest): Future[MatcherStatusResponse] =
-      matcherPost(s"/matcher/orderbook/$amountAsset/$priceAsset/cancel", request.json).as[MatcherStatusResponse]
-
     def retrying(r: Request,
                  interval: FiniteDuration = 1.second,
                  statusCode: Int = HttpConstants.ResponseStatusCodes.OK_200,
@@ -493,7 +524,7 @@ object AsyncHttpApi extends Assertions {
     }
 
     def once(r: Request): Future[Response] = {
-      n.log.debug(s"Request: ${r.getUrl}")
+      n.log.debug(s"Request: ${r.getMethod} ${r.getUrl}")
       n.client
         .executeRequest(
           r,
@@ -542,21 +573,29 @@ object AsyncHttpApi extends Assertions {
       n.assetBalance(acc, assetIdString).map(_.balance shouldBe balance)
     }
 
+    def calculateFee(jsobj: JsObject): Future[FeeInfo] =
+      postJsObjectWithApiKey("/transactions/calculateFee", jsobj).as[FeeInfo]
+
   }
 
   implicit class NodesAsyncHttpApi(nodes: Seq[Node]) extends Matchers {
+    def height: Future[Seq[Int]] = traverse(nodes)(_.height)
+
     def waitForHeightAriseAndTxPresent(transactionId: String)(implicit p: Position): Future[Unit] =
       for {
         allHeights   <- traverse(nodes)(_.waitForTransaction(transactionId).map(_.height))
-        _            <- traverse(nodes)(_.waitForHeight(allHeights.max + 2))
+        _            <- traverse(nodes)(_.waitForHeight(allHeights.max + 1))
         finalHeights <- traverse(nodes)(_.waitForTransaction(transactionId).map(_.height))
-      } yield all(finalHeights).shouldBe(finalHeights.head)
+      } yield all(finalHeights) should be >= (finalHeights.head)
 
-    def waitForHeightArise(): Future[Unit] =
+    def waitForTransaction(transactionId: String)(implicit p: Position): Future[Unit] =
+      traverse(nodes)(_.waitForTransaction(transactionId)).map(_ => ())
+
+    def waitForHeightArise(): Future[Int] =
       for {
-        height <- traverse(nodes)(_.height).map(_.max)
+        height <- height.map(_.max)
         _      <- traverse(nodes)(_.waitForHeight(height + 1))
-      } yield ()
+      } yield (height + 1)
 
     def waitForSameBlockHeadesAt(height: Int, retryInterval: FiniteDuration = 5.seconds): Future[Boolean] = {
 

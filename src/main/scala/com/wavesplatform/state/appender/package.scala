@@ -8,12 +8,11 @@ import com.wavesplatform.utx.UtxPool
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import monix.eval.Task
-import scorex.block.Block
-import scorex.consensus.TransactionsOrdering
-import scorex.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
-import scorex.transaction._
-import scorex.utils.{ScorexLogging, Time}
+import com.wavesplatform.block.Block
+import com.wavesplatform.transaction.ValidationError.{BlockAppendError, BlockFromFuture, GenericError}
+import com.wavesplatform.transaction._
 import cats.implicits._
+import com.wavesplatform.utils.{ScorexLogging, Time}
 
 import scala.util.{Left, Right}
 
@@ -102,7 +101,6 @@ package object appender extends ScorexLogging {
       effectiveBalance <- genBalance(height).left.map(GenericError(_))
       _                <- validateBlockVersion(height, block, settings.blockchainSettings.functionalitySettings)
       _                <- Either.cond(blockTime - currentTs < MaxTimeDrift, (), BlockFromFuture(blockTime))
-      _                <- validateTransactionSorting(height, block, settings.blockchainSettings.functionalitySettings)
       _                <- pos.validateBaseTarget(height, block, parent, grandParent)
       _                <- pos.validateGeneratorSignature(height, block)
       _                <- pos.validateBlockDelay(height, block, parent, effectiveBalance).orElse(checkExceptions(height, block))
@@ -131,18 +129,4 @@ package object appender extends ScorexLogging {
       GenericError(s"Block Version 3 can only appear at height greater than $version3Height")
     )
   }
-
-  private def validateTransactionSorting(height: Int, block: Block, settings: FunctionalitySettings): Either[ValidationError, Unit] = {
-    val blockTime = block.timestamp
-    for {
-      _ <- Either.cond(
-        blockTime < settings.requireSortedTransactionsAfter
-          || height > settings.dontRequireSortedTransactionsAfter
-          || block.transactionData.sorted(TransactionsOrdering.InBlock) == block.transactionData,
-        (),
-        GenericError("transactions are not sorted")
-      )
-    } yield ()
-  }
-
 }

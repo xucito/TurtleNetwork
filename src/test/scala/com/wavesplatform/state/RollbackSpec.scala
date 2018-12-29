@@ -1,22 +1,27 @@
 package com.wavesplatform.state
 
+import com.wavesplatform.account.{Address, PrivateKeyAccount}
 import com.wavesplatform.crypto.SignatureLength
-import com.wavesplatform.db.WithState
+import com.wavesplatform.db.WithDomain
+import com.wavesplatform.features.BlockchainFeatures._
+import com.wavesplatform.features._
+import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.lang.v1.compiler.Terms.TRUE
+import com.wavesplatform.settings.{TestFunctionalitySettings, WavesSettings}
 import com.wavesplatform.state.reader.LeaseDetails
-import com.wavesplatform.{NoShrink, TestTime, TransactionGen}
+import com.wavesplatform.transaction.ValidationError.AliasDoesNotExist
+import com.wavesplatform.transaction.assets.{IssueTransactionV1, ReissueTransactionV1}
+import com.wavesplatform.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
+import com.wavesplatform.transaction.smart.SetScriptTransaction
+import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.transaction.{CreateAliasTransactionV1, DataTransaction, GenesisTransaction, Transaction}
+import com.wavesplatform.{NoShrink, TestTime, TransactionGen, history}
 import org.scalacheck.Gen
 import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
-import scorex.account.{Address, PrivateKeyAccount}
-import scorex.lagonaki.mocks.TestBlock
-import scorex.transaction.ValidationError.AliasDoesNotExist
-import scorex.transaction.assets.{IssueTransactionV1, ReissueTransactionV1}
-import scorex.transaction.lease.{LeaseCancelTransactionV1, LeaseTransactionV1}
-import scorex.transaction.smart.SetScriptTransaction
-import scorex.transaction.transfer._
-import scorex.transaction.{CreateAliasTransactionV1, DataTransaction, GenesisTransaction}
+import org.scalatest.{Assertions, FreeSpec, Matchers}
 
-class RollbackSpec extends FreeSpec with Matchers with WithState with TransactionGen with PropertyChecks with NoShrink {
+class RollbackSpec extends FreeSpec with Matchers with WithDomain with TransactionGen with PropertyChecks with NoShrink {
   private val time   = new TestTime
   private def nextTs = time.getTimestamp()
 
@@ -28,6 +33,21 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
   private def transfer(sender: PrivateKeyAccount, recipient: Address, amount: Long) =
     TransferTransactionV1.selfSigned(None, sender, recipient, amount, nextTs, None, 1, Array.empty[Byte]).explicitGet()
+
+  private def randomOp(sender: PrivateKeyAccount, recipient: Address, amount: Long, op: Int, nextTs: => Long = nextTs) = {
+    import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
+    op match {
+      case 1 =>
+        val lease = LeaseTransactionV1.selfSigned(sender, amount, 100000, nextTs, recipient).explicitGet()
+        List(lease, LeaseCancelTransactionV1.selfSigned(sender, lease.id(), 1, nextTs).explicitGet())
+      case 2 =>
+        List(
+          MassTransferTransaction
+            .selfSigned(1, None, sender, List(ParsedTransfer(recipient, amount), ParsedTransfer(recipient, amount)), nextTs, 10000, Array.empty[Byte])
+            .explicitGet())
+      case _ => List(TransferTransactionV1.selfSigned(None, sender, recipient, amount, nextTs, None, 1000, Array.empty[Byte]).explicitGet())
+    }
+  }
 
   "Rollback resets" - {
     "Rollback save dropped blocks order" in forAll(accountGen, positiveLongGen, Gen.choose(1, 10)) {
@@ -49,6 +69,48 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           droppedBlocks(0).reference shouldBe genesisSignature
           droppedBlocks.map(_.uniqueId).toList shouldBe blocks
           droppedBlocks foreach d.appendBlock
+        }
+    }
+
+    "forget rollbacked transaction for querying" in forAll(accountGen, accountGen, Gen.nonEmptyListOf(Gen.choose(1, 10))) {
+      case (sender, recipient, txCount) =>
+        withDomain(createSettings(MassTransfer -> 0)) { d =>
+          d.appendBlock(genesisBlock(nextTs, sender, com.wavesplatform.state.diffs.ENOUGH_AMT))
+
+          val genesisSignature = d.lastBlockId
+
+          val transferAmount = 100
+
+          val transfers = txCount.map(tc => Seq.fill(tc)(randomOp(sender, recipient, transferAmount, tc % 3)).flatten)
+
+          for (transfer <- transfers) {
+            d.appendBlock(
+              TestBlock.create(
+                nextTs,
+                d.lastBlockId,
+                transfer
+              ))
+          }
+
+          val stransactions1 = d.addressTransactions(sender).explicitGet().sortBy(_._2.timestamp)
+          val rtransactions1 = d.addressTransactions(recipient).explicitGet().sortBy(_._2.timestamp)
+
+          d.removeAfter(genesisSignature)
+
+          for (transfer <- transfers) {
+            d.appendBlock(
+              TestBlock.create(
+                nextTs,
+                d.lastBlockId,
+                transfer
+              ))
+          }
+
+          val stransactions2 = d.addressTransactions(sender).explicitGet().sortBy(_._2.timestamp)
+          val rtransactions2 = d.addressTransactions(recipient).explicitGet().sortBy(_._2.timestamp)
+
+          stransactions1 shouldBe stransactions2
+          rtransactions1 shouldBe rtransactions2
         }
     }
 
@@ -223,7 +285,7 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
 
     "data transaction" in forAll(accountGen, positiveLongGen, dataEntryGen(1000)) {
       case (sender, initialBalance, dataEntry) =>
-        withDomain() { d =>
+        withDomain(createSettings(BlockchainFeatures.DataTransaction -> 0)) { d =>
           d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
           val genesisBlockId = d.lastBlockId
 
@@ -241,54 +303,51 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
         }
     }
 
-    "address script" in pendingUntilFixed(forAll(accountGen, positiveLongGen, scriptGen) {
-      case (sender, initialBalance, script) =>
-        withDomain() {
-          d =>
-            d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
-            val genesisBlockId = d.lastBlockId
+    "address script" in forAll(accountGen, positiveLongGen) {
+      case (sender, initialBalance) =>
+        withDomain(createSettings(SmartAccounts -> 0)) { d =>
+          d.appendBlock(genesisBlock(nextTs, sender, initialBalance))
+          val script = ScriptV1(TRUE).explicitGet()
 
-            d.blockchainUpdater.accountScript(sender) shouldBe 'empty
-            d.appendBlock(
-              TestBlock.create(
-                nextTs,
-                genesisBlockId,
-                Seq(SetScriptTransaction.selfSigned(1, sender, Some(script), 1, nextTs).explicitGet())
-              ))
+          val genesisBlockId = d.lastBlockId
+          d.blockchainUpdater.accountScript(sender) shouldBe 'empty
+          d.appendBlock(
+            TestBlock.create(
+              nextTs,
+              genesisBlockId,
+              Seq(SetScriptTransaction.selfSigned(1, sender, Some(script), 400000, nextTs).explicitGet())
+            ))
 
-            val blockWithScriptId = d.lastBlockId
+          val blockWithScriptId = d.lastBlockId
 
-            d.blockchainUpdater.accountScript(sender) should contain(script)
+          d.blockchainUpdater.accountScript(sender) should contain(script)
 
-            d.appendBlock(
-              TestBlock.create(
-                nextTs,
-                genesisBlockId,
-                Seq(SetScriptTransaction.selfSigned(1, sender, None, 1, nextTs).explicitGet())
-              ))
+          d.appendBlock(
+            TestBlock.create(
+              nextTs,
+              blockWithScriptId,
+              Seq(SetScriptTransaction.selfSigned(1, sender, None, 800000, nextTs).explicitGet())
+            ))
 
-            d.blockchainUpdater.accountScript(sender) shouldBe 'empty
+          d.blockchainUpdater.accountScript(sender) shouldBe 'empty
 
-            d.removeAfter(blockWithScriptId)
-            d.blockchainUpdater.accountScript(sender) should contain(script)
+          d.removeAfter(blockWithScriptId)
+          d.blockchainUpdater.accountScript(sender) should contain(script)
 
-            d.removeAfter(genesisBlockId)
-            d.blockchainUpdater.accountScript(sender) shouldBe 'empty
+          d.removeAfter(genesisBlockId)
+          d.blockchainUpdater.accountScript(sender) shouldBe 'empty
         }
-    })
+    }
 
-    import com.wavesplatform.features._
-    import scorex.settings.TestFunctionalitySettings
-    import com.wavesplatform.settings.FunctionalitySettings
-    import com.wavesplatform.history
+    def createSettings(preActivatedFeatures: (BlockchainFeature, Int)*): WavesSettings = {
+      val tfs = TestFunctionalitySettings.Enabled.copy(
+        preActivatedFeatures = preActivatedFeatures.map { case (k, v) => k.id -> v }(collection.breakOut),
+        blocksForFeatureActivation = 1,
+        featureCheckBlocksPeriod = 1
+      )
 
-    def createSettings(preActivatedFeatures: (BlockchainFeature, Int)*): FunctionalitySettings =
-      TestFunctionalitySettings.Enabled
-        .copy(
-          preActivatedFeatures = preActivatedFeatures.map { case (k, v) => k.id -> v }(collection.breakOut),
-          blocksForFeatureActivation = 1,
-          featureCheckBlocksPeriod = 1
-        )
+      history.DefaultWavesSettings.copy(blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = tfs))
+    }
 
     "asset sponsorship" in forAll(for {
       sender      <- accountGen
@@ -297,11 +356,8 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
       (sender, sponsorship)
     }) {
       case (sender, (issueTransaction, sponsor1, sponsor2, cancel)) =>
-        val ts       = issueTransaction.timestamp
-        val settings = createSettings(BlockchainFeatures.FeeSponsorship -> 0)
-        val wavesSettings = history.DefaultWavesSettings.copy(
-          blockchainSettings = history.DefaultWavesSettings.blockchainSettings.copy(functionalitySettings = settings))
-        withDomain(wavesSettings) { d =>
+        val ts = issueTransaction.timestamp
+        withDomain(createSettings(FeeSponsorship -> 0)) { d =>
           d.appendBlock(genesisBlock(ts, sender, Long.MaxValue / 3))
           val genesisBlockId = d.lastBlockId
 
@@ -353,6 +409,91 @@ class RollbackSpec extends FreeSpec with Matchers with WithState with Transactio
           d.removeAfter(blockIdWithIssue)
 
           d.blockchainUpdater.assetDescription(sponsor1.assetId).get.sponsorship shouldBe 0
+        }
+    }
+
+    "carry fee" in forAll(for {
+      sender      <- accountGen
+      sponsorship <- sponsorFeeCancelSponsorFeeGen(sender)
+      transfer    <- transferGeneratorP(sponsorship._1.timestamp, sender, sender, 10000000000L)
+    } yield {
+      (sender, sponsorship, transfer)
+    }) {
+      case (sender, (issue, sponsor1, sponsor2, cancel), transfer) =>
+        withDomain(createSettings(NG -> 0, FeeSponsorship -> 0)) { d =>
+          val ts = issue.timestamp
+          def appendBlock(tx: Transaction) = {
+            d.appendBlock(TestBlock.create(ts, d.lastBlockId, Seq(tx)))
+            d.lastBlockId
+          }
+          def carry(fee: Long) = fee - fee / 5 * 2
+
+          d.appendBlock(genesisBlock(ts, sender, Long.MaxValue / 3))
+          d.carryFee shouldBe carry(0)
+
+          val issueBlockId = appendBlock(issue)
+          d.carryFee shouldBe carry(issue.fee)
+
+          val sponsorBlockId = appendBlock(sponsor1)
+          d.carryFee shouldBe carry(sponsor1.fee)
+
+          appendBlock(transfer)
+          d.carryFee shouldBe carry(transfer.fee)
+
+          d.removeAfter(sponsorBlockId)
+          d.carryFee shouldBe carry(sponsor1.fee)
+
+          d.removeAfter(issueBlockId)
+          d.carryFee shouldBe carry(issue.fee)
+
+          val transferBlockId = appendBlock(transfer)
+          d.carryFee shouldBe carry(transfer.fee)
+
+          appendBlock(sponsor2)
+          d.carryFee shouldBe carry(sponsor2.fee)
+
+          d.removeAfter(transferBlockId)
+          d.carryFee shouldBe carry(transfer.fee)
+        }
+    }
+
+    "relean rollbacked transaction" in forAll(accountGen, accountGen, Gen.listOfN(66, Gen.choose(1, 10))) {
+      case (sender, recipient, txCount) =>
+        withDomain(createSettings(MassTransfer -> 0)) { d =>
+          val ts = nextTs
+
+          d.appendBlock(genesisBlock(ts, sender, com.wavesplatform.state.diffs.ENOUGH_AMT))
+
+          val transferAmount = 100
+
+          val interval = (3 * 60 * 60 * 1000 + 30 * 60 * 1000) / txCount.size
+
+          val transfers =
+            txCount.zipWithIndex.map(tc =>
+              Range(0, tc._1).map(i => randomOp(sender, recipient, transferAmount, tc._1 % 3, ts + interval * tc._2 + i)).flatten)
+
+          val blocks = for ((transfer, i) <- transfers.zipWithIndex) yield {
+            val tsb   = ts + interval * i
+            val block = TestBlock.create(tsb, d.lastBlockId, transfer)
+            d.appendBlock(block)
+            (d.lastBlockId, tsb)
+          }
+
+          val middleBlock = blocks(txCount.size / 2)
+
+          d.removeAfter(middleBlock._1)
+
+          try {
+            d.appendBlock(
+              TestBlock.create(
+                middleBlock._2 + 10,
+                middleBlock._1,
+                transfers(0)
+              ))
+            throw new Exception("Duplicate transaction wasn't checked")
+          } catch {
+            case e: Throwable => Assertions.assert(e.getMessage().contains("AlreadyInTheState"))
+          }
         }
     }
   }

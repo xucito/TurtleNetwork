@@ -2,8 +2,8 @@ package com.wavesplatform.utx
 
 import com.wavesplatform.mining.MultiDimensionalMiningConstraint
 import com.wavesplatform.state.{ByteStr, Diff, Portfolio}
-import scorex.account.Address
-import scorex.transaction._
+import com.wavesplatform.account.Address
+import com.wavesplatform.transaction._
 
 trait UtxPool extends AutoCloseable {
   self =>
@@ -22,7 +22,7 @@ trait UtxPool extends AutoCloseable {
 
   def transactionById(transactionId: ByteStr): Option[Transaction]
 
-  def packUnconfirmed(rest: MultiDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], MultiDimensionalMiningConstraint)
+  def packUnconfirmed(rest: MultiDimensionalMiningConstraint): (Seq[Transaction], MultiDimensionalMiningConstraint)
 
   def batched[Result](f: UtxBatchOps => Result): Result = f(createBatchOps)
 

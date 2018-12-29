@@ -7,11 +7,19 @@ import akka.persistence.snapshot.SnapshotStoreSpec
 import com.typesafe.config.ConfigFactory.parseString
 import com.wavesplatform.TestHelpers.deleteRecursively
 import com.wavesplatform.settings.loadConfig
+import MatcherSnapshotStoreSpec.DirKey
 
-class MatcherSnapshotStoreSpec
-    extends SnapshotStoreSpec(loadConfig(parseString(s"TN.matcher.snapshot-store.leveldb-dir = ${createTempDirectory("matcher").toAbsolutePath}"))) {
+class MatcherSnapshotStoreSpec extends SnapshotStoreSpec(loadConfig(parseString(s"""$DirKey = ${createTempDirectory("matcher").toAbsolutePath}
+         |akka {
+         |  actor.allow-java-serialization = on
+         |  persistence.snapshot-store.plugin = TN.matcher.snapshot-store
+         |}""".stripMargin))) {
   protected override def afterAll(): Unit = {
     super.afterAll()
-    deleteRecursively(new File(system.settings.config.getString("TN.matcher.snapshot-store.leveldb-dir")).toPath)
+    deleteRecursively(new File(system.settings.config.getString(DirKey)).toPath)
   }
+}
+
+object MatcherSnapshotStoreSpec {
+  val DirKey = "TN.matcher.snapshot-store.dir"
 }

@@ -7,8 +7,10 @@ import com.google.common.io.ByteStreams.{newDataInput, newDataOutput}
 import com.google.common.io.{ByteArrayDataInput, ByteArrayDataOutput}
 import com.google.common.primitives.{Ints, Shorts}
 import com.wavesplatform.state._
-import scorex.transaction.smart.script.{Script, ScriptReader}
-import scorex.transaction.{Transaction, TransactionParsers}
+import com.wavesplatform.transaction.smart.script.{Script, ScriptReader}
+import com.wavesplatform.transaction.{Transaction, TransactionParsers}
+import org.iq80.leveldb.{DB, ReadOptions}
+import java.util.{Map => JMap}
 
 package object database {
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
@@ -208,15 +210,64 @@ package object database {
   }
 
   def readAssetInfo(data: Array[Byte]): AssetInfo = {
-    val ndi = newDataInput(data)
-    AssetInfo(ndi.readBoolean(), ndi.readBigInt(), ndi.readScriptOption())
+    val ndi     = newDataInput(data)
+    val reissue = ndi.readBoolean()
+    val volume  = ndi.readBigInt()
+    AssetInfo(reissue, volume)
   }
 
   def writeAssetInfo(ai: AssetInfo): Array[Byte] = {
     val ndo = newDataOutput()
     ndo.writeBoolean(ai.isReissuable)
     ndo.writeBigInt(ai.volume)
-    ndo.writeScriptOption(ai.script)
     ndo.toByteArray
+  }
+
+  implicit class EntryExt(val e: JMap.Entry[Array[Byte], Array[Byte]]) extends AnyVal {
+    import com.wavesplatform.crypto.DigestSize
+    def extractId(offset: Int = 2, length: Int = DigestSize): ByteStr = {
+      val id = ByteStr(new Array[Byte](length))
+      Array.copy(e.getKey, offset, id.arr, 0, length)
+      id
+    }
+  }
+
+  implicit class DBExt(val db: DB) extends AnyVal {
+    def readOnly[A](f: ReadOnlyDB => A): A = {
+      val snapshot = db.getSnapshot
+      try f(new ReadOnlyDB(db, new ReadOptions().snapshot(snapshot)))
+      finally snapshot.close()
+    }
+
+    /**
+      * @note Runs operations in batch, so keep in mind, that previous changes don't appear lately in f
+      */
+    def readWrite[A](f: RW => A): A = {
+      val snapshot    = db.getSnapshot
+      val readOptions = new ReadOptions().snapshot(snapshot)
+      val batch       = db.createWriteBatch()
+      val rw          = new RW(db, readOptions, batch)
+      try {
+        val r = f(rw)
+        db.write(batch)
+        r
+      } finally {
+        batch.close()
+        snapshot.close()
+      }
+    }
+
+    def get[A](key: Key[A]): A = key.parse(db.get(key.keyBytes))
+
+    def iterateOver(prefix: Short)(f: JMap.Entry[Array[Byte], Array[Byte]] => Unit): Unit =
+      iterateOver(Shorts.toByteArray(prefix))(f)
+
+    def iterateOver(prefix: Array[Byte])(f: JMap.Entry[Array[Byte], Array[Byte]] => Unit): Unit = {
+      val iterator = db.iterator()
+      try {
+        iterator.seek(prefix)
+        while (iterator.hasNext && iterator.peekNext().getKey.startsWith(prefix)) f(iterator.next())
+      } finally iterator.close()
+    }
   }
 }

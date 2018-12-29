@@ -5,14 +5,13 @@ import java.nio.charset.StandardCharsets
 
 import com.google.common.primitives.Ints
 import com.typesafe.config.ConfigFactory
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.db.openDB
 import com.wavesplatform.history.StorageFactory
 import com.wavesplatform.settings.{WavesSettings, loadConfig}
 import com.wavesplatform.state.Blockchain
 import com.wavesplatform.utils._
 import org.slf4j.bridge.SLF4JBridgeHandler
-import scorex.account.AddressScheme
-import scorex.utils.{NTP, ScorexLogging}
 
 import scala.util.{Failure, Success, Try}
 
@@ -31,8 +30,9 @@ object Exporter extends ScorexLogging {
       override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
     }
 
+    val time             = new NTP(settings.ntpServer)
     val db               = openDB(settings.dataDirectory)
-    val blockchain       = StorageFactory(settings, db, NTP)
+    val blockchain       = StorageFactory(settings, db, time)
     val blockchainHeight = blockchain.height
     val height           = Math.min(blockchainHeight, exportHeight.getOrElse(blockchainHeight))
     log.info(s"Blockchain height is $blockchainHeight exporting to $height")
@@ -57,6 +57,8 @@ object Exporter extends ScorexLogging {
         output.close()
       case Failure(ex) => log.error(s"Failed to create file '$outputFilename': $ex")
     }
+
+    time.close()
   }
 
   private def createOutputStream(filename: String): Try[FileOutputStream] =
