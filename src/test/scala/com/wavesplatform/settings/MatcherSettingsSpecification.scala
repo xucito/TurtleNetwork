@@ -15,7 +15,7 @@ class MatcherSettingsSpecification extends FlatSpec with Matchers {
         |  directory: "/TN"
         |  matcher {
         |    enable: yes
-        |    account: "BASE58MATCHERACCOUNT"
+        |    account: "3Mqjki7bLtMEBRCYeQis39myp9B4cnooDEX"
         |    bind-address: "127.0.0.1"
         |    port: 6886
         |    min-order-fee = 100000

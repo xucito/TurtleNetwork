@@ -2,6 +2,7 @@ package com.wavesplatform.it.sync.matcher.smartcontracts
 
 import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.account.{AddressScheme, PrivateKeyAccount}
+import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.it.api.SyncHttpApi.NodeExtSync
 import com.wavesplatform.it.api.SyncMatcherHttpApi._
 import com.wavesplatform.it.matcher.MatcherSuiteBase
@@ -29,6 +30,21 @@ class OrdersFromScriptedAssetTestSuite extends MatcherSuiteBase {
 
   override protected def nodeConfigs: Seq[Config] = Configs
 
+  "can match orders when SmartAccTrading is still not activated" in {
+    val pair = AssetPair(None, Some(AllowAsset.id()))
+
+    val counter =
+      matcherNode.placeOrder(matcherPk, pair, OrderType.SELL, 100000, 2 * Order.PriceConstant, version = 1, fee = smartTradeFee)
+    matcherNode.waitOrderStatus(pair, counter.message.id, "Accepted")
+
+    val submitted =
+      matcherNode.placeOrder(matcherPk, pair, OrderType.BUY, 100000, 2 * Order.PriceConstant, version = 1, fee = smartTradeFee)
+    matcherNode.waitOrderStatus(pair, submitted.message.id, "Filled")
+
+    matcherNode.waitOrderInBlockchain(submitted.message.id)
+    matcherNode.waitForHeight(activationHeight + 1, 2.minutes)
+  }
+
   "can place if the script returns TRUE" in {
     val pair = AssetPair.createAssetPair(UnscriptedAssetId, AllowAssetId).get
     val counterId =
@@ -54,7 +70,7 @@ class OrdersFromScriptedAssetTestSuite extends MatcherSuiteBase {
   }
 
   "if counter order has expired then cancel its only, not a submitted order" in {
-    val pair = AssetPair.createAssetPair("WAVES", AllowAssetId).get
+    val pair = AssetPair.createAssetPair("TN", AllowAssetId).get
 
     // place expiring counter order
     val counterId =
@@ -246,9 +262,14 @@ object OrdersFromScriptedAssetTestSuite {
     ScriptCompiler(scriptText, isAssetScript = true).explicitGet()._1
   }
 
+  val activationHeight = 10
+
   private val commonConfig = ConfigFactory.parseString(s"""
                                                            |waves {
-                                                           |  blockchain.custom.functionality.pre-activated-features = { 9 = 0 }
+                                                           |  blockchain.custom.functionality.pre-activated-features = {
+                                                           |    ${BlockchainFeatures.SmartAssets.id} = 0,
+                                                           |    ${BlockchainFeatures.SmartAccountTrading.id} = $activationHeight
+                                                           |  }
                                                            |  matcher.price-assets = ["$AllowAssetId", "$DenyAssetId", "$UnscriptedAssetId"]
                                                            |}
                                                            |waves.matcher {
