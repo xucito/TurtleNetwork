@@ -1,251 +1,144 @@
 package com.wavesplatform.matcher.market
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.http.scaladsl.model.StatusCodes
-import akka.persistence.inmemory.extension.{InMemoryJournalStorage, StorageExtension}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import java.util.concurrent.atomic.AtomicReference
+
+import akka.actor.{Actor, ActorRef, Kill, Props, Terminated}
+import akka.testkit.{ImplicitSender, TestActorRef, TestProbe}
+import com.wavesplatform.NTPTime
+import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.matcher.MatcherTestData
-import com.wavesplatform.matcher.api.StatusCodeMatcherResponse
-import com.wavesplatform.matcher.fixtures.RestartableActor
-import com.wavesplatform.matcher.fixtures.RestartableActor.RestartActor
-import com.wavesplatform.matcher.market.MatcherActor.{GetMarkets, GetMarketsResponse, MarketData}
-import com.wavesplatform.matcher.market.OrderBookActor._
-import com.wavesplatform.matcher.market.OrderHistoryActor.{ValidateOrder, ValidateOrderResult}
-import com.wavesplatform.matcher.model.LevelAgg
-import com.wavesplatform.settings.WalletSettings
-import com.wavesplatform.state.{AssetDescription, Blockchain, ByteStr, LeaseBalance, Portfolio}
+import com.wavesplatform.matcher.api.OrderAccepted
+import com.wavesplatform.matcher.market.MatcherActor.{GetMarkets, MarketData}
+import com.wavesplatform.matcher.market.MatcherActorSpecification.FailAtStartActor
+import com.wavesplatform.matcher.model.ExchangeTransactionCreator
+import com.wavesplatform.state.{AssetDescription, Blockchain, ByteStr}
+import com.wavesplatform.transaction.AssetId
+import com.wavesplatform.transaction.assets.exchange.AssetPair
+import com.wavesplatform.utils.{EmptyBlockchain, randomBytes}
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import org.scalamock.scalatest.PathMockFactory
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
-import scorex.account.{PrivateKeyAccount, PublicKeyAccount}
-import scorex.settings.TestFunctionalitySettings
-import scorex.transaction.AssetId
-import scorex.transaction.assets.IssueTransactionV1
-import scorex.transaction.assets.exchange.{AssetPair, Order, OrderType}
-import scorex.utils.{NTP, ScorexLogging}
-import scorex.wallet.Wallet
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.Eventually
 
 import scala.concurrent.duration.DurationInt
 
 class MatcherActorSpecification
-    extends TestKit(ActorSystem.apply("MatcherTest2"))
-    with WordSpecLike
-    with Matchers
-    with BeforeAndAfterAll
-    with ImplicitSender
+    extends MatcherSpec("MatcherActor")
     with MatcherTestData
     with BeforeAndAfterEach
-    with ScorexLogging
-    with PathMockFactory {
+    with PathMockFactory
+    with ImplicitSender
+    with Eventually
+    with NTPTime {
 
-  val blockchain: Blockchain = stub[Blockchain]
-
-  val settings = matcherSettings.copy(
-    account = MatcherAccount.address,
-    balanceWatching = BalanceWatcherWorkerActor.Settings(enable = false, oneAddressProcessingTimeout = 1.second)
-  )
-  val functionalitySettings = TestFunctionalitySettings.Stub
-  val wallet                = Wallet(WalletSettings(None, "matcher", Some(WalletSeed)))
-  wallet.generateNewAccount()
-
-  val orderHistoryRef = TestActorRef(new Actor {
-    def receive: Receive = {
-      case ValidateOrder(o, _) => sender() ! ValidateOrderResult(Right(o))
-      case _                   =>
-    }
-  })
-  var actor: ActorRef = system.actorOf(Props(
-    new MatcherActor(orderHistoryRef, wallet, mock[UtxPool], mock[ChannelGroup], settings, blockchain, functionalitySettings) with RestartableActor))
-
-  val i1 = IssueTransactionV1
-    .selfSigned(PrivateKeyAccount(Array.empty), "Unknown".getBytes(), Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L)
-    .right
-    .get
-  val i2 = IssueTransactionV1
-    .selfSigned(PrivateKeyAccount(Array.empty), "ForbiddenName".getBytes(), Array.empty, 10000000000L, 8.toByte, true, 100000L, 10000L)
-    .right
-    .get
-  (blockchain.assetDescription _)
-    .when(i2.id())
-    .returns(Some(AssetDescription(i2.sender, "ForbiddenName".getBytes, "".getBytes, 8, false, i2.quantity, None, 0)))
+  private val blockchain: Blockchain = stub[Blockchain]
   (blockchain.assetDescription _)
     .when(*)
-    .returns(Some(AssetDescription(PublicKeyAccount(Array(0: Byte)), "Unknown".getBytes, "".getBytes, 8, false, i1.quantity, None, 0)))
-  (blockchain.portfolio _).when(*).returns(Portfolio(Long.MaxValue, LeaseBalance.empty, Map(ByteStr("123".getBytes) -> Long.MaxValue)))
-
-  override protected def beforeEach() = {
-    val tp = TestProbe()
-    tp.send(StorageExtension(system).journalStorage, InMemoryJournalStorage.ClearJournal)
-    tp.expectMsg(akka.actor.Status.Success(""))
-    super.beforeEach()
-
-    actor = system.actorOf(
-      Props(
-        new MatcherActor(orderHistoryRef, wallet, mock[UtxPool], mock[ChannelGroup], settings, blockchain, functionalitySettings)
-        with RestartableActor))
-  }
+    .returns(Some(AssetDescription(PrivateKeyAccount(Array.empty), "Unknown".getBytes, Array.emptyByteArray, 8, reissuable = false, 1, None, 0)))
+    .anyNumberOfTimes()
 
   "MatcherActor" should {
-
-    "AssetPair with same assets" in {
-      def sameAssetsOrder(): Order =
-        Order.apply(
-          PrivateKeyAccount("123".getBytes()),
-          MatcherAccount,
-          AssetPair(strToSomeAssetId("asset1"), strToSomeAssetId("asset1")),
-          OrderType.BUY,
-          100000000L,
-          100L,
-          1L,
-          1000L,
-          100000L
-        )
-
-      val invalidOrder = sameAssetsOrder()
-      actor ! invalidOrder
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.NotFound, "Invalid AssetPair"))
-    }
-
-    "AssetPair with predefined pair" in {
-      def predefinedPair = AssetPair(ByteStr.decodeBase58("BASE2").toOption, ByteStr.decodeBase58("BASE1").toOption)
-
-      actor ! GetOrderBookRequest(predefinedPair, None)
-      expectMsg(GetOrderBookResponse(predefinedPair, Seq(), Seq()))
-
-      def reversePredefinedPair = AssetPair(ByteStr.decodeBase58("BASE1").toOption, ByteStr.decodeBase58("BASE2").toOption)
-
-      actor ! GetOrderBookRequest(reversePredefinedPair, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.Found, "Invalid AssetPair ordering, should be reversed: BASE2-BASE1"))
-    }
-
-    "AssetPair with predefined price assets" in {
-      def priceAsset = AssetPair(ByteStr.decodeBase58("ABC").toOption, ByteStr.decodeBase58("BASE1").toOption)
-
-      actor ! GetOrderBookRequest(priceAsset, None)
-      expectMsg(GetOrderBookResponse(priceAsset, Seq(), Seq()))
-
-      def wrongPriceAsset = AssetPair(ByteStr.decodeBase58("BASE2").toOption, ByteStr.decodeBase58("CDE").toOption)
-
-      actor ! GetOrderBookRequest(wrongPriceAsset, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.Found, "Invalid AssetPair ordering, should be reversed: CDE-BASE2"))
-    }
-
-    "AssetPair with predefined price assets with priorities" in {
-      def predefinedPair = AssetPair(ByteStr.decodeBase58("BASE").toOption, ByteStr.decodeBase58("BASE2").toOption)
-
-      actor ! GetOrderBookRequest(predefinedPair, None)
-      expectMsg(GetOrderBookResponse(predefinedPair, Seq(), Seq()))
-
-      def reversePredefinedPair = AssetPair(ByteStr.decodeBase58("BASE2").toOption, ByteStr.decodeBase58("BASE").toOption)
-
-      actor ! GetOrderBookRequest(reversePredefinedPair, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.Found, "Invalid AssetPair ordering, should be reversed: BASE-BASE2"))
-    }
-
-    "AssetPair with unknown assets" in {
-      def unknownAssets = AssetPair(ByteStr.decodeBase58("Some2").toOption, ByteStr.decodeBase58("Some1").toOption)
-
-      actor ! GetOrderBookRequest(unknownAssets, None)
-      expectMsg(GetOrderBookResponse(unknownAssets, Seq(), Seq()))
-
-      def wrongUnknownAssets = AssetPair(ByteStr.decodeBase58("Some1").toOption, ByteStr.decodeBase58("Some2").toOption)
-
-      actor ! GetOrderBookRequest(wrongUnknownAssets, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.Found, "Invalid AssetPair ordering, should be reversed: Some2-Some1"))
-    }
-
-    "accept orders with AssetPair with same assets" in {
-      def sameAssetsOrder(): Order =
-        Order.apply(
-          PrivateKeyAccount("123".getBytes()),
-          MatcherAccount,
-          AssetPair(strToSomeAssetId("asset1"), strToSomeAssetId("asset1")),
-          OrderType.BUY,
-          100000000L,
-          100L,
-          1L,
-          1000L,
-          100000L
-        )
-
-      val invalidOrder = sameAssetsOrder()
-      actor ! invalidOrder
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.NotFound, "Invalid AssetPair"))
-    }
-
-    "restore OrderBook after restart" in {
-      val pair  = AssetPair(strToSomeAssetId("123"), None)
-      val order = buy(pair, 1, 2000)
-
-      actor ! order
-      expectMsg(OrderAccepted(order))
-
-      actor ! RestartActor
-      actor ! GetOrderBookRequest(pair, None)
-      expectMsg(GetOrderBookResponse(pair, Seq(LevelAgg(100000000, 2000)), Seq()))
-    }
-
     "return all open markets" in {
-      val a1 = strToSomeAssetId("123")
-      val a2 = strToSomeAssetId("234")
+      val actor = defaultActor()
 
-      val pair  = AssetPair(a2, a1)
-      val order = buy(pair, 1, 2000)
+      val pair  = AssetPair(randomAssetId, randomAssetId)
+      val order = buy(pair, 2000, 1)
+
+      (blockchain.accountScript _)
+        .when(order.sender.toAddress)
+        .returns(None)
+
+      (blockchain.accountScript _)
+        .when(order.matcherPublicKey.toAddress)
+        .returns(None)
 
       actor ! order
       expectMsg(OrderAccepted(order))
 
       actor ! GetMarkets
 
-      val Predefined = AssetPair(ByteStr.decodeBase58("BASE2").toOption, ByteStr.decodeBase58("BASE1").toOption)
-
       expectMsgPF() {
-        case GetMarketsResponse(publicKey,
-                                Seq(MarketData(`Predefined`, "Unknown", "Unknown", _, _, _), MarketData(_, "Unknown", "Unknown", _, _, _))) =>
-          publicKey shouldBe MatcherAccount.publicKey
+        case s @ Seq(MarketData(_, "Unknown", "Unknown", _, _, _)) =>
+          s.size shouldBe 1
       }
     }
 
-    "GetOrderBookRequest to the blacklisted asset" in {
-      def pair = AssetPair(ByteStr.decodeBase58("BLACKLST").toOption, ByteStr.decodeBase58("BASE1").toOption)
+    "mark an order book as failed" when {
+      "it crashes at start" in {
+        val pair = AssetPair(randomAssetId, randomAssetId)
+        val ob   = emptyOrderBookRefs
+        val actor = waitInitialization(
+          TestActorRef(
+            new MatcherActor(
+              ob,
+              (_, _) => Props(classOf[FailAtStartActor], pair),
+              blockchain.assetDescription
+            )
+          ))
 
-      actor ! GetOrderBookRequest(pair, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.NotFound, "Invalid Asset ID: BLACKLST"))
+        actor ! buy(pair, 2000, 1)
+        eventually { ob.get()(pair) shouldBe 'left }
+      }
 
-      def fbdnNamePair = AssetPair(Some(i2.assetId()), ByteStr.decodeBase58("BASE1").toOption)
+      "it crashes during the work" in {
+        val ob    = emptyOrderBookRefs
+        val actor = defaultActor(ob)
 
-      actor ! GetOrderBookRequest(fbdnNamePair, None)
-      expectMsg(StatusCodeMatcherResponse(StatusCodes.NotFound, "Invalid Asset Name: ForbiddenName"))
+        val a1, a2, a3 = randomAssetId
+
+        val pair1  = AssetPair(a1, a2)
+        val order1 = buy(pair1, 2000, 1)
+
+        val pair2  = AssetPair(a2, a3)
+        val order2 = buy(pair2, 2000, 1)
+
+        actor ! order1
+        actor ! order2
+        receiveN(2)
+
+        ob.get()(pair1) shouldBe 'right
+        ob.get()(pair2) shouldBe 'right
+
+        val toKill = actor.getChild(List(OrderBookActor.name(pair1)).iterator)
+
+        val probe = TestProbe()
+        probe.watch(toKill)
+        toKill.tell(Kill, actor)
+        probe.expectMsgType[Terminated]
+
+        ob.get()(pair1) shouldBe 'left
+      }
     }
+
+    "delete order books" is pending
+    "forward new orders to order books" is pending
   }
 
-  "GetMarketsResponse" should {
-    "serialize to json" in {
-      val waves = "TN"
-
-      val a1Name = "BITCOIN"
-      val a1     = strToSomeAssetId(a1Name)
-
-      val a2Name = "US DOLLAR"
-      val a2     = strToSomeAssetId(a2Name)
-
-      val pair1 = AssetPair(a1, None)
-      val pair2 = AssetPair(a1, a2)
-
-      val now = NTP.correctedTime()
-      val json =
-        GetMarketsResponse(Array(), Seq(MarketData(pair1, a1Name, waves, now, None, None), MarketData(pair2, a1Name, a2Name, now, None, None))).json
-
-      ((json \ "markets")(0) \ "priceAsset").as[String] shouldBe AssetPair.WavesName
-      ((json \ "markets")(0) \ "priceAssetName").as[String] shouldBe waves
-      ((json \ "markets")(0) \ "amountAsset").as[String] shouldBe a1.get.base58
-      ((json \ "markets")(0) \ "amountAssetName").as[String] shouldBe a1Name
-      ((json \ "markets")(0) \ "created").as[Long] shouldBe now
-
-      ((json \ "markets")(1) \ "amountAssetName").as[String] shouldBe a1Name
-    }
+  private def defaultActor(ob: AtomicReference[Map[AssetPair, Either[Unit, ActorRef]]] = emptyOrderBookRefs): TestActorRef[MatcherActor] = {
+    val txFactory = new ExchangeTransactionCreator(EmptyBlockchain, MatcherAccount, matcherSettings, ntpTime).createTransaction _
+    waitInitialization(
+      TestActorRef(
+        new MatcherActor(
+          ob,
+          (assetPair, matcher) =>
+            OrderBookActor.props(matcher, assetPair, _ => {}, _ => {}, mock[UtxPool], mock[ChannelGroup], matcherSettings, txFactory, ntpTime),
+          blockchain.assetDescription
+        )
+      ))
   }
 
-  def strToSomeAssetId(s: String): Option[AssetId] = Some(ByteStr(s.getBytes()))
+  private def waitInitialization(x: TestActorRef[MatcherActor]): TestActorRef[MatcherActor] = eventually(timeout(1.second)) {
+    x.underlyingActor.recoveryFinished shouldBe true
+    x
+  }
+  private def emptyOrderBookRefs             = new AtomicReference(Map.empty[AssetPair, Either[Unit, ActorRef]])
+  private def randomAssetId: Option[AssetId] = Some(ByteStr(randomBytes()))
+}
+
+object MatcherActorSpecification {
+  private class FailAtStartActor(pair: AssetPair) extends Actor {
+    throw new RuntimeException("I don't want to work today")
+    override def receive: Receive = Actor.emptyBehavior
+  }
 }

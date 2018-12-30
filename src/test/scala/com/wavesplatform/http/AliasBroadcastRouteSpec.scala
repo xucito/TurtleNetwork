@@ -2,7 +2,6 @@ package com.wavesplatform.http
 
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.RequestGen
-import com.wavesplatform.http.ApiMarshallers._
 import com.wavesplatform.settings.RestAPISettings
 import com.wavesplatform.state.diffs.TransactionDiffer.TransactionValidationError
 import com.wavesplatform.utx.UtxPool
@@ -11,10 +10,10 @@ import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json._
 import play.api.libs.json._
-import scorex.api.http._
-import scorex.api.http.alias.AliasBroadcastApiRoute
-import scorex.transaction.ValidationError.GenericError
-import scorex.transaction.Transaction
+import com.wavesplatform.api.http._
+import com.wavesplatform.api.http.alias.AliasBroadcastApiRoute
+import com.wavesplatform.transaction.ValidationError.GenericError
+import com.wavesplatform.transaction.Transaction
 
 class AliasBroadcastRouteSpec extends RouteSpec("/alias/broadcast/") with RequestGen with PathMockFactory with PropertyChecks {
   private val settings    = RestAPISettings.fromConfig(ConfigFactory.load())
@@ -39,7 +38,7 @@ class AliasBroadcastRouteSpec extends RouteSpec("/alias/broadcast/") with Reques
     val route = AliasBroadcastApiRoute(settings, utx, allChannels).route
 
     "create alias transaction" in forAll(createAliasReq) { req =>
-      import scorex.api.http.alias.SignedCreateAliasV1Request.broadcastAliasV1RequestReadsFormat
+      import com.wavesplatform.api.http.alias.SignedCreateAliasV1Request.broadcastAliasV1RequestReadsFormat
 
       def posting(v: JsValue): RouteTestResult = Post(routePath("create"), v) ~> route
 

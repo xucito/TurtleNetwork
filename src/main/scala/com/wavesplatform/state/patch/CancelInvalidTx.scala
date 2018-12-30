@@ -1,8 +1,8 @@
 package com.wavesplatform.state.patch
 
+import com.wavesplatform.account.Address
 import com.wavesplatform.state.{Blockchain, Diff, EitherExt2, LeaseBalance, Portfolio}
-import scorex.account.Address
-import scorex.utils.ScorexLogging
+import com.wavesplatform.utils.ScorexLogging
 
 object CancelInvalidTx extends ScorexLogging {
 
@@ -22,10 +22,10 @@ object CancelInvalidTx extends ScorexLogging {
 
     val diff = s.collectLposPortfolios {
       case (addr, p) if addr == addr1 && bal1 != 0L =>
-        Portfolio(p.balance, LeaseBalance(0L, 0L), Map.empty)
+        Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
 
       case (addr, p) if addr == addr2 && bal2 != 0L =>
-        Portfolio(p.balance, LeaseBalance(0L, 0L), Map.empty)
+        Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
 
       case (addr, p) if addr == addr3 =>
         Portfolio(bal1 + bal2, p.lease, Map.empty)

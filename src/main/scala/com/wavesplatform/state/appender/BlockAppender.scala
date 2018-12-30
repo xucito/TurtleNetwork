@@ -8,16 +8,16 @@ import com.wavesplatform.network._
 import com.wavesplatform.settings.WavesSettings
 //import com.wavesplatform.state.{Blockchain, ByteStr, _}
 import com.wavesplatform.state.Blockchain
+import com.wavesplatform.utils.{ScorexLogging, Time}
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import scorex.block.Block
-import scorex.transaction.ValidationError.{BlockAppendError, InvalidSignature}
-import scorex.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
-import scorex.utils.{ScorexLogging, Time}
+import com.wavesplatform.block.Block
+import com.wavesplatform.transaction.ValidationError.{BlockAppendError, InvalidSignature}
+import com.wavesplatform.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 import scala.util.Right
 
@@ -32,12 +32,13 @@ object BlockAppender extends ScorexLogging with Instrumented {
             utxStorage: UtxPool,
             pos: PoSSelector,
             settings: WavesSettings,
-            scheduler: Scheduler)(newBlock: Block): Task[Either[ValidationError, Option[BigInt]]] =
+            scheduler: Scheduler,
+            verify: Boolean = true)(newBlock: Block): Task[Either[ValidationError, Option[BigInt]]] =
     Task {
       measureSuccessful(
         blockProcessingTimeStats, {
-          if (blockchainUpdater.isLastBlockId(newBlock.reference)) { //||newBlock.timestamp >= 1531517781 ||exceptions.contains(newBlock.uniqueId)
-            appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings)(newBlock).map(_ => Some(blockchainUpdater.score))
+          if (blockchainUpdater.isLastBlockId(newBlock.reference)) {
+            appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings, verify)(newBlock).map(_ => Some(blockchainUpdater.score))
           } else if (blockchainUpdater.contains(newBlock.uniqueId)) {
             Right(None)
           } else {
@@ -78,7 +79,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
     }
   }
 
-  private val blockReceivingLag        = Kamon.metrics.histogram("block-receiving-lag")
-  private val blockProcessingTimeStats = Kamon.metrics.histogram("single-block-processing-time")
+  private val blockReceivingLag        = Kamon.histogram("block-receiving-lag")
+  private val blockProcessingTimeStats = Kamon.histogram("single-block-processing-time")
 
 }

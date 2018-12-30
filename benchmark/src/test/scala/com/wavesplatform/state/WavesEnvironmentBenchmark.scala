@@ -4,20 +4,21 @@ import java.io.File
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 
 import com.typesafe.config.ConfigFactory
+import com.wavesplatform.account.{AddressOrAlias, AddressScheme, Alias}
 import com.wavesplatform.database.LevelDBWriter
 import com.wavesplatform.db.LevelDBFactory
-import com.wavesplatform.lang.v1.traits.{Environment, Recipient}
+import com.wavesplatform.lang.v1.traits.Environment
+import com.wavesplatform.lang.v1.traits.domain.Recipient
 import com.wavesplatform.settings.{WavesSettings, loadConfig}
 import com.wavesplatform.state.WavesEnvironmentBenchmark._
 import com.wavesplatform.state.bench.DataTestData
+import com.wavesplatform.transaction.smart.WavesEnvironment
+import com.wavesplatform.utils.Base58
 import monix.eval.Coeval
 import org.iq80.leveldb.{DB, Options}
 import org.openjdk.jmh.annotations._
 import org.openjdk.jmh.infra.Blackhole
 import scodec.bits.{BitVector, ByteVector}
-import scorex.account.{AddressOrAlias, AddressScheme, Alias}
-import scorex.crypto.encode.Base58
-import scorex.transaction.smart.WavesEnvironment
 
 import scala.io.Codec
 
@@ -121,7 +122,7 @@ object WavesEnvironmentBenchmark {
     }
 
     val environment: Environment = {
-      val state = new LevelDBWriter(db, wavesSettings.blockchainSettings.functionalitySettings)
+      val state = new LevelDBWriter(db, wavesSettings.blockchainSettings.functionalitySettings, 100000, 2000, 120 * 60 * 1000)
       new WavesEnvironment(
         AddressScheme.current.chainId,
         Coeval.raiseError(new NotImplementedError("tx is not implemented")),

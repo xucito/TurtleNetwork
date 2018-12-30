@@ -17,10 +17,13 @@ import com.spotify.docker.client.messages._
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient}
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.{Config, ConfigRenderOptions}
+import com.wavesplatform.account.AddressScheme
+import com.wavesplatform.block.Block
 import com.wavesplatform.it.api.AsyncHttpApi._
 import com.wavesplatform.it.util.GlobalTimer.{instance => timer}
 import com.wavesplatform.settings._
 import com.wavesplatform.state.EitherExt2
+import com.wavesplatform.utils.ScorexLogging
 import monix.eval.Coeval
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
@@ -28,9 +31,6 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.io.IOUtils
 import org.asynchttpclient.Dsl._
-import scorex.account.AddressScheme
-import scorex.block.Block
-import scorex.utils.ScorexLogging
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -64,25 +64,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
     close()
   }
 
-  private[it] val configTemplate = parseResources("template.conf")
-
-  AddressScheme.current = new AddressScheme {
-    override val chainId = configTemplate.as[String]("TN.blockchain.custom.address-scheme-character").charAt(0).toByte
-  }
-
-  private[it] val genesisOverride = {
-    val genesisTs          = System.currentTimeMillis()
-    val timestampOverrides = parseString(s"""TN.blockchain.custom.genesis {
-         |  timestamp = $genesisTs
-         |  block-timestamp = $genesisTs
-         |}""".stripMargin)
-
-    val genesisConfig    = configTemplate.withFallback(timestampOverrides)
-    val gs               = genesisConfig.as[GenesisSettings]("TN.blockchain.custom.genesis")
-    val genesisSignature = Block.genesis(gs).explicitGet().uniqueId
-
-    timestampOverrides.withFallback(parseString(s"TN.blockchain.custom.genesis.signature = $genesisSignature"))
-  }
+  private val genesisOverride = Docker.genesisOverride
 
   // a random network in 10.x.x.x range
   private val networkSeed = Random.nextInt(0x100000) << 4 | 0x0A000000
@@ -179,7 +161,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
     def connectToOne(address: InetSocketAddress): Future[Unit] = {
       for {
         _              <- node.connect(address)
-        _              <- Future(blocking(Thread.sleep(3.seconds.toMillis)))
+        _              <- Future(blocking(Thread.sleep(1.seconds.toMillis)))
         connectedPeers <- node.connectedPeers
         _ <- {
           val connectedAddresses = connectedPeers.map(_.address.replaceAll("""^.*/([\d\.]+).+$""", "$1")).sorted
@@ -195,6 +177,10 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
     val seedAddresses = nodes.asScala
       .filterNot(_.name == node.name)
+      .filterNot { node =>
+        // Exclude disconnected
+        client.inspectContainer(node.containerId).networkSettings().networks().isEmpty
+      }
       .map(_.containerNetworkAddress)
 
     if (seedAddresses.isEmpty) Future.successful(())
@@ -239,11 +225,15 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
       val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
       val configOverrides: String = {
-          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort "
+        val ntpServer = Option(System.getenv("NTP_SERVER")).fold("")(x => s"-DTN.ntp-server=$x ")
+
+        var config = s"$javaOptions ${renderProperties(asProperties(overrides))} " +
+          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort $ntpServer"
+
 
         if (enableProfiling) {
           config += s"-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=$ProfilerPort,listen=all," +
-            s"sampling,monitors,sessionname=WavesNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot "
+            s"sampling,monitors,sessionname=TNNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot "
         }
 
         val withAspectJ = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
@@ -314,6 +304,55 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       Thread.sleep(1000)
       inspectContainer(containerId)
     }
+  }
+
+  def stopContainer(node: DockerNode): Unit = {
+    val id = node.containerId
+    log.info(s"Stopping container with id: $id")
+    takeProfileSnapshot(node)
+    client.stopContainer(node.containerId, 10)
+    saveProfile(node)
+    saveLog(node)
+    val containerInfo = client.inspectContainer(node.containerId)
+    log.debug(s"""Container information for ${node.name}:
+                 |Exit code: ${containerInfo.state().exitCode()}
+                 |Error: ${containerInfo.state().error()}
+                 |Status: ${containerInfo.state().status()}
+                 |OOM killed: ${containerInfo.state().oomKilled()}""".stripMargin)
+  }
+
+  def killAndStartContainer(node: DockerNode): DockerNode = {
+    val id = node.containerId
+    log.info(s"Killing container with id: $id")
+    takeProfileSnapshot(node)
+    client.killContainer(id, DockerClient.Signal.SIGINT)
+    saveProfile(node)
+    saveLog(node)
+    client.startContainer(id)
+    node.nodeInfo = getNodeInfo(node.containerId, node.settings)
+    Await.result(
+      node.waitForStartup().flatMap(_ => connectToAll(node)),
+      3.minutes
+    )
+    node
+  }
+
+  def restartNode(node: DockerNode, configUpdates: Config = empty): DockerNode = {
+    Await.result(node.waitForHeightArise, 3.minutes)
+
+    if (configUpdates != empty) {
+      val renderedConfig = renderProperties(asProperties(configUpdates))
+
+      log.debug("Set new config directly in the script for starting node")
+      val shPath = "/opt/waves/start-waves.sh"
+      val scriptCmd: Array[String] =
+        Array("sh", "-c", s"sed -i 's|$$TN_OPTS.*-jar|$$TN_OPTS $renderedConfig -jar|' $shPath && chmod +x $shPath")
+
+      val execScriptCmd = client.execCreate(node.containerId, scriptCmd).id()
+      client.execStart(execScriptCmd)
+    }
+
+    restartContainer(node)
   }
 
   override def close(): Unit = {
@@ -435,6 +474,21 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   private def disconnectFromNetwork(containerId: String): Unit = client.disconnectFromNetwork(containerId, wavesNetwork.id())
 
+  def restartContainer(node: DockerNode): DockerNode = {
+    val id            = node.containerId
+    val containerInfo = inspectContainer(id)
+    val ports         = containerInfo.networkSettings().ports()
+    log.info(s"New ports: ${ports.toString}")
+    client.restartContainer(id, 10)
+
+    node.nodeInfo = getNodeInfo(node.containerId, node.settings)
+    Await.result(
+      node.waitForStartup().flatMap(_ => connectToAll(node)),
+      3.minutes
+    )
+    node
+  }
+
   def connectToNetwork(nodes: Seq[DockerNode]): Unit = {
     nodes.foreach(connectToNetwork)
     Await.result(Future.traverse(nodes)(connectToAll), 1.minute)
@@ -477,6 +531,53 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
     log.debug(s"$label: $x")
   }
+
+  def runMigrationToolInsideContainer(node: DockerNode): DockerNode = {
+    val id = node.containerId
+    takeProfileSnapshot(node)
+    updateStartScript(node)
+    stopContainer(node)
+    saveProfile(node)
+    saveLog(node)
+    client.startContainer(id)
+    client.waitContainer(id)
+    client.startContainer(id)
+    node.nodeInfo = getNodeInfo(node.containerId, node.settings)
+    Await.result(
+      node.waitForStartup().flatMap(_ => connectToAll(node)),
+      3.minutes
+    )
+    node
+  }
+
+  private def updateStartScript(node: DockerNode): Unit = {
+    val id = node.containerId
+
+    log.debug("Make backup copy of /opt/waves/start-waves.sh")
+    val cpCmd: Array[String] =
+      Array(
+        "sh",
+        "-c",
+        s"""cp /opt/waves/start-waves.sh /opt/waves/start-waves.sh.bk"""
+      )
+    val execCpCmd = client.execCreate(id, cpCmd).id()
+    client.execStart(execCpCmd)
+
+    log.debug("Change script for migration tool launch")
+    val scriptCmd: Array[String] =
+      Array(
+        "sh",
+        "-c",
+        s"""rm /opt/waves/start-waves.sh && echo '#!/bin/bash' >> /opt/waves/start-waves.sh &&
+             |echo 'java ${renderProperties(asProperties(genesisOverride))} -cp /opt/waves/waves.jar com.wavesplatform.matcher.MatcherTool /opt/waves/template.conf cb > /opt/waves/migration-tool.log' >> /opt/waves/start-waves.sh &&
+             |echo 'less /opt/waves/migration-tool.log | grep -ir completed && cp /opt/waves/start-waves.sh.bk /opt/waves/start-waves.sh && chmod +x /opt/waves/start-waves.sh' >> /opt/waves/start-waves.sh &&
+             |chmod +x /opt/waves/start-waves.sh
+           """.stripMargin
+      )
+    val execScriptCmd = client.execCreate(id, scriptCmd).id()
+    client.execStart(execScriptCmd)
+  }
+
 }
 
 object Docker {
@@ -485,6 +586,25 @@ object Docker {
   private val ProfilerPort       = 10001
   private val jsonMapper         = new ObjectMapper
   private val propsMapper        = new JavaPropsMapper
+
+  val configTemplate = parseResources("template.conf")
+  def genesisOverride = {
+    val genesisTs          = System.currentTimeMillis()
+    val timestampOverrides = parseString(s"""waves.blockchain.custom.genesis {
+                                            |  timestamp = $genesisTs
+                                            |  block-timestamp = $genesisTs
+                                            |}""".stripMargin)
+
+    val genesisConfig    = configTemplate.withFallback(timestampOverrides)
+    val gs               = genesisConfig.as[GenesisSettings]("waves.blockchain.custom.genesis")
+    val genesisSignature = Block.genesis(gs).explicitGet().uniqueId
+
+    timestampOverrides.withFallback(parseString(s"waves.blockchain.custom.genesis.signature = $genesisSignature"))
+  }
+
+  AddressScheme.current = new AddressScheme {
+    override val chainId = configTemplate.as[String]("waves.blockchain.custom.address-scheme-character").charAt(0).toByte
+  }
 
   def apply(owner: Class[_]): Docker = new Docker(tag = owner.getSimpleName)
 
@@ -520,6 +640,8 @@ object Docker {
     override def networkAddress: InetSocketAddress = nodeInfo.hostNetworkAddress
 
     def containerNetworkAddress: InetSocketAddress = nodeInfo.containerNetworkAddress
+
+    def getConfig: Config = config
   }
 
 }

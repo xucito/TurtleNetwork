@@ -90,7 +90,7 @@ options to `javaOptions` in `IntegrationTest` configuration:
 javaOptions in IntegrationTest += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 ```
 
-Debugging a node inside a container is a little more complicated: you will need to modify the `WAVES_OPTS` environment
+Debugging a node inside a container is a little more complicated: you will need to modify the `TN_OPTS` environment
 variable before starting a container.
 
 ### Running Tests from IDE

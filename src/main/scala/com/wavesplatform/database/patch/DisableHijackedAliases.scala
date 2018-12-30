@@ -5,10 +5,10 @@ import java.util
 
 import com.google.common.primitives.Shorts
 import com.wavesplatform.database.{Keys, RW}
-import scorex.account.Alias
-import scorex.block.BlockHeader
-import scorex.transaction.{CreateAliasTransaction, TransactionParsers}
-import scorex.utils.ScorexLogging
+import com.wavesplatform.account.Alias
+import com.wavesplatform.utils.ScorexLogging
+import com.wavesplatform.block.BlockHeader
+import com.wavesplatform.transaction.{CreateAliasTransaction, TransactionParsers}
 
 import scala.collection.JavaConverters._
 
@@ -64,7 +64,7 @@ object DisableHijackedAliases extends ScorexLogging {
     try {
       iterator.seek(prefixBytes)
       while (iterator.hasNext && iterator.peekNext().getKey.startsWith(prefixBytes)) {
-        rw.delete(iterator.next().getKey)
+        rw.delete(iterator.next().getKey, "hijacked-aliases")
       }
     } finally {
       iterator.close()

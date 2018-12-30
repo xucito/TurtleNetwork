@@ -21,9 +21,8 @@ inTask(docker)(
       val startWaves     = sourceDirectory.value / "container" / "start-TN.sh"
 
       val withAspectJ     = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
-      val aspectjAgentUrl = "http://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.8.13/aspectjweaver-1.8.13.jar"
-
-      val yourKitArchive = "YourKit-JavaProfiler-2018.04-docker.zip"
+      val aspectjAgentUrl = "http://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.9.1/aspectjweaver-1.9.1.jar"
+      val yourKitArchive  = "YourKit-JavaProfiler-2018.04-docker.zip"
 
       new Dockerfile {
         from("anapsix/alpine-java:8_server-jre")
@@ -40,8 +39,8 @@ inTask(docker)(
 
         add((assembly in LocalProject("node")).value, "/opt/TN/TN.jar")
         add(Seq(configTemplate, startWaves), "/opt/TN/")
-        run("chmod", "+x", "/opt/TN/start-TN.sh")
-        entryPoint("/opt/TN/start-TN.sh")
+        runShell("chmod", "+x", "/opt/TN/start-waves.sh")
+        entryPoint("/opt/TN/start-waves.sh")
         expose(10001)
       }
     },

@@ -8,11 +8,11 @@ import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.utils.Base58
 import org.scalatest.CancelAfterFailure
 import play.api.libs.json._
-import scorex.account.Alias
-import scorex.api.http.assets.{MassTransferRequest, SignedMassTransferRequest}
-import scorex.transaction.transfer.MassTransferTransaction.{MaxTransferCount, Transfer}
-import scorex.transaction.transfer.TransferTransaction.MaxAttachmentSize
-import scorex.transaction.transfer._
+import com.wavesplatform.account.Alias
+import com.wavesplatform.api.http.assets.{MassTransferRequest, SignedMassTransferRequest}
+import com.wavesplatform.transaction.transfer.MassTransferTransaction.{MaxTransferCount, Transfer}
+import com.wavesplatform.transaction.transfer.TransferTransaction.MaxAttachmentSize
+import com.wavesplatform.transaction.transfer._
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -22,7 +22,6 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   private def fakeSignature = Base58.encode(Array.fill(64)(Random.nextInt.toByte))
 
   test("asset mass transfer changes asset balances and sender's.TN balance is decreased by fee.") {
-
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
 
@@ -41,7 +40,6 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   }
 
   test("TN mass transfer changes TN balances") {
-
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val (balance2, eff2) = notMiner.accountBalances(secondAddress)
     val (balance3, eff3) = notMiner.accountBalances(thirdAddress)
@@ -97,7 +95,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
   }
 
   test("invalid transfer should not be in UTX or blockchain") {
-    import scorex.transaction.transfer._
+    import com.wavesplatform.transaction.transfer._
 
     def request(version: Byte = MassTransferTransaction.version,
                 transfers: List[Transfer] = List(Transfer(secondAddress, transferAmount)),
@@ -130,7 +128,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     val invalidTransfers = Seq(
       (request(timestamp = System.currentTimeMillis + 1.day.toMillis), "Transaction .* is from far future"),
       (request(transfers = List.fill(MaxTransferCount + 1)(Transfer(secondAddress, 1)), fee = calcMassTransferFee(MaxTransferCount + 1)),
-       "Number of transfers is greater than 100"),
+       s"Number of transfers ${MaxTransferCount + 1} is greater than 100"),
       (request(transfers = List(Transfer(secondAddress, -1))), "One of the transfers has negative amount"),
       (request(fee = 0), "insufficient fee"),
       (request(fee = 99999), "Fee .* does not exceed minimal value"),
@@ -269,7 +267,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     createAliasTxs.foreach(sender.waitForTransaction(_))
 
     val transfers = aliases.map { alias =>
-      Transfer(Alias.buildWithCurrentNetworkByte(alias).explicitGet().stringRepr, 2.waves)
+      Transfer(Alias.buildWithCurrentNetworkByte(alias).explicitGet().stringRepr, 2.TN)
     }
     val txId = sender.massTransfer(firstAddress, transfers, 300000).id
     nodes.waitForHeightAriseAndTxPresent(txId)

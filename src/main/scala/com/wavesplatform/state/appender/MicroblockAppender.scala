@@ -5,23 +5,26 @@ import com.wavesplatform.metrics.{BlockStats, Instrumented}
 import com.wavesplatform.network.MicroBlockSynchronizer.MicroblockData
 import com.wavesplatform.network._
 import com.wavesplatform.state.Blockchain
+import com.wavesplatform.utils.ScorexLogging
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.Channel
 import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import scorex.block.MicroBlock
-import scorex.transaction.ValidationError.{InvalidSignature, MicroBlockAppendError}
-import scorex.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
-import scorex.utils.ScorexLogging
+import com.wavesplatform.block.MicroBlock
+import com.wavesplatform.transaction.ValidationError.{InvalidSignature, MicroBlockAppendError}
+import com.wavesplatform.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 import scala.util.{Left, Right}
 
 object MicroblockAppender extends ScorexLogging with Instrumented {
 
-  def apply(checkpoint: CheckpointService, blockchainUpdater: BlockchainUpdater with Blockchain, utxStorage: UtxPool, scheduler: Scheduler)(
-      microBlock: MicroBlock): Task[Either[ValidationError, Unit]] =
+  def apply(checkpoint: CheckpointService,
+            blockchainUpdater: BlockchainUpdater with Blockchain,
+            utxStorage: UtxPool,
+            scheduler: Scheduler,
+            verify: Boolean = true)(microBlock: MicroBlock): Task[Either[ValidationError, Unit]] =
     Task(
       measureSuccessful(
         microblockProcessingTimeStats,
@@ -31,7 +34,7 @@ object MicroblockAppender extends ScorexLogging with Instrumented {
             (),
             MicroBlockAppendError(s"[h = ${blockchainUpdater.height + 1}] is not valid with respect to checkpoint", microBlock)
           )
-          _ <- blockchainUpdater.processMicroBlock(microBlock)
+          _ <- blockchainUpdater.processMicroBlock(microBlock, verify)
         } yield utxStorage.removeAll(microBlock.transactionData)
       )).executeOn(scheduler)
 
@@ -61,5 +64,5 @@ object MicroblockAppender extends ScorexLogging with Instrumented {
     }
   }
 
-  private val microblockProcessingTimeStats = Kamon.metrics.histogram("microblock-processing-time")
+  private val microblockProcessingTimeStats = Kamon.histogram("microblock-processing-time")
 }

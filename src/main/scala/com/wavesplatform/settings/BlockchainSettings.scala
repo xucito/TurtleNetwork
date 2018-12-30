@@ -11,7 +11,6 @@ import scala.concurrent.duration._
 case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blocksForFeatureActivation: Int,
                                  allowTemporaryNegativeUntil: Long,
-                                 requireSortedTransactionsAfter: Long,
                                  generationBalanceDepthFrom50To1000AfterHeight: Int,
                                  minimalGeneratingBalanceAfter: Long,
                                  allowTransactionsFromFutureUntil: Long,
@@ -22,7 +21,6 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blockVersion3AfterHeight: Int,
                                  preActivatedFeatures: Map[Short, Int],
                                  doubleFeaturesPeriodsAfterHeight: Int) {
-  val dontRequireSortedTransactionsAfter: Int    = blockVersion3AfterHeight
   val allowLeasedBalanceTransferUntilHeight: Int = blockVersion3AfterHeight
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
@@ -53,7 +51,6 @@ object FunctionalitySettings {
     featureCheckBlocksPeriod = 2000,
     blocksForFeatureActivation = 1000,
     allowTemporaryNegativeUntil = 0L,
-    requireSortedTransactionsAfter = 0L,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     minimalGeneratingBalanceAfter = 0L,
     allowTransactionsFromFutureUntil = 0L,
@@ -70,7 +67,6 @@ object FunctionalitySettings {
     featureCheckBlocksPeriod = 3000,
     blocksForFeatureActivation = 2700,
     allowTemporaryNegativeUntil = 1477958400000L,
-    requireSortedTransactionsAfter = 1477958400000L,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     minimalGeneratingBalanceAfter = 0,
     allowTransactionsFromFutureUntil = 1478100000000L,
@@ -131,11 +127,7 @@ object GenesisSettings {
   )
 }
 
-case class BlockchainSettings(addressSchemeCharacter: Char,
-                              maxTransactionsPerBlockDiff: Int,
-                              minBlocksInMemory: Int,
-                              functionalitySettings: FunctionalitySettings,
-                              genesisSettings: GenesisSettings)
+case class BlockchainSettings(addressSchemeCharacter: Char, functionalitySettings: FunctionalitySettings, genesisSettings: GenesisSettings)
 
 object BlockchainType extends Enumeration {
   val TESTNET = Value("TESTNET")
@@ -162,8 +154,6 @@ object BlockchainSettings {
 
     BlockchainSettings(
       addressSchemeCharacter = addressSchemeCharacter,
-      maxTransactionsPerBlockDiff = config.as[Int](s"$configPath.max-transactions-per-block-diff"),
-      minBlocksInMemory = config.as[Int](s"$configPath.min-blocks-in-memory"),
       functionalitySettings = functionalitySettings,
       genesisSettings = genesisSettings
     )

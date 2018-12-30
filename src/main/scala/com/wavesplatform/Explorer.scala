@@ -5,14 +5,13 @@ import java.nio.ByteBuffer
 import java.util
 
 import com.typesafe.config.ConfigFactory
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.database.{Keys, LevelDBWriter}
 import com.wavesplatform.db.openDB
 import com.wavesplatform.settings.{WavesSettings, loadConfig}
 import com.wavesplatform.state.{ByteStr, EitherExt2}
-import com.wavesplatform.utils.{Base58, Base64}
+import com.wavesplatform.utils.{Base58, Base64, ScorexLogging}
 import org.slf4j.bridge.SLF4JBridgeHandler
-import scorex.account.{Address, AddressScheme}
-import scorex.utils.ScorexLogging
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -63,7 +62,12 @@ object Explorer extends ScorexLogging {
     "addresses-for-asset-seq-nr",
     "addresses-for-asset",
     "address-transaction-ids-seq-nr",
-    "address-transaction-ids"
+    "address-transaction-ids",
+    "alias-is-disabled",
+    "carry-fee-history",
+    "carry-fee",
+    "asset-script-history",
+    "asset-script"
   )
 
   def main(args: Array[String]): Unit = {
@@ -79,8 +83,14 @@ object Explorer extends ScorexLogging {
 
     log.info(s"Data directory: ${settings.dataDirectory}")
 
-    val db     = openDB(settings.dataDirectory)
-    val reader = new LevelDBWriter(db, settings.blockchainSettings.functionalitySettings)
+    val db = openDB(settings.dataDirectory)
+    val reader = new LevelDBWriter(
+      db,
+      settings.blockchainSettings.functionalitySettings,
+      maxCacheSize = settings.maxCacheSize,
+      maxRollbackDepth = settings.maxRollbackDepth,
+      rememberBlocksInterval = settings.rememberBlocks.toMillis
+    )
 
     val blockchainHeight = reader.height
     log.info(s"Blockchain height is $blockchainHeight")
