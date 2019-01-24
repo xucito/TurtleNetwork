@@ -89,12 +89,12 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
             .get
 
         val iTx = invalidTx(timestamp = System.currentTimeMillis + 1.day.toMillis)
-        assertBadRequestAndResponse(sponsor.broadcastRequest(iTx.json()), "Transaction .* is from far future")
+        assertBadRequestAndResponse(sponsor.broadcastRequest(iTx.json()), "Transaction timestamp .* is more than .*ms in the future")
       }
     }
 
-    val minerWavesBalanceAfterFirstXferTest   = minerWavesBalance + 2.waves + minFee + CommonValidation.FeeUnit * SmallFee / minSponsorFee
-    val sponsorWavesBalanceAfterFirstXferTest = sponsorWavesBalance - 2.waves - minFee - CommonValidation.FeeUnit * SmallFee / minSponsorFee
+    val minerWavesBalanceAfterFirstXferTest   = minerWavesBalance + 2.TN + minFee + CommonValidation.FeeUnit * SmallFee / minSponsorFee
+    val sponsorWavesBalanceAfterFirstXferTest = sponsorWavesBalance - 2.TN - minFee - CommonValidation.FeeUnit * SmallFee / minSponsorFee
 
     "fee should be written off in issued asset" - {
 
@@ -128,12 +128,12 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
         sponsorTx.head.map(_.id) should contain allElementsOf Seq(sponsorId, transferTxToAlice, sponsorAssetId)
       }
 
-      "sponsor should receive sponsored asset as fee, waves should be written off" in {
+      "sponsor should receive sponsored asset as fee,  should be written off" in {
         miner.assertAssetBalance(sponsor.address, sponsorAssetId, sponsorAssetTotal / 2 + SmallFee)
         miner.assertBalances(sponsor.address, sponsorWavesBalanceAfterFirstXferTest)
       }
 
-      "miner waves balance should be changed" in {
+      "miner  balance should be changed" in {
         miner.assertBalances(miner.address, minerWavesBalanceAfterFirstXferTest)
       }
     }
@@ -234,7 +234,7 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
         sponsor.assertAssetBalance(sponsor.address, sponsorAssetId, sponsorAssetBalance + TinyFee)
         alice.assertAssetBalance(alice.address, sponsorAssetId, aliceAssetBalance - TinyFee)
         alice.assertBalances(alice.address, aliceWavesBalance._2 - 1.TN)
-        bob.assertBalances(bob.address, bobWavesBalance._1 + 1.waves, bobWavesBalance._2 + 1.TN)
+        bob.assertBalances(bob.address, bobWavesBalance._1 + 1.TN, bobWavesBalance._2 + 1.TN)
         bob.assertAssetBalance(bob.address, sponsorAssetId, bobAssetBalance)
         miner.assertBalances(miner.address, minerBalance._2 + wavesFee)
         miner.assertAssetBalance(miner.address, sponsorAssetId, minerAssetBalance)

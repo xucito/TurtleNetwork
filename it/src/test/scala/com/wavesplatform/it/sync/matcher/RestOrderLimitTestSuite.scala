@@ -173,7 +173,7 @@ class RestOrderLimitTestSuite
 object RestOrderLimitTestSuite {
   val reducedLimit                            = 8
   val configWithReducedRestOrderLimit: Config = parseString(s"""
-                                                       |waves.matcher {
+                                                       |TN.matcher {
                                                        |  rest-order-limit=$reducedLimit
                                                        |}
     """.stripMargin)

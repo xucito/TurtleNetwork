@@ -141,11 +141,11 @@ class TradersTestSuite extends MatcherSuiteBase {
           // Amount of waves in order is smaller than fee
           val bobBalance = matcherNode.accountBalances(bobAcc.address)._1
 
-          val oldestOrderId = bobPlacesWaveOrder(bobWavesPair, 1, 10.waves * Order.PriceConstant)
-          val newestOrderId = bobPlacesWaveOrder(bobWavesPair, 1, 10.waves * Order.PriceConstant)
+          val oldestOrderId = bobPlacesWaveOrder(bobWavesPair, 1, 10.TN * Order.PriceConstant)
+          val newestOrderId = bobPlacesWaveOrder(bobWavesPair, 1, 10.TN * Order.PriceConstant)
 
           //      waitForOrderStatus(matcherNode, bobAssetIdRaw, id, "Accepted")
-          val leaseAmount = bobBalance - exTxFee - 10.waves - matcherFee
+          val leaseAmount = bobBalance - exTxFee - 10.TN - matcherFee
           val leaseId     = bobNode.lease(bobAcc.address, aliceAcc.address, leaseAmount, exTxFee, 2).id
           matcherNode.waitForTransaction(leaseId)
 
@@ -164,9 +164,9 @@ class TradersTestSuite extends MatcherSuiteBase {
           matcherNode.waitForTransaction(cancelLeaseId)
         }
 
-        "leased TN, insufficient waves" in {
+        "leased TN, insufficient TN" in {
           val bobBalance = matcherNode.accountBalances(bobAcc.address)._1
-          val price      = 1.waves
+          val price      = 1.TN
           val order2     = bobPlacesWaveOrder(bobWavesPair, 1, price * Order.PriceConstant)
 
           val leaseAmount = bobBalance - exTxFee - price / 2

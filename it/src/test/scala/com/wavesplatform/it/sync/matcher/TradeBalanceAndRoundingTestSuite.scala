@@ -253,7 +253,7 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
     val wctWavesSellAmount = 2
     val wctWavesPrice      = 11234560000000L
 
-    "bob lease all waves exact half matcher fee" in {
+    "bob lease all  exact half matcher fee" in {
       val leasingAmount = bobNode.accountBalances(bobAcc.address)._1 - leasingFee - matcherFee / 2
       val leaseTxId     = bobNode.lease(bobAcc.address, matcherAcc.address, leasingAmount, leasingFee, 2).id
       matcherNode.waitForTransaction(leaseTxId)

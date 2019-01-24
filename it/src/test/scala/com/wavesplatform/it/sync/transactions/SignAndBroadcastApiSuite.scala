@@ -39,18 +39,23 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
 
     for (v <- supportedVersions) {
       val json = Json.obj("type" -> 10, "sender" -> firstAddress, "alias" -> "alias", "fee" -> 100000)
-      val js   = if (Option(v).isDefined) json ++ Json.obj("version" -> v.toInt) else json
+      val js   = if (Option(v).isDefined) json ++ Json.obj("version" -> v) else json
       assertSignBadJson(js - "type", "failed to parse json message")
       assertSignBadJson(js + ("type" -> Json.toJson(-100)), "Bad transaction type")
       assertSignBadJson(js - "alias", "failed to parse json message")
     }
+
+    val obsoleteTx = Json.obj("type" -> 1, "sender" -> firstAddress, "recipient" -> firstAddress, "amount" -> 1, "fee" -> 100000)
+    assertSignBadJson(obsoleteTx, "UnsupportedTransactionType")
+    assertSignBadJson(obsoleteTx + ("type" -> Json.toJson(2)), "UnsupportedTransactionType")
+
   }
 
   test("/transactions/sign should respect timestamp if specified") {
     val timestamp = 1500000000000L
     for (v <- supportedVersions) {
       val json = Json.obj("type" -> 10, "sender" -> firstAddress, "alias" -> "alias", "fee" -> 100000, "timestamp" -> timestamp)
-      val js   = if (Option(v).isDefined) json ++ Json.obj("version" -> v.toInt) else json
+      val js   = if (Option(v).isDefined) json ++ Json.obj("version" -> v) else json
       val r    = sender.postJsonWithApiKey("/transactions/sign", js)
       assert(r.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)
       assert((Json.parse(r.getResponseBody) \ "timestamp").as[Long] == timestamp)
@@ -160,7 +165,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
         "transfers"  -> Json.toJson(Seq(Transfer(secondAddress, 1.TN), Transfer(thirdAddress, 2.TN))),
         "attachment" -> Base58.encode("masspay".getBytes)
       ),
-      usesProofs = true
+      usesProofs = true,
+      version = 1
     )
   }
 
@@ -197,7 +203,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
           StringDataEntry("str", "AAA-AAA")
         )
       ),
-      usesProofs = true
+      usesProofs = true,
+      version = 1
     )
   }
 
@@ -209,7 +216,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
         "sender"  -> firstAddress,
         "script"  -> ""
       ),
-      usesProofs = true
+      usesProofs = true,
+      version = 1
     )
   }
 
@@ -239,7 +247,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
           "assetId"              -> assetId,
           "minSponsoredAssetFee" -> 100
         ),
-        usesProofs = true
+        usesProofs = true,
+        version = 1
       )
 
       signBroadcastAndCalcFee(
@@ -250,7 +259,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
           "assetId"              -> assetId,
           "minSponsoredAssetFee" -> JsNull
         ),
-        usesProofs = true
+        usesProofs = true,
+        version = 1
       )
     }
   }
@@ -289,7 +299,8 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
         "decimals"    -> 2,
         "reissuable"  -> true
       ),
-      usesProofs = false
+      usesProofs = false,
+      version = 1
     )
 
     for ((o1ver, o2ver, tver) <- Seq(
@@ -353,10 +364,10 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
     }
   }
 
-  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: String = null): String = {
+  private def signBroadcastAndCalcFee(json: JsObject, usesProofs: Boolean, version: Byte): String = {
     val jsWithPK  = json ++ Json.obj("senderPublicKey" -> sender.publicKey.toString)
     val jsWithFee = jsWithPK ++ Json.obj("fee" -> sender.calculateFee(jsWithPK).feeAmount)
-    val js        = if (Option(version).isDefined) jsWithFee ++ Json.obj("version" -> version.toInt) else jsWithFee
+    val js        = if (Option(version).isDefined) jsWithFee ++ Json.obj("version" -> version) else jsWithFee
     val rs        = sender.postJsonWithApiKey("/transactions/sign", js)
     assert(rs.getStatusCode == HttpConstants.ResponseStatusCodes.OK_200)
     val body = Json.parse(rs.getResponseBody)

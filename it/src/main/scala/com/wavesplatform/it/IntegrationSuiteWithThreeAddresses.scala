@@ -1,14 +1,15 @@
 package com.wavesplatform.it
 
+import com.wavesplatform.account.PrivateKeyAccount
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.util._
-import org.scalatest._
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.state._
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.utils.ScorexLogging
 import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.utils.ScorexLogging
+import org.scalatest._
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 
 trait IntegrationSuiteWithThreeAddresses
     extends BeforeAndAfterAll
@@ -90,7 +91,7 @@ trait IntegrationSuiteWithThreeAddresses
       ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1
     }
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc, script, 0.014.waves, System.currentTimeMillis())
+      .selfSigned(SetScriptTransaction.supportedVersions.head, acc, script, 0.014.TN, System.currentTimeMillis())
       .right
       .get
     sender

@@ -1,7 +1,9 @@
 package com.wavesplatform.lang
 
 import cats.data.EitherT
-import com.wavesplatform.lang.ScriptVersion.Versions.V1
+import cats.kernel.Monoid
+import com.wavesplatform.lang.Version.V1
+import com.wavesplatform.lang.v1.CTX
 import com.wavesplatform.lang.v1.compiler.Terms._
 import com.wavesplatform.lang.v1.compiler.Types._
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
@@ -19,7 +21,12 @@ import scala.util.{Left, Right, Try}
 object Common {
   import com.wavesplatform.lang.v1.evaluator.ctx.impl.converters._
 
-  def ev[T <: EVALUATED](context: EvaluationContext = PureContext.build(V1).evaluationContext, expr: EXPR): Either[ExecutionError, T] =
+  private val dataEntryValueType = UNION(LONG, BOOLEAN, BYTEVECTOR, STRING)
+  val dataEntryType              = CaseType("DataEntry", List("key" -> STRING, "value" -> dataEntryValueType))
+  val addCtx: CTX                = CTX.apply(Seq(dataEntryType), Map.empty, Array.empty)
+
+  def ev[T <: EVALUATED](context: EvaluationContext = Monoid.combine(PureContext.build(V1).evaluationContext, addCtx.evaluationContext),
+                         expr: EXPR): Either[ExecutionError, T] =
     EvaluatorV1[T](context, expr)
 
   trait NoShrink {
@@ -72,9 +79,9 @@ object Common {
     EvaluationContext.build(Map.empty, Map("p" -> LazyVal(EitherT.pure(instance))), Seq.empty)
 
   def emptyBlockchainEnvironment(h: Int = 1, in: Coeval[Tx :+: Ord :+: CNil] = Coeval(???), nByte: Byte = 'T'): Environment = new Environment {
-    override def height: Long      = h
-    override def networkByte: Byte = nByte
-    override def inputEntity       = in()
+    override def height: Long  = h
+    override def chainId: Byte = nByte
+    override def inputEntity   = in()
 
     override def transactionById(id: Array[Byte]): Option[Tx]                                                    = ???
     override def transactionHeightById(id: Array[Byte]): Option[Long]                                            = ???
@@ -83,13 +90,13 @@ object Common {
     override def accountBalanceOf(addressOrAlias: Recipient, assetId: Option[Array[Byte]]): Either[String, Long] = ???
   }
 
-  def addressFromPublicKey(networkByte: Byte, pk: Array[Byte], addressVersion: Byte = EnvironmentFunctions.AddressVersion): Array[Byte] = {
+  def addressFromPublicKey(chainId: Byte, pk: Array[Byte], addressVersion: Byte = EnvironmentFunctions.AddressVersion): Array[Byte] = {
     val publicKeyHash   = Global.secureHash(pk).take(EnvironmentFunctions.HashLength)
-    val withoutChecksum = addressVersion +: networkByte +: publicKeyHash
+    val withoutChecksum = addressVersion +: chainId +: publicKeyHash
     withoutChecksum ++ Global.secureHash(withoutChecksum).take(EnvironmentFunctions.ChecksumLength)
   }
 
-  def addressFromString(networkByte: Byte, str: String): Either[String, Option[Array[Byte]]] = {
+  def addressFromString(chainId: Byte, str: String): Either[String, Option[Array[Byte]]] = {
     val base58String = if (str.startsWith(EnvironmentFunctions.AddressPrefix)) str.drop(EnvironmentFunctions.AddressPrefix.length) else str
     Global.base58Decode(base58String, Global.MaxAddressLength) match {
       case Left(e) => Left(e)
@@ -103,7 +110,7 @@ object Common {
           checkSum sameElements checkSumGenerated
         }
 
-        if (version == EnvironmentFunctions.AddressVersion && network == networkByte && addressBytes.length == EnvironmentFunctions.AddressLength && checksumCorrect)
+        if (version == EnvironmentFunctions.AddressVersion && network == chainId && addressBytes.length == EnvironmentFunctions.AddressLength && checksumCorrect)
           Right(Some(addressBytes))
         else Right(None)
     }

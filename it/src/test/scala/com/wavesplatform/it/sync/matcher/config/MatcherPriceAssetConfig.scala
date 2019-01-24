@@ -42,7 +42,7 @@ object MatcherPriceAssetConfig {
       decimals = Decimals,
       reissuable = false,
       script = None,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -59,7 +59,7 @@ object MatcherPriceAssetConfig {
       decimals = Decimals,
       reissuable = false,
       script = None,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -76,7 +76,7 @@ object MatcherPriceAssetConfig {
       decimals = 8,
       reissuable = false,
       script = None,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -93,7 +93,7 @@ object MatcherPriceAssetConfig {
       decimals = 8,
       reissuable = false,
       script = None,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -141,7 +141,7 @@ object MatcherPriceAssetConfig {
 
   val orderLimit = 10
 
-  private val updatedMatcherConfig = parseString(s"""waves.matcher {
+  private val updatedMatcherConfig = parseString(s"""TN.matcher {
                                                     |  price-assets = [ "$UsdId", "$BtcId", "TN" ]
                                                     |  rest-order-limit = $orderLimit
                                                     |}""".stripMargin)

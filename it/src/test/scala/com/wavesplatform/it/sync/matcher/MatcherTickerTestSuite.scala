@@ -165,9 +165,9 @@ object MatcherTickerTestSuite {
   private val ForbiddenAssetId = "FdbnAsset"
   val Decimals: Byte           = 2
 
-  private val minerDisabled = parseString("waves.miner.enable = no")
+  private val minerDisabled = parseString("TN.miner.enable = no")
   private val matcherConfig = parseString(s"""
-                                             |waves.matcher {
+                                             |TN.matcher {
                                              |  enable = yes
                                              |  account = 3HmFkAoQRs4Y3PE2uR6ohN7wS4VqPBGKv7k
                                              |  bind-address = "0.0.0.0"
@@ -234,7 +234,7 @@ object MatcherTickerTestSuite {
   )
 
   private val updatedMatcherConfig = parseString(s"""
-                                                    |waves.matcher {
+                                                    |TN.matcher {
                                                     |  price-assets = [ "$UsdId", "TN"]
                                                     |}
      """.stripMargin)

@@ -8,6 +8,7 @@ import com.wavesplatform.it.sync.matcher.config.MatcherPriceAssetConfig._
 import com.wavesplatform.it.util._
 import com.wavesplatform.transaction.assets.exchange.OrderType.{BUY, SELL}
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
+import com.wavesplatform.state._
 
 class ExtraFeeTestSuite extends MatcherSuiteBase {
 
@@ -33,9 +34,9 @@ class ExtraFeeTestSuite extends MatcherSuiteBase {
   Seq(asset1, asset2).foreach(matcherNode.waitForTransaction(_))
 
   Seq(
-    aliceNode.transfer(aliceAcc.address, bobAcc.address, defaultAssetQuantity / 2, 0.005.waves, Some(asset0), None, 2).id,
-    aliceNode.transfer(aliceAcc.address, bobAcc.address, defaultAssetQuantity / 2, 0.009.waves, Some(asset1), None, 2).id,
-    bobNode.transfer(bobAcc.address, aliceAcc.address, defaultAssetQuantity / 2, 0.005.waves, Some(asset2), None, 2).id
+    aliceNode.transfer(aliceAcc.address, bobAcc.address, defaultAssetQuantity / 2, 0.005.TN, Some(asset0), None, 2).id,
+    aliceNode.transfer(aliceAcc.address, bobAcc.address, defaultAssetQuantity / 2, 0.009.TN, Some(asset1), None, 2).id,
+    bobNode.transfer(bobAcc.address, aliceAcc.address, defaultAssetQuantity / 2, 0.005.TN, Some(asset2), None, 2).id
   ).foreach(matcherNode.waitForTransaction(_))
 
   "When matcher executes orders" - {

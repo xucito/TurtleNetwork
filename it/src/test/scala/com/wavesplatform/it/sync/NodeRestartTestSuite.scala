@@ -66,7 +66,7 @@ class NodeRestartTestSuite extends FreeSpec with Matchers with WaitForHeight2 wi
 object NodeRestartTestSuite {
   import com.wavesplatform.it.NodeConfigs._
   private val FirstNode = ConfigFactory.parseString(s"""
-                                                         |waves {
+                                                         |TN {
                                                          |  synchronization.synchronization-timeout = 10s
                                                          |  blockchain.custom.functionality {
                                                          |    pre-activated-features.1 = 0
@@ -80,7 +80,7 @@ object NodeRestartTestSuite {
                                                          |}""".stripMargin)
 
   private val SecondNode = ConfigFactory.parseString(s"""
-                                                            |waves {
+                                                            |TN {
                                                             |  synchronization.synchronization-timeout = 10s
                                                             |  blockchain.custom.functionality {
                                                             |    pre-activated-features.1 = 0

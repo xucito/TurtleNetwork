@@ -11,6 +11,7 @@ import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.transfer.TransferTransactionV2
 import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
+import com.wavesplatform.state._
 
 class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with CancelAfterFailure with ReportingTestName with NodesFromDocker {
   import UTXAllowance._
@@ -26,7 +27,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       val nodeAddress = i.createAddress()
       val acc         = PrivateKeyAccount.fromSeed(i.seed(nodeAddress)).right.get
 
-      val tx = i.transfer(i.address, nodeAddress, 10.waves, 0.005.waves).id
+      val tx = i.transfer(i.address, nodeAddress, 10.TN, 0.005.TN).id
       nodes.waitForHeightAriseAndTxPresent(tx)
 
       val scriptText = s"""true""".stripMargin
@@ -52,10 +53,10 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           assetId = None,
           sender = accounts(0),
           recipient = accounts(0),
-          amount = 1.waves,
+          amount = 1.TN,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = minFee + 0.004.waves,
+          feeAmount = minFee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .right
@@ -72,10 +73,10 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           assetId = None,
           sender = accounts(1),
           recipient = accounts(1),
-          amount = 1.waves,
+          amount = 1.TN,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = minFee + 0.004.waves,
+          feeAmount = minFee + 0.004.TN,
           attachment = Array.emptyByteArray
         )
         .right
@@ -91,7 +92,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
 object UTXAllowance {
   import com.wavesplatform.it.NodeConfigs._
   private val FirstNode = ConfigFactory.parseString(s"""
-                                                         |waves {
+                                                         |TN {
                                                          |  utx.allow-transactions-from-smart-accounts = false
                                                          |  miner {
                                                          |      quorum = 0
@@ -100,7 +101,7 @@ object UTXAllowance {
                                                          |}""".stripMargin)
 
   private val SecondNode = ConfigFactory.parseString(s"""
-                                                          |waves {
+                                                          |TN {
                                                           |  utx.allow-transactions-from-smart-accounts = true
                                                           |  miner {
                                                           |      enable = no

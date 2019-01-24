@@ -6,7 +6,7 @@ import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync.{script, someAssetAmount, _}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.ByteStr
+import com.wavesplatform.state.{ByteStr, _}
 import com.wavesplatform.transaction.Proofs
 import com.wavesplatform.transaction.assets.SetAssetScriptTransaction
 import com.wavesplatform.transaction.smart.SetScriptTransaction
@@ -115,7 +115,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
     notMiner.assertBalances(secondAddress, balance2, eff2)
   }
 
-  test("sender's waves balance is decreased by fee") {
+  test("sender's  balance is decreased by fee") {
     val script2 = ScriptCompiler(
       s"""
            |match tx {
@@ -140,13 +140,13 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
     assert(details2.script == script2)
   }
 
-  test("cannot transact without having enough waves") {
+  test("cannot transact without having enough TN") {
     val (balance, eff) = notMiner.accountBalances(firstAddress)
-    assertBadRequestAndResponse(sender.setAssetScript(assetWScript, firstAddress, balance + 1, Some(scriptBase64)), "negative waves balance")
+    assertBadRequestAndResponse(sender.setAssetScript(assetWScript, firstAddress, balance + 1, Some(scriptBase64)), "negative TN balance")
     nodes.waitForHeightArise()
     notMiner.assertBalances(firstAddress, balance, eff)
 
-    val leaseAmount = 1.waves
+    val leaseAmount = 1.TN
     val leaseId     = sender.lease(firstAddress, secondAddress, leaseAmount, minFee).id
     nodes.waitForHeightAriseAndTxPresent(leaseId)
 
@@ -170,7 +170,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
     val (balance, eff) = notMiner.accountBalances(firstAddress)
 
     val invalidTxs = Seq(
-      (sastx(timestamp = System.currentTimeMillis + 1.day.toMillis), "Transaction .* is from far future"),
+      (sastx(timestamp = System.currentTimeMillis + 1.day.toMillis), "Transaction timestamp .* is more than .*ms in the future"),
       (sastx(fee = 9999999), "Fee .* does not exceed minimal value"),
       (sastx(assetId = ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz9ekQuYn92natMnMq8").get), "invalid.assetId"),
       (sastx(assetId = ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get), "Referenced assetId not found")
@@ -278,7 +278,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
       accountA,
       ByteStr.decodeBase58(assetWScript).get,
       Some(unchangeableScript),
-      setAssetScriptFee + 0.004.waves,
+      setAssetScriptFee + 0.004.TN,
       System.currentTimeMillis,
       Proofs.empty
     )
@@ -300,7 +300,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
       accountA,
       ByteStr.decodeBase58(assetWScript).get,
       Some(script),
-      setAssetScriptFee + 0.004.waves,
+      setAssetScriptFee + 0.004.TN,
       System.currentTimeMillis,
       Proofs.empty
     )

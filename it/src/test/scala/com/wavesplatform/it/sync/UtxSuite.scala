@@ -85,7 +85,7 @@ class UtxSuite extends FunSuite with CancelAfterFailure with NodesFromDocker wit
 object UtxSuite {
   import com.wavesplatform.it.NodeConfigs._
   private val minerConfig = ConfigFactory.parseString(s"""
-                                                         |waves {
+                                                         |TN {
                                                          |  synchronization.synchronization-timeout = 10s
                                                          |  blockchain.custom.functionality {
                                                          |    pre-activated-features.1 = 0
@@ -95,7 +95,7 @@ object UtxSuite {
                                                          |}""".stripMargin)
 
   private val notMinerConfig = ConfigFactory.parseString(s"""
-                                                            |waves {
+                                                            |TN {
                                                             |  synchronization.synchronization-timeout = 10s
                                                             |  blockchain.custom.functionality {
                                                             |    pre-activated-features.1 = 0

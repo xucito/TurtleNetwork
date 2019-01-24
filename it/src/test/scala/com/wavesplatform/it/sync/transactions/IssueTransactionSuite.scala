@@ -7,9 +7,7 @@ import com.wavesplatform.it.sync._
 import org.scalatest.prop.TableDrivenPropertyChecks
 
 class IssueTransactionSuite extends BaseTransactionSuite with TableDrivenPropertyChecks {
-  val supportedVersions: List[Byte] = List(1, 2)
-
-  test("asset issue changes issuer's asset balance; issuer's waves balance is decreased by fee") {
+  test("asset issue changes issuer's asset balance; issuer's TN balance is decreased by fee") {
     for (v <- supportedVersions) {
       val assetName        = "myasset"
       val assetDescription = "my asset description"
@@ -53,10 +51,10 @@ class IssueTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
     val assetName        = "myasset"
     val assetDescription = "my asset description"
     val eff1             = notMiner.accountBalances(firstAddress)._2
-    val bigAssetFee      = eff1 + 1.waves
+    val bigAssetFee      = eff1 + 1.TN
 
     assertBadRequestAndMessage(sender.issue(firstAddress, assetName, assetDescription, someAssetAmount, 2, reissuable = false, bigAssetFee),
-                               "negative waves balance")
+                               "negative TN balance")
   }
 
   test("Try to put incorrect script") {

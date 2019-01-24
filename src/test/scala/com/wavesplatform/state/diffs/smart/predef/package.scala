@@ -1,8 +1,7 @@
 package com.wavesplatform.state.diffs.smart
 
-import com.wavesplatform.lang.ScriptVersion
-import com.wavesplatform.lang.ScriptVersion.Versions.V1
-import com.wavesplatform.lang.v1.compiler.CompilerV1
+import com.wavesplatform.lang.Version._
+import com.wavesplatform.lang.v1.compiler.ExpressionCompilerV1
 import com.wavesplatform.lang.v1.compiler.Terms.EVALUATED
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
 import com.wavesplatform.lang.v1.parser.Parser
@@ -17,15 +16,15 @@ import monix.eval.Coeval
 import shapeless.Coproduct
 
 package object predef {
-  val networkByte: Byte = 'u'
+  val chainId: Byte = 'u'
 
-  def runScript[T <: EVALUATED](script: String, version: ScriptVersion, t: In, blockchain: Blockchain, networkByte: Byte): Either[String, T] = {
-    val Success(expr, _) = Parser(script)
+  def runScript[T <: EVALUATED](script: String, version: Version, t: In, blockchain: Blockchain, chainId: Byte): Either[String, T] = {
+    val Success(expr, _) = Parser.parseScript(script)
     for {
-      compileResult <- CompilerV1(compilerContext(version, isAssetScript = false), expr)
+      compileResult <- ExpressionCompilerV1(compilerContext(version, isAssetScript = false), expr)
       (typedExpr, _) = compileResult
       evalContext = BlockchainContext.build(version,
-                                            networkByte,
+                                            chainId,
                                             Coeval.evalOnce(t),
                                             Coeval.evalOnce(blockchain.height),
                                             blockchain,
@@ -35,13 +34,13 @@ package object predef {
   }
 
   def runScript[T <: EVALUATED](script: String, t: In = null): Either[String, T] =
-    runScript[T](script, V1, t, EmptyBlockchain, networkByte)
+    runScript[T](script, V1, t, EmptyBlockchain, chainId)
 
-  def runScript[T <: EVALUATED](script: String, t: In, networkByte: Byte): Either[String, T] =
-    runScript[T](script, V1, t, EmptyBlockchain, networkByte)
+  def runScript[T <: EVALUATED](script: String, t: In, chainId: Byte): Either[String, T] =
+    runScript[T](script, V1, t, EmptyBlockchain, chainId)
 
   def runScript[T <: EVALUATED](script: String, tx: Transaction, blockchain: Blockchain): Either[String, T] =
-    runScript[T](script, V1, Coproduct(tx), blockchain, networkByte)
+    runScript[T](script, V1, Coproduct(tx), blockchain, chainId)
 
   private def dropLastLine(str: String): String = str.replace("\r", "").split('\n').init.mkString("\n")
 
@@ -49,7 +48,7 @@ package object predef {
     s"""${dropLastLine(scriptWithPureFunctions(tx, t))}
        |${dropLastLine(scriptWithWavesFunctions(tx, t))}
        |${dropLastLine(scriptWithCryptoFunctions)}
-       |if rnd then pure && waves else crypto""".stripMargin
+       |if rnd then pure &&  else crypto""".stripMargin
 
   def scriptWithPureFunctions(tx: DataTransaction, t: TransferTransaction): String =
     s"""
@@ -168,8 +167,8 @@ package object predef {
        |
        | let balances = assetBalance(tx.sender, unit) > 0 && wavesBalance(tx.sender) != 0
        |
-       | let waves = txById && entries && balances && aFromPK && aFromStrOrRecip && height > 0
-       | waves""".stripMargin
+       | let  = txById && entries && balances && aFromPK && aFromStrOrRecip && height > 0
+       | TN""".stripMargin
 
   def scriptWithCryptoFunctions: String =
     s"""

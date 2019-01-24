@@ -20,12 +20,12 @@ object MatcherDefaultConfig {
   val orderLimit       = 20
 
   val minerEnabled  = parseString(s"""
-       |waves.miner.enable = yes
-       |waves.miner.quorum = 0""".stripMargin)
-  val minerDisabled = parseString("waves.miner.enable = no")
+       |TN.miner.enable = yes
+       |TN.miner.quorum = 0""".stripMargin)
+  val minerDisabled = parseString("TN.miner.enable = no")
   val matcherConfig = parseString(s"""
-                                     |waves.miner.enable = no
-                                     |waves.matcher {
+                                     |TN.miner.enable = no
+                                     |TN.matcher {
                                      |  enable = yes
                                      |  account = 3HmFkAoQRs4Y3PE2uR6ohN7wS4VqPBGKv7k
                                      |  bind-address = "0.0.0.0"

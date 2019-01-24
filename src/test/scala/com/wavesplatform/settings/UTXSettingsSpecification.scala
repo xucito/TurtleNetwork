@@ -12,6 +12,7 @@ class UTXSettingsSpecification extends FlatSpec with Matchers {
     val config   = ConfigFactory.parseString("""TN {
         |  utx {
         |    max-size = 100
+        |    max-bytes-size = 100
         |    cleanup-interval = 10m
         |    blacklist-sender-addresses = ["a"]
         |    allow-blacklisted-transfer-to = ["b"]
@@ -19,7 +20,8 @@ class UTXSettingsSpecification extends FlatSpec with Matchers {
         |  }
         |}""".stripMargin).resolve()
     val settings = config.as[UtxSettings]("TN.utx")
-    settings.maxSize should be(100)
+    settings.maxSize shouldBe 100
+    settings.maxBytesSize shouldBe 100L
     settings.cleanupInterval shouldBe 10.minutes
     settings.blacklistSenderAddresses shouldBe Set("a")
     settings.allowBlacklistedTransferTo shouldBe Set("b")
