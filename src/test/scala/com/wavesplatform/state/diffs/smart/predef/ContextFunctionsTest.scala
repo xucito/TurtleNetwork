@@ -76,34 +76,34 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
         val str  = tx.data(3)
         val result = runScript(
           s"""
-               |match tx {
-               | case tx: DataTransaction => {
-               |  let d = tx.data
-               |
+             |match tx {
+             | case tx: DataTransaction => {
+             |  let d = tx.data
+             |
                |  let int  = extract(getInteger(d, "${int.key}"))
-               |  let bool = extract(getBoolean(d, "${bool.key}"))
-               |  let bin  = extract(getBinary(d, "${bin.key}"))
-               |  let str  = extract(getString(d, "${str.key}"))
-               |
+             |  let bool = extract(getBoolean(d, "${bool.key}"))
+             |  let bin  = extract(getBinary(d, "${bin.key}"))
+             |  let str  = extract(getString(d, "${str.key}"))
+             |
                |  let okInt  = int  == ${int.value}
-               |  let okBool = bool == ${bool.value}
-               |  let okBin  = bin  == base58'${Base58.encode(bin.asInstanceOf[BinaryDataEntry].value.arr)}'
-               |  let okStr  = str  == "${str.value}"
-               |
+             |  let okBool = bool == ${bool.value}
+             |  let okBin  = bin  == base58'${Base58.encode(bin.asInstanceOf[BinaryDataEntry].value.arr)}'
+             |  let okStr  = str  == "${str.value}"
+             |
                |  let badInt  = isDefined(getInteger(d, "${bool.key}"))
-               |  let badBool = isDefined(getBoolean(d, "${bin.key}"))
-               |  let badBin  = isDefined(getBinary(d, "${str.key}"))
-               |  let badStr  = isDefined(getString(d, "${int.key}"))
-               |
+             |  let badBool = isDefined(getBoolean(d, "${bin.key}"))
+             |  let badBin  = isDefined(getBinary(d, "${str.key}"))
+             |  let badStr  = isDefined(getString(d, "${int.key}"))
+             |
                |  let noSuchKey = isDefined(getInteger(d, "\u00a0"))
-               |
+             |
                |  let positives = okInt && okBool && okBin && okStr
-               |  let negatives = badInt || badBool || badBin || badStr || noSuchKey
-               |  positives && ! negatives
-               | }
-               | case _ => throw()
-               |}
-               |""".stripMargin,
+             |  let negatives = badInt || badBool || badBin || badStr || noSuchKey
+             |  positives && ! negatives
+             | }
+             | case _ => throw()
+             |}
+             |""".stripMargin,
           Coproduct(tx)
         )
         result shouldBe evaluated(true)
@@ -119,32 +119,32 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
         val str  = tx.data(3)
         val ok = runScript(
           s"""
-               |match tx {
-               | case tx: DataTransaction => {
-               |  let d = tx.data
-               |
+             |match tx {
+             | case tx: DataTransaction => {
+             |  let d = tx.data
+             |
                |  let int  = extract(getInteger(d, 0))
-               |  let bool = extract(getBoolean(d, 1))
-               |  let bin  = extract(getBinary(d, 2))
-               |  let str  = extract(getString(d, 3))
-               |
+             |  let bool = extract(getBoolean(d, 1))
+             |  let bin  = extract(getBinary(d, 2))
+             |  let str  = extract(getString(d, 3))
+             |
                |  let okInt  = int  == ${int.value}
-               |  let okBool = bool == ${bool.value}
-               |  let okBin  = bin  == base58'${Base58.encode(bin.asInstanceOf[BinaryDataEntry].value.arr)}'
-               |  let okStr  = str  == "${str.value}"
-               |
+             |  let okBool = bool == ${bool.value}
+             |  let okBin  = bin  == base58'${Base58.encode(bin.asInstanceOf[BinaryDataEntry].value.arr)}'
+             |  let okStr  = str  == "${str.value}"
+             |
                |  let badInt  = isDefined(getInteger(d, 1))
-               |  let badBool = isDefined(getBoolean(d, 2))
-               |  let badBin  = isDefined(getBinary(d, 3))
-               |  let badStr  = isDefined(getString(d, 0))
-               |
+             |  let badBool = isDefined(getBoolean(d, 2))
+             |  let badBin  = isDefined(getBinary(d, 3))
+             |  let badStr  = isDefined(getString(d, 0))
+             |
                |  let positives = okInt && okBool && okBin && okStr
-               |  let negatives = badInt || badBool || badBin || badStr
-               |  positives && ! negatives
-               | }
-               | case _ => throw()
-               |}
-               |""".stripMargin,
+             |  let negatives = badInt || badBool || badBin || badStr
+             |  positives && ! negatives
+             | }
+             | case _ => throw()
+             |}
+             |""".stripMargin,
           Coproduct(tx)
         )
         ok shouldBe evaluated(true)

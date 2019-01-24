@@ -193,7 +193,7 @@ object Parser {
         (typesP | (Index ~~ restMatchCaseInvalidP ~~ Index).map {
           case (start, _, end) => Seq(PART.INVALID(Pos(start, end), "the type for variable should be specified: `case varName: Type => expr`"))
         })
-    ).?.map(_.getOrElse(List.empty))
+      ).?.map(_.getOrElse(List.empty))
 
     P(
       Index ~~ "case" ~~ &(border) ~ comment ~/ (
@@ -205,7 +205,7 @@ object Parser {
                 Seq.empty[PART[String]]
               )
           }
-      ) ~ comment ~ "=>" ~/ baseExpr.? ~~ Index
+        ) ~ comment ~ "=>" ~/ baseExpr.? ~~ Index
     ).map {
       case (start, (v, types), e, end) =>
         val exprStart = types.lastOption.orElse(v).fold(start)(_.position.end)
@@ -293,7 +293,7 @@ object Parser {
           ("" ~ ";") ~/ (baseExpr | invalid).? |
             newLineSep ~/ (baseExpr | invalid).? |
             (Index ~~ CharPred(_ != '\n').repX).map(pos => Some(INVALID(Pos(pos, pos), "expected ';'")))
-        ) ~~
+          ) ~~
         Index
     ).map {
       case (start, ls, body, end) => {

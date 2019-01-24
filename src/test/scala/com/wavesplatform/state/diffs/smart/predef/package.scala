@@ -48,7 +48,7 @@ package object predef {
     s"""${dropLastLine(scriptWithPureFunctions(tx, t))}
        |${dropLastLine(scriptWithWavesFunctions(tx, t))}
        |${dropLastLine(scriptWithCryptoFunctions)}
-       |if rnd then pure &&  else crypto""".stripMargin
+       |if rnd then pure && TN else crypto""".stripMargin
 
   def scriptWithPureFunctions(tx: DataTransaction, t: TransferTransaction): String =
     s"""
@@ -167,7 +167,7 @@ package object predef {
        |
        | let balances = assetBalance(tx.sender, unit) > 0 && wavesBalance(tx.sender) != 0
        |
-       | let  = txById && entries && balances && aFromPK && aFromStrOrRecip && height > 0
+       | let TN= txById && entries && balances && aFromPK && aFromStrOrRecip && height > 0
        | TN""".stripMargin
 
   def scriptWithCryptoFunctions: String =
