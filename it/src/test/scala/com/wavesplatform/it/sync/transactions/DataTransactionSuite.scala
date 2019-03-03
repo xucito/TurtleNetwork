@@ -1,15 +1,17 @@
 package com.wavesplatform.it.sync.transactions
 
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.{Base58, EitherExt2}
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.api.UnexpectedStatusCodeException
 import com.wavesplatform.it.sync.{calcDataFee, minFee}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, EitherExt2, IntegerDataEntry, StringDataEntry}
+import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, DataEntry, IntegerDataEntry, StringDataEntry}
 import com.wavesplatform.transaction.DataTransaction
-import com.wavesplatform.utils.Base58
 import org.scalatest.{Assertion, Assertions}
 import play.api.libs.json._
+
 import scala.concurrent.duration._
 import scala.util.{Failure, Random, Try}
 
@@ -47,7 +49,7 @@ class DataTransactionSuite extends BaseTransactionSuite {
              fee: Long = 100000,
              timestamp: Long = System.currentTimeMillis,
              version: Byte = DataTransaction.supportedVersions.head): DataTransaction =
-      DataTransaction.selfSigned(version, sender.privateKey, entries, fee, timestamp).explicitGet()
+      DataTransaction.selfSigned(sender.privateKey, entries, fee, timestamp).explicitGet()
 
     val (balance1, eff1) = notMiner.accountBalances(firstAddress)
     val invalidTxs = Seq(
@@ -134,7 +136,7 @@ class DataTransactionSuite extends BaseTransactionSuite {
 
   test("queries for nonexistent data") {
     def assertNotFound(url: String): Assertion = Try(sender.get(url)) match {
-      case Failure(UnexpectedStatusCodeException(_, statusCode, responseBody)) =>
+      case Failure(UnexpectedStatusCodeException(_, _, statusCode, responseBody)) =>
         statusCode shouldBe 404
         responseBody should include("no data for this key")
       case _ => Assertions.fail("Expected 404")

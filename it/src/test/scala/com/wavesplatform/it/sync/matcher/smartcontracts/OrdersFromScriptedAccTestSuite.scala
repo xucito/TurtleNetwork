@@ -1,17 +1,15 @@
 package com.wavesplatform.it.sync.matcher.smartcontracts
 
 import com.typesafe.config.{Config, ConfigFactory}
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.api.SyncMatcherHttpApi._
 import com.wavesplatform.it.matcher.MatcherSuiteBase
-import com.wavesplatform.it.sync.matcher.config.MatcherDefaultConfig._
 import com.wavesplatform.it.sync._
+import com.wavesplatform.it.sync.matcher.config.MatcherDefaultConfig._
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.{ByteStr, EitherExt2}
 import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order, OrderType}
-import com.wavesplatform.transaction.smart.SetScriptTransaction
-import com.wavesplatform.transaction.smart.script.ScriptCompiler
 
 import scala.concurrent.duration._
 
@@ -42,6 +40,7 @@ class OrdersFromScriptedAccTestSuite extends MatcherSuiteBase {
         matcherNode.height shouldBe <(activationHeight)
       }
 
+<<<<<<< HEAD
       withClue("duplicate names in contracts are denied") {
         val setScriptTransaction = SetScriptTransaction
           .selfSigned(
@@ -60,6 +59,8 @@ class OrdersFromScriptedAccTestSuite extends MatcherSuiteBase {
         )
       }
 
+=======
+>>>>>>> 0893bc8d98ef08d239df0e37054b0b4749d0fddd
       setContract(Some("true"), bobAcc)
     }
 

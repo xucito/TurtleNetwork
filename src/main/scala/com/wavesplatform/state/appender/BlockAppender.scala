@@ -1,6 +1,7 @@
 package com.wavesplatform.state.appender
 
 import cats.data.EitherT
+import com.wavesplatform.block.Block
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.metrics._
 import com.wavesplatform.mining.Miner
@@ -8,6 +9,8 @@ import com.wavesplatform.network._
 import com.wavesplatform.settings.WavesSettings
 //import com.wavesplatform.state.{Blockchain, ByteStr, _}
 import com.wavesplatform.state.Blockchain
+import com.wavesplatform.transaction.ValidationError.{BlockAppendError, InvalidSignature}
+import com.wavesplatform.transaction.{BlockchainUpdater, ValidationError}
 import com.wavesplatform.utils.{ScorexLogging, Time}
 import com.wavesplatform.utx.UtxPool
 import io.netty.channel.Channel
@@ -15,19 +18,21 @@ import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.wavesplatform.block.Block
-import com.wavesplatform.transaction.ValidationError.{BlockAppendError, InvalidSignature}
-import com.wavesplatform.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
 
 import scala.util.Right
 
 object BlockAppender extends ScorexLogging with Instrumented {
+<<<<<<< HEAD
 //  private val exceptions = List(
 //    ByteStr.decodeBase58("5EmZvVfuA8QQwrnMyyGcjm1sSQ2YvcJL9aiEaAoKoJhcTxp8kYq1ADaY1qt88pfR2mkAes6BjXupiPQVZBiqQkSY").get,
 //    ByteStr.decodeBase58("2E32Qc9xCgK9he71Kh7fiVgh5mjsfkHCqEdJh8n1MTEKMBKX6Dr5bdi6VuwvBApSFTo9iq3WuKpVD96zAFWniiVS").get,
 //  )
   def apply(checkpoint: CheckpointService,
             blockchainUpdater: BlockchainUpdater with Blockchain,
+=======
+
+  def apply(blockchainUpdater: BlockchainUpdater with Blockchain,
+>>>>>>> 0893bc8d98ef08d239df0e37054b0b4749d0fddd
             time: Time,
             utxStorage: UtxPool,
             pos: PoSSelector,
@@ -38,7 +43,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
       measureSuccessful(
         blockProcessingTimeStats, {
           if (blockchainUpdater.isLastBlockId(newBlock.reference)) {
-            appendBlock(checkpoint, blockchainUpdater, utxStorage, pos, time, settings, verify)(newBlock).map(_ => Some(blockchainUpdater.score))
+            appendBlock(blockchainUpdater, utxStorage, pos, time, settings, verify)(newBlock).map(_ => Some(blockchainUpdater.score))
           } else if (blockchainUpdater.contains(newBlock.uniqueId)) {
             Right(None)
           } else {
@@ -48,8 +53,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
       )
     }.executeOn(scheduler)
 
-  def apply(checkpoint: CheckpointService,
-            blockchainUpdater: BlockchainUpdater with Blockchain,
+  def apply(blockchainUpdater: BlockchainUpdater with Blockchain,
             time: Time,
             utxStorage: UtxPool,
             pos: PoSSelector,
@@ -62,7 +66,7 @@ object BlockAppender extends ScorexLogging with Instrumented {
     blockReceivingLag.safeRecord(System.currentTimeMillis() - newBlock.timestamp)
     (for {
       _                <- EitherT(Task.now(newBlock.signaturesValid()))
-      validApplication <- EitherT(apply(checkpoint, blockchainUpdater, time, utxStorage, pos, settings, scheduler)(newBlock))
+      validApplication <- EitherT(apply(blockchainUpdater, time, utxStorage, pos, settings, scheduler)(newBlock))
     } yield validApplication).value.map {
       case Right(None) => // block already appended
       case Right(Some(_)) =>

@@ -107,7 +107,7 @@ object BlacklistedTradingTestSuite {
   def configWithBlacklisted(assets: Array[String] = Array(), names: Array[String] = Array(), addresses: Array[String] = Array()): Config = {
     def toStr(array: Array[String]): String = if (array.length == 0) "" else array.mkString("\"", "\", \"", "\"")
     parseString(s"""
-                |waves.matcher {
+                |TN.matcher {
                 |  blacklisted-assets = [${toStr(assets)}]
                 |  blacklisted-names = [${toStr(names)}]
                 |  blacklisted-addresses = [${toStr(addresses)}]

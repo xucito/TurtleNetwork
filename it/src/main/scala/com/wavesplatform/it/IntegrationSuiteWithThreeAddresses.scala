@@ -1,9 +1,9 @@
 package com.wavesplatform.it
 
 import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.util._
-import com.wavesplatform.state._
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.transfer._
@@ -91,7 +91,7 @@ trait IntegrationSuiteWithThreeAddresses
       ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1
     }
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc, script, 0.014.TN, System.currentTimeMillis())
+      .selfSigned(acc, script, 0.014.TN, System.currentTimeMillis())
       .right
       .get
     sender

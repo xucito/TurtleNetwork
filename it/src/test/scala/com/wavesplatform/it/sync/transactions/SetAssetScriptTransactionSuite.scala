@@ -1,18 +1,20 @@
 package com.wavesplatform.it.sync.transactions
 
 import com.wavesplatform.account.AddressScheme
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync.{script, someAssetAmount, _}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.{ByteStr, _}
 import com.wavesplatform.transaction.Proofs
 import com.wavesplatform.transaction.assets.SetAssetScriptTransaction
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import play.api.libs.json._
 import scorex.crypto.encode.Base58
+
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -129,7 +131,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
     val (balance, eff) = notMiner.accountBalances(firstAddress)
     val details        = notMiner.assetsDetails(assetWScript, true).scriptDetails.getOrElse(fail("Expecting to get asset details"))
     assert(details.scriptComplexity == 1)
-    assert(details.scriptText == "TRUE")
+    assert(details.scriptText == "TRUE") // [WAIT] true
     assert(details.script == scriptBase64)
 
     val txId = sender.setAssetScript(assetWScript, firstAddress, setAssetScriptFee, Some(script2)).id
@@ -157,13 +159,10 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
   }
 
   test("invalid transaction should not be in UTX or blockchain") {
-    def sastx(version: Byte = SetAssetScriptTransaction.supportedVersions.head,
-              fee: Long = setAssetScriptFee,
-              timestamp: Long = System.currentTimeMillis,
-              assetId: ByteStr = ByteStr.decodeBase58(assetWScript).get,
+    def sastx(fee: Long = setAssetScriptFee, timestamp: Long = System.currentTimeMillis, assetId: ByteStr = ByteStr.decodeBase58(assetWScript).get,
     ): SetAssetScriptTransaction =
       SetAssetScriptTransaction
-        .signed(version, AddressScheme.current.chainId, sender.privateKey, assetId, Some(script), fee, timestamp, sender.privateKey)
+        .signed(AddressScheme.current.chainId, sender.privateKey, assetId, Some(script), fee, timestamp, sender.privateKey)
         .right
         .get
 
@@ -250,7 +249,6 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
 
     val setScriptTransaction = SetScriptTransaction
       .selfSigned(
-        SetScriptTransaction.supportedVersions.head,
         accountA,
         Some(
           ScriptCompiler(
@@ -273,7 +271,6 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
     nodes.waitForHeightAriseAndTxPresent(setScriptId)
 
     val nonIssuerUnsignedTx = SetAssetScriptTransaction(
-      1,
       AddressScheme.current.chainId,
       accountA,
       ByteStr.decodeBase58(assetWScript).get,
@@ -295,7 +292,6 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
 
     //try to change unchangeable script
     val nonIssuerUnsignedTx2 = SetAssetScriptTransaction(
-      1,
       AddressScheme.current.chainId,
       accountA,
       ByteStr.decodeBase58(assetWScript).get,

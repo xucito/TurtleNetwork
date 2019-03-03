@@ -1,18 +1,19 @@
 package com.wavesplatform.state.diffs.smart.predef
 
 import com.wavesplatform.account.{Address, Alias}
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.lang.Global
-import com.wavesplatform.lang.Version.V2
+import com.wavesplatform.lang.StdLibVersion.V2
 import com.wavesplatform.lang.Testing.evaluated
 import com.wavesplatform.lang.v1.compiler
-import com.wavesplatform.lang.v1.compiler.ExpressionCompilerV1
+import com.wavesplatform.lang.v1.compiler.ExpressionCompiler
 import com.wavesplatform.lang.v1.compiler.Terms.{CONST_BOOLEAN, CONST_LONG, EVALUATED}
 import com.wavesplatform.lang.v1.evaluator.EvaluatorV1
 import com.wavesplatform.lang.v1.evaluator.ctx.impl.waves.WavesContext
 import com.wavesplatform.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.wavesplatform.lang.v1.parser.Parser
 import com.wavesplatform.state._
-import com.wavesplatform.state.diffs.ProduceError._
+import com.wavesplatform.common.state.diffs.ProduceError._
 import com.wavesplatform.transaction.assets.exchange.{Order, OrderType}
 import com.wavesplatform.transaction.smart.BlockchainContext.In
 import com.wavesplatform.transaction.smart.WavesEnvironment
@@ -534,7 +535,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
     import cats.syntax.monoid._
     import com.wavesplatform.lang.v1.CTX._
 
-    val Success(expr, _) = Parser.parseScript(script)
+    val Success(expr, _) = Parser.parseExpr(script)
     val ctx =
       PureContext
         .build(V2) |+|
@@ -544,7 +545,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
           .build(V2, new WavesEnvironment(chainId, Coeval(null), null, EmptyBlockchain), isTokenContext = true)
 
     for {
-      compileResult <- compiler.ExpressionCompilerV1(ctx.compilerContext, expr)
+      compileResult <- compiler.ExpressionCompiler(ctx.compilerContext, expr)
       (typedExpr, _) = compileResult
       r <- EvaluatorV1[EVALUATED](ctx.evaluationContext, typedExpr)
     } yield r
@@ -554,7 +555,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
     import cats.syntax.monoid._
     import com.wavesplatform.lang.v1.CTX._
 
-    val Success(expr, _) = Parser.parseScript(script)
+    val Success(expr, _) = Parser.parseExpr(script)
     val ctx =
       PureContext.build(V2) |+|
         CryptoContext
@@ -563,7 +564,7 @@ class TransactionBindingsTest extends PropSpec with PropertyChecks with Matchers
           .build(V2, new WavesEnvironment(chainId, Coeval(t), null, EmptyBlockchain), isTokenContext = false)
 
     for {
-      compileResult <- ExpressionCompilerV1(ctx.compilerContext, expr)
+      compileResult <- ExpressionCompiler(ctx.compilerContext, expr)
       (typedExpr, _) = compileResult
       r <- EvaluatorV1[EVALUATED](ctx.evaluationContext, typedExpr)
     } yield r

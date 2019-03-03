@@ -2,15 +2,16 @@ package com.wavesplatform.api.http
 
 import java.security.SecureRandom
 
-import javax.ws.rs.Path
 import akka.http.scaladsl.server.Route
+import com.wavesplatform.common.utils._
 import com.wavesplatform.crypto
 import com.wavesplatform.settings.RestAPISettings
 import com.wavesplatform.state.diffs.CommonValidation
-import com.wavesplatform.utils.{Base58, Time}
-import io.swagger.annotations._
-import play.api.libs.json._
 import com.wavesplatform.transaction.smart.script.{Script, ScriptCompiler}
+import com.wavesplatform.utils.Time
+import io.swagger.annotations._
+import javax.ws.rs.Path
+import play.api.libs.json._
 
 @Path("/utils")
 @Api(value = "/utils", description = "Useful functions", position = 3, produces = "application/json")
@@ -25,7 +26,38 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   override val route: Route = pathPrefix("utils") {
-    compile ~ compileContract ~ estimate ~ time ~ seedRoute ~ length ~ hashFast ~ hashSecure ~ sign ~ transactionSerialize
+    decompile ~ compile ~ compileContract ~ estimate ~ time ~ seedRoute ~ length ~ hashFast ~ hashSecure ~ sign ~ transactionSerialize
+  }
+
+  @Path("/script/decompile")
+  @ApiOperation(value = "Decompile", notes = "Decompiles base64 script representation to string code", httpMethod = "POST")
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        name = "code",
+        required = true,
+        dataType = "string",
+        paramType = "body",
+        value = "Script code",
+        example = "true"
+      )
+    ))
+  @ApiResponses(
+    Array(
+      new ApiResponse(code = 200, message = "string or error")
+    ))
+  def decompile: Route = path("script" / "decompile") {
+    (post & entity(as[String])) { code =>
+        Script.fromBase64String(code) match {
+          case Left(err)     => complete(err)
+          case Right(script) => val ret = Script.decompile(script)
+            complete(
+              Json.obj(
+                "script" -> ret.toString,
+              )
+            )
+        }
+    }
   }
 
   @Path("/script/compile")
@@ -63,6 +95,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
       }
     }
   }
+
   @Path("/script/compileContract")
   @ApiOperation(value = "Compile Contract", notes = "Compiles string code to base64 contract representation", httpMethod = "POST")
   @ApiImplicitParams(
@@ -98,6 +131,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
       )
     }
   }
+
   @Path("/script/estimate")
   @ApiOperation(value = "Estimate", notes = "Estimates compiled code in Base64 representation", httpMethod = "POST")
   @ApiImplicitParams(
@@ -123,14 +157,14 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
           .left
           .map(_.m)
           .flatMap { script =>
-            ScriptCompiler.estimate(script, script.version).map((script, _))
+            ScriptCompiler.estimate(script, script.stdLibVersion).map((script, _))
           }
           .fold(
             e => ScriptCompilerError(e), {
               case (script, complexity) =>
                 Json.obj(
                   "script"     -> code,
-                  "scriptText" -> script.text,
+                  "scriptText" -> script.expr.toString, // [WAIT] Script.decompile(script),
                   "complexity" -> complexity,
                   "extraFee"   -> CommonValidation.ScriptExtraFee
                 )
@@ -263,7 +297,7 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   def transactionSerialize: Route = (pathPrefix("transactionSerialize") & post) {
     handleExceptions(jsonExceptionHandler) {
       json[JsObject] { jsv =>
-        createTransaction((jsv \ "senderPublicKey").as[String], jsv)(tx => Json.obj("bytes" -> tx.bodyBytes().map(_.toInt & 0xff)))
+        parseOrCreateTransaction(jsv)(tx => Json.obj("bytes" -> tx.bodyBytes().map(_.toInt & 0xff)))
       }
     }
   }

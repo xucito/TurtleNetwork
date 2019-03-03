@@ -15,7 +15,7 @@ val versionSource = Def.task {
   // Please, update the fallback version every major and minor releases.
   // This version is used then building from sources without Git repository
   // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
-  val FallbackVersion = (0, 15, 4)
+  val FallbackVersion = (0, 16, 1)
 
   val versionFile      = (sourceManaged in Compile).value / "com" / "wavesplatform" / "Version.scala"
   val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
@@ -46,7 +46,7 @@ logBuffered := false
 
 inThisBuild(
   Seq(
-    scalaVersion := "2.12.7",
+    scalaVersion := "2.12.8",
     organization := "com.wavesplatform",
     crossPaths := false,
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits", "-Xlint")
@@ -58,18 +58,19 @@ resolvers ++= Seq(
   Resolver.sbtPluginRepo("releases")
 )
 
-fork in run := true
-javaOptions in run ++= Seq(
-  "-XX:+IgnoreUnrecognizedVMOptions",
-  "--add-modules=java.xml.bind"
-)
-
-Test / fork := true
-Test / javaOptions ++= Seq(
+val java9Options = Seq(
   "-XX:+IgnoreUnrecognizedVMOptions",
   "--add-modules=java.xml.bind",
   "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED"
 )
+
+fork in run := true
+javaOptions in run ++= java9Options
+
+Test / fork := true
+Test / javaOptions ++= java9Options
+
+Jmh / javaOptions ++= java9Options
 
 val aopMerge: MergeStrategy = new MergeStrategy {
   val name = "aopMerge"
@@ -116,6 +117,7 @@ inConfig(Test)(
   Seq(
     logBuffered := false,
     parallelExecution := false,
+    testListeners := Seq.empty, // Fix for doubled test reports
     testOptions += Tests.Argument("-oIDOF", "-u", "target/test-reports"),
     testOptions += Tests.Setup(_ => sys.props("sbt-testing") = "true")
   ))
@@ -217,16 +219,26 @@ addCommandAlias(
     |set scalacOptions in ThisBuild -= "-Xfatal-warnings";
   """.stripMargin
 )
+
 lazy val checkPRRaw = taskKey[Unit]("Build a project and run unit tests")
 checkPRRaw in Global := {
   try {
     clean.all(ScopeFilter(inProjects(allProjects: _*), inConfigurations(Compile))).value
   } finally {
-    test.all(ScopeFilter(inProjects(langJVM, node), inConfigurations(Test))).value
+    test.all(ScopeFilter(inProjects(langJVM, node, commonJVM), inConfigurations(Test))).value
     (langJS / Compile / fastOptJS).value
     compile.all(ScopeFilter(inProjects(generator, benchmark), inConfigurations(Test))).value
   }
 }
+
+lazy val common = crossProject(JSPlatform, JVMPlatform)
+  .withoutSuffixFor(JVMPlatform)
+  .settings(
+    libraryDependencies ++= Dependencies.scalatest
+  )
+
+lazy val commonJS  = common.js
+lazy val commonJVM = common.jvm
 
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
@@ -247,7 +259,6 @@ lazy val lang =
           Dependencies.scalatest ++
           Dependencies.scalactic ++
           Dependencies.monix.value ++
-          Dependencies.scodec.value ++
           Dependencies.fastparse.value,
       resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins"),
       resolvers += Resolver.sbtPluginRepo("releases")
@@ -256,7 +267,10 @@ lazy val lang =
       scalaJSLinkerConfig ~= {
         _.withModuleKind(ModuleKind.CommonJSModule)
       },
-      libraryDependencies += "org.rudogma" %%% "supertagged" % "1.4",
+      libraryDependencies ++= Seq(
+        "org.rudogma" %%% "supertagged" % "1.4",
+        "com.chuusai" %%% "shapeless"   % "2.3.3"
+      )
     )
     .jvmSettings(
       coverageExcludedPackages := "",
@@ -273,14 +287,16 @@ lazy val lang =
       organizationHomepage := Some(url("https://blackturtle.eu")),
       scmInfo := Some(ScmInfo(url("https://github.com/BlackTurtle123/TurtleNetwork"), "git@github.com:BlackTurtle123/TurtleNetwork.git", None)),
       developers := List(Developer("MrTurtle", "Bram N.", "info@blackturtle.eu", url("https://blackturtle.eur"))),
-      libraryDependencies ++= Seq(
+      libraryDependencies ++= Dependencies.meta ++
+        Seq(
         "org.scala-js"                      %% "scalajs-stubs" % "1.0.0-RC1" % "provided",
         "com.github.spullara.mustache.java" % "compiler" % "0.9.5"
       ) ++ Dependencies.logging.map(_       % "test") // scrypto logs an error if a signature verification was failed
+
     )
 
-lazy val langJS  = lang.js
-lazy val langJVM = lang.jvm
+lazy val langJS  = lang.js.dependsOn(commonJS)
+lazy val langJVM = lang.jvm.dependsOn(commonJVM)
 
 lazy val node = project
   .in(file("."))
@@ -302,9 +318,14 @@ lazy val node = project
         Dependencies.ficus ++
         Dependencies.scorex ++
         Dependencies.commons_net ++
-        Dependencies.monix.value
+        Dependencies.monix.value,
+    dependencyOverrides ++= Seq(
+      Dependencies.AkkaActor,
+      Dependencies.AkkaStream,
+      Dependencies.AkkaHTTP
+    )
   )
-  .dependsOn(langJVM)
+  .dependsOn(langJVM, commonJVM)
 
 lazy val discovery = project
 

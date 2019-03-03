@@ -1,17 +1,18 @@
 package com.wavesplatform.it.sync.smartcontract
 
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.{Base58, EitherExt2}
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.BaseTransactionSuite
-import com.wavesplatform.state._
 import com.wavesplatform.transaction.Proofs
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.utils.Base58
 import org.scalatest.CancelAfterFailure
+
 import scala.concurrent.duration._
 
 /*
@@ -58,7 +59,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
     // set script
     val script = ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, sender.privateKey, Some(script), setScriptFee, System.currentTimeMillis())
+      .selfSigned(sender.privateKey, Some(script), setScriptFee, System.currentTimeMillis())
       .explicitGet()
 
     val setScriptId = sender
@@ -81,7 +82,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
 
     val unsigned =
       MassTransferTransaction
-        .create(1, None, sender.publicKey, transfers, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
+        .create(None, sender.publicKey, transfers, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
         .explicitGet()
 
     val accountSig = ByteStr(crypto.sign(sender.privateKey, unsigned.bodyBytes()))
@@ -98,7 +99,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
 
     val unsignedToGov =
       MassTransferTransaction
-        .create(1, None, sender.publicKey, transfersToGov, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
+        .create(None, sender.publicKey, transfersToGov, currTime, calcMassTransferFee(2) + smartFee, Array.emptyByteArray, Proofs.empty)
         .explicitGet()
     val accountSigToGovFail = ByteStr(crypto.sign(sender.privateKey, unsignedToGov.bodyBytes()))
     val signedToGovFail     = unsignedToGov.copy(proofs = Proofs(Seq(accountSigToGovFail)))
@@ -113,8 +114,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
 
     val unsignedToGovSecond =
       MassTransferTransaction
-        .create(1,
-                None,
+        .create(None,
                 sender.publicKey,
                 transfersToGov,
                 System.currentTimeMillis(),

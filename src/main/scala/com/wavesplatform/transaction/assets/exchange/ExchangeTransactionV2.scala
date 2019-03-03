@@ -3,8 +3,8 @@ package com.wavesplatform.transaction.assets.exchange
 import cats.data.State
 import com.google.common.primitives.{Ints, Longs}
 import com.wavesplatform.account.{PrivateKeyAccount, PublicKeyAccount}
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.crypto
-import com.wavesplatform.state.ByteStr
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets.exchange.ExchangeTransaction._
 import io.swagger.annotations.ApiModelProperty
@@ -22,21 +22,26 @@ case class ExchangeTransactionV2(buyOrder: Order,
                                  timestamp: Long,
                                  proofs: Proofs)
     extends ExchangeTransaction {
+
   import ExchangeTransactionV2._
-  override def version: Byte                     = 2
+
+  override def version: Byte = 2
+
   override val builder                           = ExchangeTransactionV2
   override val assetFee: (Option[AssetId], Long) = (None, fee)
 
   @ApiModelProperty(hidden = true)
   override val sender: PublicKeyAccount = buyOrder.matcherPublicKey
 
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
-    Array(0: Byte, builder.typeId, version) ++
-      Ints.toByteArray(buyOrder.bytes().length) ++ orderMark(buyOrder.version) ++ buyOrder.bytes() ++
-      Ints.toByteArray(sellOrder.bytes().length) ++ orderMark(sellOrder.version) ++ sellOrder.bytes() ++
-      Longs.toByteArray(price) ++ Longs.toByteArray(amount) ++
-      Longs.toByteArray(buyMatcherFee) ++ Longs.toByteArray(sellMatcherFee) ++ Longs.toByteArray(fee) ++
-      Longs.toByteArray(timestamp))
+  override val bodyBytes: Coeval[Array[Byte]] =
+    Coeval.evalOnce(
+      Array(0: Byte, builder.typeId, version) ++
+        Ints.toByteArray(buyOrder.bytes().length) ++ orderMark(buyOrder.version) ++ buyOrder.bytes() ++
+        Ints.toByteArray(sellOrder.bytes().length) ++ orderMark(sellOrder.version) ++ sellOrder.bytes() ++
+        Longs.toByteArray(price) ++ Longs.toByteArray(amount) ++
+        Longs.toByteArray(buyMatcherFee) ++ Longs.toByteArray(sellMatcherFee) ++ Longs.toByteArray(fee) ++
+        Longs.toByteArray(timestamp)
+    )
 
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(bodyBytes() ++ proofs.bytes())
 }
@@ -90,7 +95,7 @@ object ExchangeTransactionV2 extends TransactionParserFor[ExchangeTransactionV2]
     }
   }
 
-  override def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] = {
+  override def parseTail(bytes: Array[Byte]): Try[TransactionT] = {
     def back(off: Int): State[Int, Unit] = State { from =>
       (from - off, ())
     }

@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom
 import cats.Show
 import com.wavesplatform.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesplatform.api.http.assets.SignedTransferV1Request
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.crypto
 import com.wavesplatform.dexgen.Worker._
 import com.wavesplatform.dexgen.utils.{ApiRequests, GenOrderType}
@@ -12,7 +13,6 @@ import com.wavesplatform.it.api.{MatcherResponse, MatcherStatusResponse, Orderbo
 import com.wavesplatform.it.util._
 import com.wavesplatform.matcher.AssetPairBuilder
 import com.wavesplatform.matcher.api.CancelOrderRequest
-import com.wavesplatform.state.ByteStr
 import com.wavesplatform.transaction.AssetId
 import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order}
 import com.wavesplatform.transaction.transfer.TransferTransactionV1
@@ -61,13 +61,14 @@ class Worker(workerSettings: Settings,
     to(matcherSettings.endpoint).orderBook(pair)
     val order = Order.buy(buyer, matcherPublicKey, pair, amount, price, now, now + 29.day.toMillis, fee)
     log.info(s"[$tag] Buy ${order.id()}: $order")
-    val response = to(matcherSettings.endpoint).placeOrder(order).andThen {
-      case Failure(e) => log.error(s"[$tag] Can't place buy order ${order.id()}: $e")
-    }
-    log.info(order.id().base58)
-    to(matcherSettings.endpoint).orderHistory(buyer)
-    to(matcherSettings.endpoint).orderBook(pair)
-    to(matcherSettings.endpoint).orderStatus(order.id().base58, pair)
+    val response = for {
+      placeOrder <- to(matcherSettings.endpoint).placeOrder(order).andThen {
+        case Failure(e) => log.error(s"[$tag] Can't place buy order ${order.id()}: $e")
+      }
+      orderHistory <- to(matcherSettings.endpoint).orderHistory(buyer)
+      orderbook    <- to(matcherSettings.endpoint).orderBook(pair)
+      orderStatus  <- to(matcherSettings.endpoint).orderStatus(order.id().base58, pair)
+    } yield placeOrder
     (order, response)
   }
 
@@ -76,12 +77,14 @@ class Worker(workerSettings: Settings,
     to(matcherSettings.endpoint).orderBook(pair)
     val order = Order.sell(seller, matcherPublicKey, pair, amount, price, now, now + 29.day.toMillis, fee)
     log.info(s"[$tag] Sell ${order.id()}: $order")
-    val response = to(matcherSettings.endpoint).placeOrder(order).andThen {
-      case Failure(e) => log.error(s"[$tag] Can't place sell order ${order.id()}: $e")
-    }
-    to(matcherSettings.endpoint).orderHistory(seller)
-    to(matcherSettings.endpoint).orderBook(pair)
-    to(matcherSettings.endpoint).orderStatus(order.id().base58, pair)
+    val response = for {
+      placeOrder <- to(matcherSettings.endpoint).placeOrder(order).andThen {
+        case Failure(e) => log.error(s"[$tag] Can't place sell order ${order.id()}: $e")
+      }
+      orderHistory <- to(matcherSettings.endpoint).orderHistory(seller)
+      orderbook    <- to(matcherSettings.endpoint).orderBook(pair)
+      orderStatus  <- to(matcherSettings.endpoint).orderStatus(order.id().base58, pair)
+    } yield placeOrder
     (order, response)
   }
 

@@ -19,7 +19,7 @@ object Types {
   case class PARAMETERIZEDUNION(l: List[SINGLE]) extends PARAMETERIZED
   case object NOTHING                            extends FINAL { override val name = "Nothing"; override val l = List() }
   case object LONG                               extends REAL { override val name = "Int"; override val l = List(this) }
-  case object BYTEVECTOR                         extends REAL { override val name = "ByteVector"; override val l = List(this) }
+  case object BYTESTR                            extends REAL { override val name = "ByteVector"; override val l = List(this) }
   case object BOOLEAN                            extends REAL { override val name = "Boolean"; override val l = List(this) }
   case object STRING                             extends REAL { override val name = "String"; override val l = List(this) }
   case class LIST(innerType: FINAL) extends REAL {
@@ -76,5 +76,7 @@ object Types {
       case (NOTHING, _)           => false
       case (l1: FINAL, l2: FINAL) => l1.u >= l2.u
     }
+
+    def <=(l2: FINAL): Boolean = l2 >= l1
   }
 }

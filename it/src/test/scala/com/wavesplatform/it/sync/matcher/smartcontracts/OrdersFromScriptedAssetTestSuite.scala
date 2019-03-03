@@ -2,6 +2,8 @@ package com.wavesplatform.it.sync.matcher.smartcontracts
 
 import com.typesafe.config.{Config, ConfigFactory}
 import com.wavesplatform.account.{AddressScheme, PrivateKeyAccount}
+import com.wavesplatform.api.http.TransactionNotAllowedByAssetScript
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.it.api.SyncHttpApi.NodeExtSync
 import com.wavesplatform.it.api.SyncMatcherHttpApi._
@@ -10,13 +12,13 @@ import com.wavesplatform.it.sync.createSignedIssueRequest
 import com.wavesplatform.it.sync.matcher.config.MatcherDefaultConfig
 import com.wavesplatform.it.util._
 import com.wavesplatform.lang.v1.compiler.Terms
-import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order, OrderType}
 import com.wavesplatform.transaction.assets.{IssueTransactionV1, IssueTransactionV2}
-import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.smart.script.v1.ExprScript
 import com.wavesplatform.transaction.smart.script.{Script, ScriptCompiler}
+import play.api.libs.json.Json
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 import scala.util.Random
 
 /**
@@ -69,29 +71,6 @@ class OrdersFromScriptedAssetTestSuite extends MatcherSuiteBase {
     matcherNode.expectIncorrectOrderPlacement(order, 400, "OrderRejected")
   }
 
-  "if counter order has expired then cancel its only, not a submitted order" in {
-    val pair = AssetPair.createAssetPair("TN", AllowAssetId).get
-
-    // place expiring counter order
-    val counterId =
-      matcherNode
-        .placeOrder(matcherPk, pair, OrderType.SELL, 2.TN, 10, version = 2, fee = smartTradeFee, timeToLive = 61.seconds)
-        .message
-        .id
-    matcherNode.waitOrderStatus(pair, counterId, "Accepted")
-
-    // wait counter order's lifetime
-    Thread.sleep(65.seconds.toMillis)
-    matcherNode.orderBook(pair).asks.size shouldBe 1
-
-    // place a submitted order
-    val submittedId =
-      matcherNode.placeOrder(matcherPk, pair, OrderType.BUY, 2.TN, 10, version = 2, fee = smartTradeFee).message.id
-
-    matcherNode.waitOrderStatus(pair, counterId, "Cancelled")
-    matcherNode.orderStatus(submittedId, pair).status shouldBe "Accepted"
-  }
-
   "can execute against unscripted, if the script returns TRUE" in {
     info("place counter")
     val pair = AssetPair.createAssetPair(UnscriptedAssetId, AllowAssetId).get
@@ -141,9 +120,13 @@ class OrdersFromScriptedAssetTestSuite extends MatcherSuiteBase {
     val submittedId =
       matcherNode.placeOrder(matcherPk, pair, OrderType.BUY, 100000, 2 * Order.PriceConstant, version = 2, fee = smartTradeFee).message.id
 
-    info("both orders are cancelled")
-    matcherNode.waitOrderStatus(pair, submittedId, "Cancelled")
-    matcherNode.waitOrderStatus(pair, counterId, "Cancelled")
+    info("two orders form an invalid transaction")
+    matcherNode.waitOrderStatus(pair, submittedId, "Filled")
+    matcherNode.waitOrderStatus(pair, counterId, "PartiallyFilled")
+
+    val txs = matcherNode.transactionsByOrder(submittedId)
+    txs.size shouldBe 1
+    matcherNode.expectSignedBroadcastRejected(Json.toJson(txs.head)) shouldBe TransactionNotAllowedByAssetScript.ErrorCode
   }
 
   "can't execute against scripted, if one script returns FALSE" in {
@@ -164,9 +147,13 @@ class OrdersFromScriptedAssetTestSuite extends MatcherSuiteBase {
     val submittedId =
       matcherNode.placeOrder(matcherPk, pair, OrderType.BUY, 100000, 2 * Order.PriceConstant, version = 2, fee = twoSmartTradeFee).message.id
 
-    info("both orders are cancelled")
-    matcherNode.waitOrderStatus(pair, submittedId, "Cancelled")
-    matcherNode.waitOrderStatus(pair, counterId, "Cancelled")
+    info("two orders form an invalid transaction")
+    matcherNode.waitOrderStatus(pair, submittedId, "Filled")
+    matcherNode.waitOrderStatus(pair, counterId, "PartiallyFilled")
+
+    val txs = matcherNode.transactionsByOrder(submittedId)
+    txs.size shouldBe 1
+    matcherNode.expectSignedBroadcastRejected(Json.toJson(txs.head)) shouldBe TransactionNotAllowedByAssetScript.ErrorCode
   }
 
   private def issueAsset(): String = {
@@ -211,7 +198,6 @@ object OrdersFromScriptedAssetTestSuite {
   private def mkAllowAsset(id: Int = Random.nextInt(1000) + 1): IssueTransactionV2 = {
     IssueTransactionV2
       .selfSigned(
-        2,
         AddressScheme.current.chainId,
         sender = matcherPk,
         name = s"AllowAsset-$id".getBytes(),
@@ -219,7 +205,7 @@ object OrdersFromScriptedAssetTestSuite {
         quantity = Int.MaxValue / 3,
         decimals = 0,
         reissuable = false,
-        script = Some(ScriptV1(Terms.TRUE).explicitGet()),
+        script = Some(ExprScript(Terms.TRUE).explicitGet()),
         fee = 1.TN,
         timestamp = System.currentTimeMillis()
       )
@@ -235,7 +221,6 @@ object OrdersFromScriptedAssetTestSuite {
 
   private val DenyAsset = IssueTransactionV2
     .selfSigned(
-      2,
       AddressScheme.current.chainId,
       sender = matcherPk,
       name = "DenyAsset".getBytes(),
@@ -243,7 +228,7 @@ object OrdersFromScriptedAssetTestSuite {
       quantity = Int.MaxValue / 3,
       decimals = 0,
       reissuable = false,
-      script = Some(ScriptV1(Terms.FALSE).explicitGet()),
+      script = Some(ExprScript(Terms.FALSE).explicitGet()),
       fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
@@ -264,17 +249,13 @@ object OrdersFromScriptedAssetTestSuite {
 
   val activationHeight = 10
 
-  private val commonConfig = ConfigFactory.parseString(s"""
-                                                           |TN {
-                                                           |  blockchain.custom.functionality.pre-activated-features = {
+  private val commonConfig = ConfigFactory.parseString(s"""TN {
+                                                          |  blockchain.custom.functionality.pre-activated-features = {
                                                            |    ${BlockchainFeatures.SmartAssets.id} = 0,
                                                            |    ${BlockchainFeatures.SmartAccountTrading.id} = $activationHeight
                                                            |  }
-                                                           |  matcher.price-assets = ["$AllowAssetId", "$DenyAssetId", "$UnscriptedAssetId"]
-                                                           |}
-                                                           |TN.matcher {
-                                                           |  order-cleanup-interval = 5m
-                                                           |}""".stripMargin)
+                                                          |  matcher.price-assets = ["$AllowAssetId", "$DenyAssetId", "$UnscriptedAssetId"]
+                                                          |}""".stripMargin)
 
   private val Configs = MatcherDefaultConfig.Configs.map(commonConfig.withFallback(_))
 

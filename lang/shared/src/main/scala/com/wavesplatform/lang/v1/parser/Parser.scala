@@ -1,11 +1,10 @@
 package com.wavesplatform.lang.v1.parser
 
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.lang.v1.parser.BinaryOperation._
-import com.wavesplatform.lang.v1.parser.Expressions.Pos.AnyPos
 import com.wavesplatform.lang.v1.parser.Expressions._
 import com.wavesplatform.lang.v1.parser.UnaryOperation._
 import fastparse.{WhitespaceApi, core}
-import scodec.bits.ByteVector
 
 object Parser {
 
@@ -170,18 +169,18 @@ object Parser {
     val funcname    = anyVarName
     val argWithType = anyVarName ~ ":" ~ typesP
     val args        = "(" ~ argWithType.rep(sep = ",") ~ ")"
-    val funcHeader  = "func" ~ funcname ~ args ~ "=" ~ "{" ~ baseExpr ~ "}"
+    val funcHeader  = Index ~~ "func" ~ funcname ~ args ~ "=" ~ P(singleBaseExpr | ("{" ~ baseExpr ~ "}")) ~~ Index
     funcHeader.map {
-      case (name, args, expr) => FUNC(AnyPos, name, args, expr)
+      case (start, name, args, expr, end) => FUNC(Pos(start, end), name, args, expr)
     }
   }
 
-  val annotationP: P[ANNOTATION] = ("@" ~ anyVarName ~ "(" ~ anyVarName.rep(sep = ",") ~ ")").map {
-    case (name: PART[String], args: Seq[PART[String]]) => ANNOTATION(AnyPos, name, args)
+  val annotationP: P[ANNOTATION] = (Index ~~ "@" ~ anyVarName ~ "(" ~ anyVarName.rep(sep = ",") ~ ")" ~~ Index).map {
+    case (start, name: PART[String], args: Seq[PART[String]], end) => ANNOTATION(Pos(start, end), name, args)
   }
 
-  val annotatedFunc: P[ANNOTATEDFUNC] = (annotationP.rep ~ funcP).map {
-    case (as, f) => ANNOTATEDFUNC(AnyPos, as, f)
+  val annotatedFunc: P[ANNOTATEDFUNC] = (Index ~~ annotationP.rep ~ funcP ~~ Index).map {
+    case (start, as, f, end) => ANNOTATEDFUNC(Pos(start, end), as, f)
   }
 
   val matchCaseP: P[MATCH_CASE] = {
@@ -254,8 +253,8 @@ object Parser {
             case "64" => Global.base64Decode(xs)
           }
           decoded match {
-            case Left(err) => CONST_BYTEVECTOR(Pos(start, end), PART.INVALID(Pos(innerStart, innerEnd), err))
-            case Right(r)  => CONST_BYTEVECTOR(Pos(start, end), PART.VALID(Pos(innerStart, innerEnd), ByteVector(r)))
+            case Left(err) => CONST_BYTESTR(Pos(start, end), PART.INVALID(Pos(innerStart, innerEnd), err))
+            case Right(r)  => CONST_BYTESTR(Pos(start, end), PART.VALID(Pos(innerStart, innerEnd), ByteStr(r)))
           }
       }
 
@@ -311,6 +310,14 @@ object Parser {
 
   lazy val baseExpr = P(binaryOp(baseAtom, opsByPriority) | baseAtom)
 
+
+  val singleBaseAtom = comment ~
+    P(ifP | matchP | byteVectorP | stringP | numberP | trueP | falseP | maybeAccessP) ~
+    comment
+
+  lazy val singleBaseExpr = P(binaryOp(singleBaseAtom, opsByPriority) | singleBaseAtom)
+
+
   lazy val declaration = P(letP | funcP)
 
   def binaryOp(atom: P[EXPR], rest: List[List[BinaryOperation]]): P[EXPR] = rest match {
@@ -331,12 +338,12 @@ object Parser {
       } | acc
   }
 
-  def parseScript(str: String): core.Parsed[EXPR, Char, String] = P(Start ~ (baseExpr | invalid) ~ End).parse(str)
+  def parseExpr(str: String): core.Parsed[EXPR, Char, String] = P(Start ~ (baseExpr | invalid) ~ End).parse(str)
 
   def parseContract(str: String): core.Parsed[CONTRACT, Char, String] =
-    P(Start ~ (declaration.rep) ~ (annotatedFunc.rep) ~ End)
+    P(Start ~ comment.? ~ (declaration.rep) ~ comment.? ~ (annotatedFunc.rep) ~ End ~~ Index)
       .map {
-        case (ds, fs) => CONTRACT(AnyPos, ds.toList, fs.toList)
+        case (ds, fs, end) => CONTRACT(Pos(0, end), ds.toList, fs.toList)
       }
       .parse(str)
 }

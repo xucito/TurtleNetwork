@@ -1,13 +1,14 @@
 package com.wavesplatform.it.sync.matcher
 
 import com.typesafe.config.Config
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.it.api.OrderBookResponse
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.api.SyncMatcherHttpApi._
 import com.wavesplatform.it.matcher.MatcherSuiteBase
 import com.wavesplatform.it.sync._
 import com.wavesplatform.it.sync.matcher.config.MatcherDefaultConfig._
 import com.wavesplatform.it.util._
-import com.wavesplatform.state.ByteStr
 import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order, OrderType}
 
 import scala.concurrent.duration._
@@ -65,8 +66,8 @@ class MatcherRestartTestSuite extends MatcherSuiteBase {
         matcherNode.placeOrder(aliceAcc, aliceWavesPair, OrderType.SELL, 500, 2.TN * Order.PriceConstant, matcherFee, orderVersion, 5.minutes)
       aliceSecondOrder.status shouldBe "OrderAccepted"
 
-      val orders2 = matcherNode.orderBook(aliceWavesPair)
-      orders2.asks.head.amount shouldBe 1000
+      val orders2 =
+        matcherNode.waitFor[OrderBookResponse]("Top ask has 1000 amount")(_.orderBook(aliceWavesPair), _.asks.head.amount == 1000, 1.second)
       orders2.asks.head.price shouldBe 2.TN * Order.PriceConstant
 
       val cancel = matcherNode.cancelOrder(aliceAcc, aliceWavesPair, firstOrder)

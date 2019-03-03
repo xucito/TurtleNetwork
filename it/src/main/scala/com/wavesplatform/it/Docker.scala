@@ -19,10 +19,10 @@ import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.{Config, ConfigRenderOptions}
 import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.block.Block
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.it.api.AsyncHttpApi._
 import com.wavesplatform.it.util.GlobalTimer.{instance => timer}
 import com.wavesplatform.settings._
-import com.wavesplatform.state.EitherExt2
 import com.wavesplatform.utils.ScorexLogging
 import monix.eval.Coeval
 import net.ceedubs.ficus.Ficus._
@@ -225,11 +225,16 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
       val javaOptions = Option(System.getenv("CONTAINER_JAVA_OPTS")).getOrElse("")
       val configOverrides: String = {
-        val ntpServer = Option(System.getenv("NTP_SERVER")).fold("")(x => s"-DTN.ntp-server=$x ")
+        val ntpServer    = Option(System.getenv("NTP_SERVER")).fold("")(x => s"-DTN.ntp-server=$x ")
+        val maxCacheSize = Option(System.getenv("MAX_CACHE_SIZE")).fold("")(x => s"-DTN.max-cache-size=$x ")
+        val kafkaServer = Option(System.getenv("KAFKA_SERVER")).fold("") { x =>
+          val prefix = "-DTN.matcher.events-queue"
+          val topic  = s"dex-$networkSeed-${System.currentTimeMillis() / 1000 / 60}"
+          s"$prefix.type=kafka $prefix.kafka.topic=$topic -Dakka.kafka.consumer.kafka-clients.bootstrap.servers=$x "
+        }
 
         var config = s"$javaOptions ${renderProperties(asProperties(overrides))} " +
-          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort $ntpServer"
-
+          s"-Dlogback.stdout.level=TRACE -Dlogback.file.level=OFF -DTN.network.declared-address=$ip:$networkPort $ntpServer $maxCacheSize $kafkaServer"
 
         if (enableProfiling) {
           config += s"-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=$ProfilerPort,listen=all," +
@@ -472,7 +477,10 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   def disconnectFromNetwork(node: DockerNode): Unit = disconnectFromNetwork(node.containerId)
 
-  private def disconnectFromNetwork(containerId: String): Unit = client.disconnectFromNetwork(containerId, wavesNetwork.id())
+  private def disconnectFromNetwork(containerId: String): Unit = {
+    log.info(s"Trying to disconnect container ${containerId} from network ...")
+    client.disconnectFromNetwork(containerId, wavesNetwork.id())
+  }
 
   def restartContainer(node: DockerNode): DockerNode = {
     val id            = node.containerId
@@ -495,6 +503,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
   }
 
   private def connectToNetwork(node: DockerNode): Unit = {
+    log.info(s"Trying to connect node ${node} to network ...")
     client.connectToNetwork(
       wavesNetwork.id(),
       NetworkConnection

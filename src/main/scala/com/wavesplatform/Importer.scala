@@ -6,17 +6,18 @@ import com.google.common.primitives.Ints
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.block.Block
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.db.openDB
-import com.wavesplatform.history.{CheckpointServiceImpl, StorageFactory}
+import com.wavesplatform.history.StorageFactory
 import com.wavesplatform.mining.MultiDimensionalMiningConstraint
 import com.wavesplatform.settings.{WavesSettings, loadConfig}
-import com.wavesplatform.state.ByteStr
 import com.wavesplatform.state.appender.BlockAppender
 import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.utils._
 import com.wavesplatform.utx.UtxPool
-import monix.execution.Scheduler
+import monix.execution.{Scheduler, UncaughtExceptionReporter}
+import monix.reactive.Observer
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 import scala.concurrent.Await
@@ -67,10 +68,9 @@ object Importer extends ScorexLogging {
         createInputStream(filename) match {
           case Success(inputStream) =>
             val db                = openDB(settings.dataDirectory)
-            val blockchainUpdater = StorageFactory(settings, db, time)
+            val blockchainUpdater = StorageFactory(settings, db, time, Observer.empty(UncaughtExceptionReporter.LogExceptionsToStandardErr))
             val pos               = new PoSSelector(blockchainUpdater, settings.blockchainSettings, settings.synchronizationSettings)
-            val checkpoint        = new CheckpointServiceImpl(db, settings.checkpointsSettings)
-            val extAppender       = BlockAppender(checkpoint, blockchainUpdater, time, utxPoolStub, pos, settings, scheduler, verifyTransactions) _
+            val extAppender       = BlockAppender(blockchainUpdater, time, utxPoolStub, pos, settings, scheduler, verifyTransactions) _
             checkGenesis(settings, blockchainUpdater)
             val bis           = new BufferedInputStream(inputStream)
             var quit          = false

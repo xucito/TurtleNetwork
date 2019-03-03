@@ -1,12 +1,12 @@
 package com.wavesplatform.matcher
 
 import com.google.common.base.Charsets.UTF_8
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.metrics._
-import com.wavesplatform.state.{Blockchain, ByteStr}
+import com.wavesplatform.state.Blockchain
 import com.wavesplatform.transaction.AssetId
 import com.wavesplatform.transaction.assets.exchange.AssetPair
 import kamon.Kamon
-import scorex.utils.ByteArray
 
 class AssetPairBuilder(settings: MatcherSettings, blockchain: Blockchain) {
   import AssetPairBuilder._
@@ -55,11 +55,5 @@ class AssetPairBuilder(settings: MatcherSettings, blockchain: Blockchain) {
 object AssetPairBuilder {
   private def errorMsg(assetId: String) = s"Invalid Asset ID: $assetId"
 
-  implicit val assetIdOrdering: Ordering[Option[ByteStr]] = (price: Option[ByteStr], amount: Option[ByteStr]) =>
-    (price, amount) match {
-      case (None, None)                           => 0
-      case (_, None)                              => 1
-      case (None, _)                              => -1
-      case (Some(ByteStr(b1)), Some(ByteStr(b2))) => ByteArray.compare(b1, b2)
-  }
+  val assetIdOrdering: Ordering[Option[ByteStr]] = Ordering.Option[ByteStr]
 }

@@ -5,6 +5,7 @@ import com.wavesplatform.matcher.MatcherSettings
 import com.wavesplatform.metrics.Metrics
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
+
 import scala.concurrent.duration._
 
 case class WavesSettings(directory: String,
@@ -16,7 +17,6 @@ case class WavesSettings(directory: String,
                          networkSettings: NetworkSettings,
                          walletSettings: WalletSettings,
                          blockchainSettings: BlockchainSettings,
-                         checkpointsSettings: CheckpointsSettings,
                          matcherSettings: MatcherSettings,
                          minerSettings: MinerSettings,
                          restAPISettings: RestAPISettings,
@@ -42,7 +42,6 @@ object WavesSettings {
     val networkSettings         = config.as[NetworkSettings]("TN.network")
     val walletSettings          = config.as[WalletSettings]("TN.wallet")
     val blockchainSettings      = BlockchainSettings.fromConfig(config)
-    val checkpointsSettings     = CheckpointsSettings.fromConfig(config)
     val matcherSettings         = MatcherSettings.fromConfig(config)
     val minerSettings           = MinerSettings.fromConfig(config)
     val restAPISettings         = RestAPISettings.fromConfig(config)
@@ -61,7 +60,6 @@ object WavesSettings {
       networkSettings,
       walletSettings,
       blockchainSettings,
-      checkpointsSettings,
       matcherSettings,
       minerSettings,
       restAPISettings,

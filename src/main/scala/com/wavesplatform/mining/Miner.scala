@@ -53,7 +53,6 @@ object MinerDebugInfo {
 
 class MinerImpl(allChannels: ChannelGroup,
                 blockchainUpdater: BlockchainUpdater with NG,
-                checkpoint: CheckpointService,
                 settings: WavesSettings,
                 timeService: Time,
                 utx: UtxPool,
@@ -139,7 +138,8 @@ class MinerImpl(allChannels: ChannelGroup,
     val refBlockID          = referencedBlockInfo.blockId
     lazy val currentTime    = timeService.correctedTime()
     lazy val blockDelay     = currentTime - lastBlock.timestamp
-    lazy val balance        = GeneratingBalanceProvider.balance(blockchainUpdater, blockchainSettings.functionalitySettings, height, account.toAddress)
+    lazy val balance =
+      GeneratingBalanceProvider.balance(blockchainUpdater, blockchainSettings.functionalitySettings, account.toAddress, refBlockID)
 
     measureSuccessful(
       blockBuildTimeStats,
@@ -220,7 +220,7 @@ class MinerImpl(allChannels: ChannelGroup,
           microBlock <- EitherT.fromEither[Task](
             MicroBlock.buildAndSign(account, unconfirmed, accumulatedBlock.signerData.signature, signedBlock.signerData.signature))
           _ = microBlockBuildTimeStats.safeRecord(System.currentTimeMillis() - start)
-          _ <- EitherT(MicroblockAppender(checkpoint, blockchainUpdater, utx, appenderScheduler, verify = false)(microBlock))
+          _ <- EitherT(MicroblockAppender(blockchainUpdater, utx, appenderScheduler, verify = false)(microBlock))
         } yield (microBlock, signedBlock)).value map {
           case Left(err) => Error(err)
           case Right((microBlock, signedBlock)) =>
@@ -269,7 +269,7 @@ class MinerImpl(allChannels: ChannelGroup,
   }
 
   private def nextBlockGenerationTime(fs: FunctionalitySettings, height: Int, block: Block, account: PublicKeyAccount): Either[String, Long] = {
-    val balance = GeneratingBalanceProvider.balance(blockchainUpdater, fs, height, account.toAddress)
+    val balance = GeneratingBalanceProvider.balance(blockchainUpdater, fs, account.toAddress, block.uniqueId)
 
     if (GeneratingBalanceProvider.isMiningAllowed(blockchainUpdater, height, balance)) {
       for {
@@ -313,7 +313,7 @@ class MinerImpl(allChannels: ChannelGroup,
         log.debug(s"Next attempt for acc=$account in $offset")
         generateOneBlockTask(account)(offset).flatMap {
           case Right((estimators, block, totalConstraint)) =>
-            BlockAppender(checkpoint, blockchainUpdater, timeService, utx, pos, settings, appenderScheduler)(block)
+            BlockAppender(blockchainUpdater, timeService, utx, pos, settings, appenderScheduler)(block)
               .asyncBoundary(minerScheduler)
               .map {
                 case Left(err) => log.warn("Error mining Block: " + err.toString)

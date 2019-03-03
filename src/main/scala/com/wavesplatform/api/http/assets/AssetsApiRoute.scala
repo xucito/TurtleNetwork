@@ -4,20 +4,26 @@ import java.util.concurrent._
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
+import cats.instances.either.catsStdInstancesForEither
+import cats.instances.option.catsStdInstancesForOption
+import cats.syntax.either._
+import cats.syntax.traverse._
 import com.google.common.base.Charsets
 import com.wavesplatform.account.Address
 import com.wavesplatform.api.http._
 import com.wavesplatform.api.http.assets.AssetsApiRoute.DistributionParams
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.Base58
 import com.wavesplatform.http.BroadcastRoute
 import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state.{Blockchain, ByteStr}
+import com.wavesplatform.state.Blockchain
 import com.wavesplatform.transaction.ValidationError.GenericError
 import com.wavesplatform.transaction.assets.IssueTransaction
 import com.wavesplatform.transaction.assets.exchange.Order
 import com.wavesplatform.transaction.assets.exchange.OrderJson._
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.{AssetId, AssetIdStringLength, TransactionFactory, ValidationError}
-import com.wavesplatform.utils.{Base58, Time, _}
+import com.wavesplatform.utils.{Time, _}
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
@@ -26,10 +32,7 @@ import javax.ws.rs.Path
 import monix.eval.Task
 import monix.execution.Scheduler
 import play.api.libs.json._
-import cats.syntax.either._
-import cats.syntax.traverse._
-import cats.instances.option.catsStdInstancesForOption
-import cats.instances.either.catsStdInstancesForEither
+
 import scala.concurrent.Future
 import scala.util.Success
 
@@ -254,7 +257,7 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       }).toRight("No issue transaction found with given asset ID")
       description <- blockchain.assetDescription(id).toRight("Failed to get description of the asset")
       script = description.script.filter(_ => full)
-      complexity <- script.fold[Either[String, Long]](Right(0))(script => ScriptCompiler.estimate(script, script.version))
+      complexity <- script.fold[Either[String, Long]](Right(0))(script => ScriptCompiler.estimate(script, script.stdLibVersion))
     } yield {
       JsObject(
         Seq(
@@ -272,13 +275,13 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
             case 0           => JsNull
             case sponsorship => JsNumber(sponsorship)
           })
-        ) ++ (script.toSeq.map { script =>
+        ) ++ script.toSeq.map { script =>
           "scriptDetails" -> Json.obj(
             "scriptComplexity" -> JsNumber(BigDecimal(complexity)),
             "script"           -> JsString(script.bytes().base64),
-            "scriptText"       -> JsString(script.text)
+            "scriptText"       -> JsString(script.expr.toString) // [WAIT] JsString(Script.decompile(script))
           )
-        })
+        }
       )
     }).left.map(m => CustomValidationError(m))
 

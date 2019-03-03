@@ -3,18 +3,20 @@ package com.wavesplatform.generator
 import java.util.concurrent.ThreadLocalRandom
 
 import cats.Show
+import com.wavesplatform.account.{Alias, PrivateKeyAccount}
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.generator.NarrowTransactionGenerator.Settings
 import com.wavesplatform.state.DataEntry.{MaxValueSize, Type}
-import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, EitherExt2, IntegerDataEntry, StringDataEntry}
-import org.slf4j.LoggerFactory
-import com.wavesplatform.account.{Alias, PrivateKeyAccount}
-import com.wavesplatform.utils.LoggerFacade
+import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, IntegerDataEntry, StringDataEntry}
 import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseTransactionV1}
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import com.wavesplatform.transaction.transfer._
+import com.wavesplatform.utils.LoggerFacade
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -183,13 +185,8 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             senderAndAssetOpt.flatMap {
               case (sender, asset) =>
                 logOption(
-                  MassTransferTransaction.selfSigned(MassTransferTransaction.version,
-                                                     asset,
-                                                     sender,
-                                                     transfers.toList,
-                                                     ts,
-                                                     200000 + 50000 * transferCount,
-                                                     Array.fill(r.nextInt(100))(r.nextInt().toByte)))
+                  MassTransferTransaction
+                    .selfSigned(asset, sender, transfers.toList, ts, 200000 + 50000 * transferCount, Array.fill(r.nextInt(100))(r.nextInt().toByte)))
             }
           case DataTransaction =>
             val sender = randomFrom(accounts).get
@@ -211,11 +208,11 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
               }
             val size = 128 + data.map(_.toBytes.length).sum
             val fee  = 100000 * (size / 1024 + 1)
-            logOption(DataTransaction.selfSigned(1, sender, data.toList, fee, ts))
+            logOption(DataTransaction.selfSigned(sender, data.toList, fee, ts))
           case SponsorFeeTransaction =>
             randomFrom(validIssueTxs).flatMap(assetTx => {
               val sender = accounts.find(_.address == assetTx.sender.address).get
-              logOption(SponsorFeeTransaction.selfSigned(1, sender, assetTx.id(), Some(Random.nextInt(1000)), 100000000L, ts))
+              logOption(SponsorFeeTransaction.selfSigned(sender, assetTx.id(), Some(Random.nextInt(1000)), 100000000L, ts))
             })
         }
 

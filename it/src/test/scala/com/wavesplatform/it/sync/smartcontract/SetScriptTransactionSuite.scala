@@ -1,11 +1,12 @@
 package com.wavesplatform.it.sync.smartcontract
 
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.crypto
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync.{minFee, setScriptFee, transferAmount}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.it.util._
-import com.wavesplatform.state._
 import com.wavesplatform.transaction.Proofs
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
@@ -25,7 +26,6 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val tx =
       TransferTransactionV2
         .selfSigned(
-          version = 2,
           assetId = None,
           sender = sender.privateKey,
           recipient = acc0,
@@ -59,7 +59,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
     val script = ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(SetScriptTransaction.supportedVersions.head, acc0, Some(script), setScriptFee, System.currentTimeMillis())
+      .selfSigned(acc0, Some(script), setScriptFee, System.currentTimeMillis())
       .explicitGet()
 
     val setScriptId = sender
@@ -72,6 +72,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
     acc0ScriptInfo.script.isEmpty shouldBe false
     acc0ScriptInfo.scriptText.isEmpty shouldBe false
+
     acc0ScriptInfo.script.get.startsWith("base64:") shouldBe true
 
     val json = Json.parse(sender.get(s"/transactions/info/$setScriptId").getResponseBody)
@@ -82,7 +83,6 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val tx =
       TransferTransactionV2
         .selfSigned(
-          version = 2,
           assetId = None,
           sender = acc0,
           recipient = acc3,
@@ -100,7 +100,6 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val unsigned =
       TransferTransactionV2
         .create(
-          version = 2,
           assetId = None,
           sender = acc0,
           recipient = acc3,
@@ -126,7 +125,6 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
   test("can clear script at acc0") {
     val unsigned = SetScriptTransaction
       .create(
-        version = SetScriptTransaction.supportedVersions.head,
         sender = acc0,
         script = None,
         fee = minFee + 0.004.TN,
@@ -138,18 +136,33 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val sig2 = ByteStr(crypto.sign(acc2, unsigned.bodyBytes()))
 
     val signed = unsigned.copy(proofs = Proofs(Seq(sig1, sig2)))
-    val clearScriptId = sender
-      .signedBroadcast(signed.json())
-      .id
 
-    nodes.waitForHeightAriseAndTxPresent(clearScriptId)
+    nodes.waitForHeightArise()
+
+    sender
+      .signedBroadcast(signed.json(), waitForTx = true)
+
+    val tx =
+      TransferTransactionV2
+        .selfSigned(
+          assetId = None,
+          sender = acc0,
+          recipient = acc3,
+          amount = transferAmount,
+          timestamp = System.currentTimeMillis(),
+          feeAssetId = None,
+          feeAmount = minFee,
+          attachment = Array.emptyByteArray
+        )
+        .explicitGet()
+    sender.signedBroadcast(tx.json(), waitForTx = true)
+
   }
 
   test("can send using old pk of acc0") {
     val tx =
       TransferTransactionV2
         .selfSigned(
-          version = 2,
           assetId = None,
           sender = acc0,
           recipient = acc3,

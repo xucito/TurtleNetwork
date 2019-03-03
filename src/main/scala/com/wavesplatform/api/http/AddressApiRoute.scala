@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
 import com.wavesplatform.account.{Address, PublicKeyAccount}
+import com.wavesplatform.common.utils.{Base58, Base64}
 import com.wavesplatform.consensus.GeneratingBalanceProvider
 import com.wavesplatform.crypto
 import com.wavesplatform.http.BroadcastRoute
@@ -12,7 +13,8 @@ import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
 import com.wavesplatform.state.Blockchain
 import com.wavesplatform.state.diffs.CommonValidation
 import com.wavesplatform.transaction.TransactionFactory
-import com.wavesplatform.utils.{Base58, Base64, Time}
+import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.utils.Time
 import com.wavesplatform.utx.UtxPool
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.group.ChannelGroup
@@ -357,20 +359,20 @@ case class AddressApiRoute(settings: RestAPISettings,
     BalanceDetails(
       account.address,
       portfolio.balance,
-      GeneratingBalanceProvider.balance(blockchain, functionalitySettings, blockchain.height, account),
+      GeneratingBalanceProvider.balance(blockchain, functionalitySettings, account),
       portfolio.balance - portfolio.lease.out,
       portfolio.effectiveBalance
     )
   }
 
   private def addressScriptInfoJson(account: Address): AddressScriptInfo = {
-    val script = blockchain
+    val script: Option[Script] = blockchain
       .accountScript(account)
 
     AddressScriptInfo(
       address = account.address,
       script = script.map(_.bytes().base64),
-      scriptText = script.map(_.text),
+      scriptText = script.map(_.expr.toString), // [WAIT] script.map(Script.decompile),
       complexity = script.map(_.complexity).getOrElse(0),
       extraFee = if (script.isEmpty) 0 else CommonValidation.ScriptExtraFee
     )
@@ -380,7 +382,7 @@ case class AddressApiRoute(settings: RestAPISettings,
     Address
       .fromString(address)
       .right
-      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, blockchain.effectiveBalance(acc, blockchain.height, confirmations))))
+      .map(acc => ToResponseMarshallable(Balance(acc.address, confirmations, blockchain.effectiveBalance(acc, confirmations))))
       .getOrElse(InvalidAddress)
   }
 

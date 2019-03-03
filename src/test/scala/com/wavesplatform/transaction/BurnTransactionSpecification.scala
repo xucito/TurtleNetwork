@@ -1,12 +1,13 @@
 package com.wavesplatform.transaction
 
 import com.wavesplatform.TransactionGen
-import com.wavesplatform.state.{ByteStr, EitherExt2}
+import com.wavesplatform.account.PublicKeyAccount
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
+import com.wavesplatform.transaction.assets.{BurnTransaction, BurnTransactionV1, BurnTransactionV2}
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import com.wavesplatform.account.PublicKeyAccount
-import com.wavesplatform.transaction.assets.{BurnTransaction, BurnTransactionV1, BurnTransactionV2}
 
 class BurnTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
@@ -34,7 +35,6 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
                        "timestamp": 1526287561757,
                        "signature": "uapJcAJQryBhWThU43rYgMNmvdT7kY747vx5BBgxr2KvaeTRx8Vsuh4yu1JxBymU9LnAoo1zjQcPrWSuhi6dVPE",
                        "proofs": ["uapJcAJQryBhWThU43rYgMNmvdT7kY747vx5BBgxr2KvaeTRx8Vsuh4yu1JxBymU9LnAoo1zjQcPrWSuhi6dVPE"],
-                       "chainId": null,
                        "version": 1,
                        "assetId": "9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz",
                        "amount": 10000000000
@@ -75,7 +75,6 @@ class BurnTransactionSpecification extends PropSpec with PropertyChecks with Mat
 
     val tx = BurnTransactionV2
       .create(
-        2,
         'T',
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,

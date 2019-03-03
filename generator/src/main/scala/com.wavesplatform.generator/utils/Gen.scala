@@ -3,12 +3,14 @@ package com.wavesplatform.generator.utils
 import java.util.concurrent.ThreadLocalRandom
 
 import com.wavesplatform.account.{Address, PrivateKeyAccount}
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.generator.utils.Implicits._
-import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, ByteStr, DataEntry, IntegerDataEntry, StringDataEntry, _}
+import com.wavesplatform.state.{BinaryDataEntry, BooleanDataEntry, DataEntry, IntegerDataEntry, StringDataEntry}
+import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.smart.script.{Script, ScriptCompiler}
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{Proofs, Transaction}
 import com.wavesplatform.utils.LoggerFacade
 import org.slf4j.LoggerFactory
 import scorex.crypto.signatures.Curve25519._
@@ -99,7 +101,7 @@ object Gen {
 
     val (script, _) = ScriptCompiler(src, isAssetScript = false)
       .explicitGet()
-    log.info(s"${script.text}")
+
     script
   }
 
@@ -128,7 +130,7 @@ object Gen {
         case (sender, count) =>
           val transfers = List.tabulate(count)(_ => ParsedTransfer(recipientGen.next(), amountGen.next()))
           val fee       = 100000 + count * 50000
-          MassTransferTransaction.selfSigned(Proofs.Version, None, sender, transfers, System.currentTimeMillis, fee, Array.emptyByteArray)
+          MassTransferTransaction.selfSigned(None, sender, transfers, System.currentTimeMillis, fee, Array.emptyByteArray)
       }
       .collect { case Right(tx) => tx }
   }

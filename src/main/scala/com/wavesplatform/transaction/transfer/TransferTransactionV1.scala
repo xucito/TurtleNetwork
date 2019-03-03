@@ -2,8 +2,8 @@ package com.wavesplatform.transaction.transfer
 
 import com.google.common.primitives.Bytes
 import com.wavesplatform.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.crypto
-import com.wavesplatform.state.ByteStr
 import com.wavesplatform.transaction._
 import monix.eval.Coeval
 import com.wavesplatform.crypto._
@@ -33,7 +33,7 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
 
   override val typeId: Byte = TransferTransaction.typeId
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override protected def parseTail(bytes: Array[Byte]): Try[TransactionT] = {
     Try {
       val signature = ByteStr(bytes.slice(0, SignatureLength))
       val txId      = bytes(SignatureLength)
@@ -53,6 +53,7 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
                                            signature)
       } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
     }.flatten
+  }
 
   def create(assetId: Option[AssetId],
              sender: PublicKeyAccount,

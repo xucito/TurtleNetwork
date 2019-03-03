@@ -1,20 +1,26 @@
 package com.wavesplatform.transaction.smart
 
 import com.wavesplatform.account.AddressOrAlias
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.lang.v1.traits._
 import com.wavesplatform.lang.v1.traits.domain.Recipient._
-import com.wavesplatform.lang.v1.traits.domain.{Ord, Recipient, Tx}
+import com.wavesplatform.lang.v1.traits.domain.Tx.ContractTransfer
+import com.wavesplatform.lang.v1.traits.domain.{Recipient, Tx}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.assets.exchange.Order
 import monix.eval.Coeval
-import scodec.bits.ByteVector
 import shapeless._
 
-class WavesEnvironment(nByte: Byte, in: Coeval[Transaction :+: Order :+: CNil], h: Coeval[Int], blockchain: Blockchain) extends Environment {
+object WavesEnvironment {
+  type In = Transaction :+: Order :+: ContractTransfer :+: CNil
+}
+
+class WavesEnvironment(nByte: Byte, in: Coeval[WavesEnvironment.In], h: Coeval[Int], blockchain: Blockchain) extends Environment {
   override def height: Long = h()
 
-  override def inputEntity: Tx :+: Ord :+: CNil = {
+  override def inputEntity: Environment.InputEntity = {
     in.apply()
       .map(InputPoly)
   }
@@ -30,7 +36,7 @@ class WavesEnvironment(nByte: Byte, in: Coeval[Transaction :+: Order :+: CNil], 
       address <- recipient match {
         case Address(bytes) =>
           com.wavesplatform.account.Address
-            .fromBytes(bytes.toArray)
+            .fromBytes(bytes.arr)
             .toOption
         case Alias(name) =>
           com.wavesplatform.account.Alias
@@ -44,7 +50,7 @@ class WavesEnvironment(nByte: Byte, in: Coeval[Transaction :+: Order :+: CNil], 
         .flatMap {
           case (IntegerDataEntry(_, value), DataType.Long)     => Some(value)
           case (BooleanDataEntry(_, value), DataType.Boolean)  => Some(value)
-          case (BinaryDataEntry(_, value), DataType.ByteArray) => Some(ByteVector(value.arr))
+          case (BinaryDataEntry(_, value), DataType.ByteArray) => Some(ByteStr(value.arr))
           case (StringDataEntry(_, value), DataType.String)    => Some(value)
           case _                                               => None
         }
@@ -56,14 +62,14 @@ class WavesEnvironment(nByte: Byte, in: Coeval[Transaction :+: Order :+: CNil], 
       .left
       .map(_.toString)
       .right
-      .map(a => Recipient.Address(ByteVector(a.bytes.arr)))
+      .map(a => Recipient.Address(ByteStr(a.bytes.arr)))
 
   override def chainId: Byte = nByte
 
   override def accountBalanceOf(addressOrAlias: Recipient, maybeAssetId: Option[Array[Byte]]): Either[String, Long] = {
     (for {
       aoa <- addressOrAlias match {
-        case Address(bytes) => AddressOrAlias.fromBytes(bytes.toArray, position = 0).map(_._1)
+        case Address(bytes) => AddressOrAlias.fromBytes(bytes.arr, position = 0).map(_._1)
         case Alias(name)    => com.wavesplatform.account.Alias.buildWithCurrentChainId(name)
       }
       address <- blockchain.resolveAlias(aoa)

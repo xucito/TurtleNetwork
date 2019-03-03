@@ -1,13 +1,15 @@
 package com.wavesplatform.it.sync.smartcontract.smartasset
 
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync.{someAssetAmount, _}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
-import com.wavesplatform.state.{ByteStr, IntegerDataEntry}
+import com.wavesplatform.state.IntegerDataEntry
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.Transfer
 import com.wavesplatform.transaction.transfer.TransferTransactionV2
-import com.wavesplatform.state._
+
 import scala.concurrent.duration._
 
 class AssetSupportedTransactionsSuite extends BaseTransactionSuite {
@@ -168,7 +170,6 @@ class AssetSupportedTransactionsSuite extends BaseTransactionSuite {
 
     val blackTx = TransferTransactionV2
       .selfSigned(
-        2,
         Some(ByteStr.decodeBase58(blackAsset).get),
         pkByAddress(secondAddress),
         pkByAddress(thirdAddress),
@@ -183,7 +184,6 @@ class AssetSupportedTransactionsSuite extends BaseTransactionSuite {
 
     val incorrectTx = TransferTransactionV2
       .selfSigned(
-        2,
         Some(ByteStr.decodeBase58(blackAsset).get),
         pkByAddress(secondAddress),
         pkByAddress(thirdAddress),

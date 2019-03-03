@@ -1,12 +1,13 @@
 package com.wavesplatform.transaction
 
 import com.wavesplatform.TransactionGen
-import com.wavesplatform.state.{ByteStr, EitherExt2}
+import com.wavesplatform.account.PublicKeyAccount
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
+import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseCancelTransactionV2}
 import org.scalatest._
 import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
-import com.wavesplatform.account.PublicKeyAccount
-import com.wavesplatform.transaction.lease.{LeaseCancelTransaction, LeaseCancelTransactionV1, LeaseCancelTransactionV2}
 
 class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
 
@@ -80,7 +81,6 @@ class LeaseCancelTransactionSpecification extends PropSpec with PropertyChecks w
 
     val tx = LeaseCancelTransactionV2
       .create(
-        2,
         'T',
         PublicKeyAccount.fromBase58String("FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z").explicitGet(),
         ByteStr.decodeBase58("DJWkQxRyJNqWhq9qSQpK2D4tsrct6eZbjSv3AH4PSha6").get,

@@ -2,12 +2,13 @@ package com.wavesplatform
 
 import java.nio.charset.StandardCharsets
 
-import com.wavesplatform.state.ByteStr
 import org.scalatest.matchers.{HavePropertyMatchResult, HavePropertyMatcher}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import com.wavesplatform.account.{AddressOrAlias, PublicKeyAccount}
-import com.wavesplatform.utils.Base58
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.Base58
+import com.wavesplatform.common.utils.Base58
 import com.wavesplatform.transaction.{AssetId, Proofs}
 import com.wavesplatform.transaction.transfer._
 import shapeless.{:+:, CNil, Coproduct}
@@ -105,8 +106,7 @@ package object http {
   )(TransferTransactionV1.apply, unlift(TransferTransactionV1.unapply))
 
   implicit val versionedTransferTransactionFormat: Format[TransferTransactionV2] = (
-    (JsPath \ "version").format[Byte] and
-      (JsPath \ "sender").format[PublicKeyAccount] and
+    (JsPath \ "sender").format[PublicKeyAccount] and
       (JsPath \ "recipient").format[AddressOrAlias] and
       (JsPath \ "assetId").formatNullable[AssetId] and
       (JsPath \ "amount").format[Long] and

@@ -4,14 +4,16 @@ import java.util.concurrent.ThreadLocalRandom
 
 import cats.Show
 import com.wavesplatform.account.PrivateKeyAccount
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.generator.utils.Gen
 import com.wavesplatform.it.util._
-import com.wavesplatform.state._
+import com.wavesplatform.transaction.Transaction
+import com.wavesplatform.transaction.assets.exchange.{AssetPair, ExchangeTransactionV2, OrderV2}
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.transfer.TransferTransactionV2
-import com.wavesplatform.transaction.Transaction
-import com.wavesplatform.transaction.assets.exchange.{AssetPair, ExchangeTransactionV2, OrderV2}
+
 import scala.concurrent.duration._
 
 class SmartGenerator(settings: SmartGenerator.Settings, val accounts: Seq[PrivateKeyAccount]) extends TransactionGenerator {
@@ -33,12 +35,12 @@ class SmartGenerator(settings: SmartGenerator.Settings, val accounts: Seq[Privat
 
     val setScripts = Range(0, settings.scripts) flatMap (_ =>
       accounts.map { i =>
-        SetScriptTransaction.selfSigned(1, i, Some(script), 1.TN, System.currentTimeMillis()).explicitGet()
+        SetScriptTransaction.selfSigned(i, Some(script), 1.TN, System.currentTimeMillis()).explicitGet()
       })
 
     val txs = Range(0, settings.transfers).map { i =>
       TransferTransactionV2
-        .selfSigned(2, None, bank, bank, 1.TN - 2 * fee, System.currentTimeMillis(), None, fee, Array.emptyByteArray)
+        .selfSigned(None, bank, bank, 1.TN - 2 * fee, System.currentTimeMillis(), None, fee, Array.emptyByteArray)
         .explicitGet()
     }
 

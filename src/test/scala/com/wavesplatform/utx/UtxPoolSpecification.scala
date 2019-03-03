@@ -1,26 +1,34 @@
 package com.wavesplatform.utx
 
+import java.nio.file.Files
+
 import com.typesafe.config.ConfigFactory
 import com.wavesplatform._
 import com.wavesplatform.account.{Address, PrivateKeyAccount, PublicKeyAccount}
 import com.wavesplatform.block.Block
+import com.wavesplatform.common.state.ByteStr
+import com.wavesplatform.common.utils.EitherExt2
+import com.wavesplatform.database.LevelDBWriter
+import com.wavesplatform.db.openDB
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.history.StorageFactory
 import com.wavesplatform.lagonaki.mocks.TestBlock
 import com.wavesplatform.lang.v1.compiler.Terms.EXPR
-import com.wavesplatform.lang.v1.compiler.{CompilerContext, ExpressionCompilerV1}
+import com.wavesplatform.lang.v1.compiler.{CompilerContext, ExpressionCompiler}
 import com.wavesplatform.mining._
 import com.wavesplatform.settings._
+import com.wavesplatform.state._
 import com.wavesplatform.state.diffs._
-import com.wavesplatform.state.{ByteStr, EitherExt2, _}
+import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.ValidationError.SenderIsBlacklisted
 import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.Script
-import com.wavesplatform.transaction.smart.script.v1.ScriptV1
+import com.wavesplatform.transaction.smart.script.v1.ExprScript
 import com.wavesplatform.transaction.transfer.MassTransferTransaction.ParsedTransfer
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.Transaction
+import com.wavesplatform.utils.Implicits.SubjectOps
 import com.wavesplatform.utils.Time
+import monix.reactive.subjects.Subject
 import org.scalacheck.Gen
 import org.scalacheck.Gen._
 import org.scalamock.scalatest.MockFactory
@@ -29,11 +37,27 @@ import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.duration._
 
-class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink with WithDB {
+private object UtxPoolSpecification {
+  private val ignorePortfolioChanged: Subject[Address, Address] = Subject.empty[Address]
+
+  final case class TempDB(fs: FunctionalitySettings) {
+    val path   = Files.createTempDirectory("leveldb-test")
+    val db     = openDB(path.toAbsolutePath.toString)
+    val writer = new LevelDBWriter(db, ignorePortfolioChanged, fs, 100000, 2000, 120 * 60 * 1000)
+
+    Runtime.getRuntime.addShutdownHook(new Thread(() => {
+      db.close()
+      TestHelpers.deleteRecursively(path)
+    }))
+  }
+}
+
+class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with PropertyChecks with TransactionGen with NoShrink {
   val PoolDefaultMaxBytes = 50 * 1024 * 1024 // 50 MB
 
   import CommonValidation.{ScriptExtraFee => extraFee}
   import FunctionalitySettings.TESTNET.{maxTransactionTimeBackOffset => maxAge}
+  import UtxPoolSpecification._
 
   private def mkBlockchain(senderAccount: Address, senderBalance: Long) = {
     val config          = ConfigFactory.load()
@@ -45,14 +69,16 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
         FunctionalitySettings.TESTNET.copy(
           preActivatedFeatures = Map(
             BlockchainFeatures.MassTransfer.id  -> 0,
-            BlockchainFeatures.SmartAccounts.id -> 0
+            BlockchainFeatures.SmartAccounts.id -> 0,
+            BlockchainFeatures.Ride4DApps.id    -> 0
           )),
         genesisSettings
       ),
       featuresSettings = origSettings.featuresSettings.copy(autoShutdownOnUnsupportedFeature = false)
     )
 
-    val bcu = StorageFactory(settings, db, new TestTime())
+    val dbContext = TempDB(settings.blockchainSettings.functionalitySettings)
+    val bcu       = StorageFactory(settings, dbContext.db, new TestTime(), ignorePortfolioChanged)
     bcu.processBlock(Block.genesis(genesisSettings).explicitGet()).explicitGet()
     bcu
   }
@@ -75,11 +101,9 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   private def massTransferWithRecipients(sender: PrivateKeyAccount, recipients: List[PublicKeyAccount], maxAmount: Long, time: Time) = {
     val amount    = maxAmount / (recipients.size + 1)
     val transfers = recipients.map(r => ParsedTransfer(r.toAddress, amount))
-    val txs = for {
-      version <- Gen.oneOf(MassTransferTransaction.supportedVersions.toSeq)
-      minFee = CommonValidation.FeeConstants(TransferTransaction.typeId) + CommonValidation.FeeConstants(MassTransferTransaction.typeId) * transfers.size
-      fee <- chooseNum(minFee, amount)
-    } yield MassTransferTransaction.selfSigned(version, None, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
+    val minFee    = CommonValidation.FeeConstants(TransferTransaction.typeId) + CommonValidation.FeeConstants(MassTransferTransaction.typeId) * transfers.size
+    val txs = for { fee <- chooseNum(minFee, amount) } yield
+      MassTransferTransaction.selfSigned(None, sender, transfers, time.getTimestamp(), fee, Array.empty[Byte]).explicitGet()
     txs.label("transferWithRecipient")
   }
 
@@ -104,6 +128,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       new UtxPoolImpl(
         time,
         bcu,
+        ignorePortfolioChanged,
         FunctionalitySettings.TESTNET,
         UtxSettings(10, PoolDefaultMaxBytes, Set.empty, Set.empty, 5.minutes, allowTransactionsFromSmartAccounts = true)
       )
@@ -120,6 +145,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
           new UtxPoolImpl(
             time,
             bcu,
+            ignorePortfolioChanged,
             FunctionalitySettings.TESTNET,
             UtxSettings(10, PoolDefaultMaxBytes, Set.empty, Set.empty, 5.minutes, allowTransactionsFromSmartAccounts = true)
           )
@@ -134,7 +160,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
     txs <- Gen.nonEmptyListOf(transferWithRecipient(sender, recipient, senderBalance / 10, time))
   } yield {
     val settings = UtxSettings(10, PoolDefaultMaxBytes, Set.empty, Set.empty, 5.minutes, allowTransactionsFromSmartAccounts = true)
-    val utxPool  = new UtxPoolImpl(time, bcu, FunctionalitySettings.TESTNET, settings)
+    val utxPool  = new UtxPoolImpl(time, bcu, ignorePortfolioChanged, FunctionalitySettings.TESTNET, settings)
     txs.foreach(utxPool.putIfNew)
     (sender, bcu, utxPool, time, settings)
   }).label("withValidPayments")
@@ -147,7 +173,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   } yield {
     val settings =
       UtxSettings(10, PoolDefaultMaxBytes, Set(sender.address), Set.empty, 5.minutes, allowTransactionsFromSmartAccounts = true)
-    val utxPool = new UtxPoolImpl(time, bcu, FunctionalitySettings.TESTNET, settings)
+    val utxPool = new UtxPoolImpl(time, bcu, ignorePortfolioChanged, FunctionalitySettings.TESTNET, settings)
     (sender, utxPool, txs)
   }).label("withBlacklisted")
 
@@ -159,7 +185,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   } yield {
     val settings =
       UtxSettings(txs.length, PoolDefaultMaxBytes, Set(sender.address), Set(recipient.address), 5.minutes, allowTransactionsFromSmartAccounts = true)
-    val utxPool = new UtxPoolImpl(time, bcu, FunctionalitySettings.TESTNET, settings)
+    val utxPool = new UtxPoolImpl(time, bcu, ignorePortfolioChanged, FunctionalitySettings.TESTNET, settings)
     (sender, utxPool, txs)
   }).label("withBlacklistedAndAllowedByRule")
 
@@ -174,7 +200,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       val whitelist: Set[String] = if (allowRecipients) recipients.map(_.address).toSet else Set.empty
       val settings =
         UtxSettings(txs.length, PoolDefaultMaxBytes, Set(sender.address), whitelist, 5.minutes, allowTransactionsFromSmartAccounts = true)
-      val utxPool = new UtxPoolImpl(time, bcu, FunctionalitySettings.TESTNET, settings)
+      val utxPool = new UtxPoolImpl(time, bcu, ignorePortfolioChanged, FunctionalitySettings.TESTNET, settings)
       (sender, utxPool, txs)
     }).label("massTransferWithBlacklisted")
 
@@ -186,7 +212,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
         val time = new TestTime()
 
         forAll(listOfN(count, transfer(sender, senderBalance / 2, time))) { txs =>
-          val utx = new UtxPoolImpl(time, bcu, FunctionalitySettings.TESTNET, utxSettings)
+          val utx = new UtxPoolImpl(time, bcu, ignorePortfolioChanged, FunctionalitySettings.TESTNET, utxSettings)
           f(txs, utx, time)
         }
     }
@@ -203,6 +229,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       val utx = new UtxPoolImpl(
         time,
         bcu,
+        ignorePortfolioChanged,
         FunctionalitySettings.TESTNET,
         UtxSettings(10, PoolDefaultMaxBytes, Set.empty, Set.empty, 5.minutes, allowTransactionsFromSmartAccounts = true)
       )
@@ -214,19 +241,17 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       """let x = 1
         |let y = 2
         |true""".stripMargin
-
-    val compiler = new ExpressionCompilerV1(CompilerContext.empty)
-    compiler.compile(code, List.empty).explicitGet()
+    ExpressionCompiler.compile(code, CompilerContext.empty).explicitGet()
   }
 
-  private val script: Script = ScriptV1(expr).explicitGet()
+  private val script: Script = ExprScript(expr).explicitGet()
 
   private def preconditionsGen(lastBlockId: ByteStr, master: PrivateKeyAccount): Gen[Seq[Block]] =
     for {
       version <- Gen.oneOf(SetScriptTransaction.supportedVersions.toSeq)
       ts      <- timestampGen
     } yield {
-      val setScript = SetScriptTransaction.selfSigned(version, master, Some(script), 100000, ts + 1).explicitGet()
+      val setScript = SetScriptTransaction.selfSigned(master, Some(script), 100000, ts + 1).explicitGet()
       Seq(TestBlock.create(ts + 1, lastBlockId, Seq(setScript)))
     }
 
@@ -240,6 +265,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
       val utx = new UtxPoolImpl(
         new TestTime(),
         bcu,
+        ignorePortfolioChanged,
         smartAccountsFs,
         UtxSettings(10, PoolDefaultMaxBytes, Set.empty, Set.empty, 1.day, allowTransactionsFromSmartAccounts = scEnabled)
       )
@@ -252,7 +278,7 @@ class UtxPoolSpecification extends FreeSpec with Matchers with MockFactory with 
   }
 
   private def transactionV2Gen(sender: PrivateKeyAccount, ts: Long, feeAmount: Long): Gen[TransferTransactionV2] = accountGen.map { recipient =>
-    TransferTransactionV2.selfSigned(2, None, sender, recipient, waves(1), ts, None, feeAmount, Array.emptyByteArray).explicitGet()
+    TransferTransactionV2.selfSigned(None, sender, recipient, waves(1), ts, None, feeAmount, Array.emptyByteArray).explicitGet()
   }
 
   "UTX Pool" - {
