@@ -8,7 +8,7 @@ import com.wavesplatform.lang.Version._
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError._
-import com.wavesplatform.transaction.{smart, _}
+import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease._
@@ -45,7 +45,7 @@ object CommonValidation {
                                                           settings: FunctionalitySettings,
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] =
-    if (blockTime >= settings.allowTemporaryNegativeUntil && (blockTime <= 450482 || blockTime >= 450486)) {
+    if (blockTime >= settings.allowTemporaryNegativeUntil) {
       def checkTransfer(sender: Address, assetId: Option[AssetId], amount: Long, feeAssetId: Option[AssetId], feeAmount: Long) = {
         val amountDiff = assetId match {
           case Some(aid) => Portfolio(0, LeaseBalance.empty, Map(aid -> -amount))

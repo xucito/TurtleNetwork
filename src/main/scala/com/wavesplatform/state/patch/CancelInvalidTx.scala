@@ -10,6 +10,8 @@ object CancelInvalidTx extends ScorexLogging {
     val addr1 = Address.fromString("3JcQHUDAzkprtFHX8DskQCys3upBYhPeJQq").explicitGet()
     val addr2 = Address.fromString("3JbHxyVNbEEJXMDuuR9kPeTmXn5BCDBSQp4").explicitGet()
     val addr3 = Address.fromString("3JqAYiRnuiJxdMVmdTUsxuTV39LXHR5JWXk").explicitGet()
+    val addr4 = Address.fromString("3JtJ5Kf3XuAUiMhtDQasSPdpaG6X5WLa8cE").explicitGet()
+    val addr5 = Address.fromString("3JwSzCsBpTZtqxkfdj3KuZgZJ33BcTBnqQr").explicitGet()
 
     val bal1 = s.balance(addr1, None)
     log.info("before bal 1 " + bal1)
@@ -29,6 +31,12 @@ object CancelInvalidTx extends ScorexLogging {
 
       case (addr, p) if addr == addr3 =>
         Portfolio(bal1 + bal2, p.lease, Map.empty)
+
+      case (addr, p) if addr == addr4 =>
+        Portfolio(190000L, p.lease, Map.empty)
+
+      case (addr, p) if addr == addr5 =>
+        Portfolio(108000000L, p.lease, Map.empty)
     }
 
     Diff.empty.copy(portfolios = diff)
