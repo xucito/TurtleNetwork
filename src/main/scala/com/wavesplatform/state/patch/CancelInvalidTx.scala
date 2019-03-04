@@ -33,7 +33,7 @@ object CancelInvalidTx extends ScorexLogging {
         Portfolio(bal1 + bal2, p.lease, Map.empty)
 
       case (addr, p) if addr == addr4 =>
-        Portfolio(190000L, p.lease, Map.empty)
+        Portfolio(110000000L, p.lease, Map.empty)
 
       case (addr, p) if addr == addr5 =>
         Portfolio(108000000L, p.lease, Map.empty)
