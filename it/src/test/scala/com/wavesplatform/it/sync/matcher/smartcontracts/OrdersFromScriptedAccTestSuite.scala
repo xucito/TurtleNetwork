@@ -40,27 +40,6 @@ class OrdersFromScriptedAccTestSuite extends MatcherSuiteBase {
         matcherNode.height shouldBe <(activationHeight)
       }
 
-<<<<<<< HEAD
-      withClue("duplicate names in contracts are denied") {
-        val setScriptTransaction = SetScriptTransaction
-          .selfSigned(
-            SetScriptTransaction.supportedVersions.head,
-            bobAcc,
-            Some(ScriptCompiler(sDupNames, isAssetScript = false).explicitGet()._1),
-            0.014.TN,
-            System.currentTimeMillis()
-          )
-          .explicitGet()
-
-        assertBadRequestAndResponse(
-          matcherNode
-            .signedBroadcast(setScriptTransaction.json()),
-          "VarNames: duplicate variable names are temporarily denied:"
-        )
-      }
-
-=======
->>>>>>> 0893bc8d98ef08d239df0e37054b0b4749d0fddd
       setContract(Some("true"), bobAcc)
     }
 
