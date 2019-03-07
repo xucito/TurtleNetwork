@@ -48,7 +48,7 @@ class Worker(workerSettings: Settings,
   private val invalidAccounts  = generatorSettings.invalidAccounts
   private val fakeAccounts     = generatorSettings.fakeAccounts
 
-  private val fee = 0.003.TN
+  private val fee = 0.04.TN
 
   private def now = System.currentTimeMillis()
 
@@ -139,7 +139,7 @@ class Worker(workerSettings: Settings,
         case Left(e) => throw new RuntimeException(s"[$tag] Generated transaction is wrong: $e")
         case Right(txRequest) =>
           log.info(
-            s"[$tag] ${assetId.fold("Waves")(_.base58)} balance of ${sender.address}: $balance, sending $transferAmount to ${recipient.address}")
+            s"[$tag] ${assetId.fold("TN")(_.base58)} balance of ${sender.address}: $balance, sending $transferAmount to ${recipient.address}")
           val signedTx = createSignedTransferRequest(txRequest)
           to(endpoint).broadcastRequest(signedTx).flatMap { tx =>
             to(endpoint).waitForTransaction(tx.id)

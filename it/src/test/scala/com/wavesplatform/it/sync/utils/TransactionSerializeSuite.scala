@@ -33,10 +33,10 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
   private val buyV2 = OrderV2(
     PublicKeyAccount.fromBase58String("BqeJY8CP3PeUDaByz57iRekVUGtLxoow4XxPvXfHynaZ").right.get,
     PublicKeyAccount.fromBase58String("Fvk5DXmfyWVZqQVBowUBMwYtRAHDtdyZNNeRrwSjt6KP").right.get,
-    AssetPair.createAssetPair("WAVES", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
+    AssetPair.createAssetPair("TN", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
     OrderType.BUY,
     2,
-    60.waves,
+    60.TN,
     tsOrderFrom,
     tsOrderTo,
     1,
@@ -46,10 +46,10 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
   val buyV1 = OrderV1(
     PublicKeyAccount.fromBase58String("BqeJY8CP3PeUDaByz57iRekVUGtLxoow4XxPvXfHynaZ").right.get,
     PublicKeyAccount.fromBase58String("Fvk5DXmfyWVZqQVBowUBMwYtRAHDtdyZNNeRrwSjt6KP").right.get,
-    AssetPair.createAssetPair("WAVES", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
+    AssetPair.createAssetPair("TN", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
     OrderType.BUY,
     2,
-    60.waves,
+    60.TN,
     tsOrderFrom,
     tsOrderTo,
     1,
@@ -59,10 +59,10 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
   private val sell = OrderV1(
     PublicKeyAccount.fromBase58String("7E9Za8v8aT6EyU1sX91CVK7tWUeAetnNYDxzKZsyjyKV").right.get,
     PublicKeyAccount.fromBase58String("Fvk5DXmfyWVZqQVBowUBMwYtRAHDtdyZNNeRrwSjt6KP").right.get,
-    AssetPair.createAssetPair("WAVES", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
+    AssetPair.createAssetPair("TN", "9ZDWzK53XT5bixkmMwTJi2YzgxCqn5dUajXFcT2HcFDy").get,
     OrderType.SELL,
     3,
-    50.waves,
+    50.TN,
     tsOrderFrom,
     tsOrderTo,
     2,
@@ -74,7 +74,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       buyV1,
       sell,
       2,
-      50.waves,
+      50.TN,
       1,
       1,
       1,
@@ -89,7 +89,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       buyV2,
       sell,
       2,
-      50.waves,
+      50.TN,
       1,
       1,
       1,
@@ -237,7 +237,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
     .get
 
   private val transfers = MassTransferTransaction
-    .parseTransfersList(List(Transfer(firstAddress, 1.waves), Transfer(secondAddress, 2.waves)))
+    .parseTransfersList(List(Transfer(firstAddress, 1.TN), Transfer(secondAddress, 2.TN)))
     .right
     .get
 
@@ -247,7 +247,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       publicKey,
       transfers,
       ts,
-      2.waves,
+      2.TN,
       Base58.decode("59QuUcqP6p").get,
       Proofs(Seq(ByteStr.decodeBase58("FXMNu3ecy5zBjn9b69VtpuYRwxjCbxdkZ3xZpLzB8ZeFDvcgTkmEDrD29wtGYRPtyLS3LPYrL2d5UM6TpFBMUGQ").get))
     )
@@ -260,7 +260,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,
       100000000L,
       true,
-      1.waves,
+      1.TN,
       ts,
       ByteStr.decodeBase58("3LnRMrjkk7RoV35PTwcdB4yW2rqUqXaKAh8DnPk5tNWABvhVQ9oqdTk3zM8b9AbGtry7WEcQZtevfK92DCFaa6hA").get
     )
@@ -274,7 +274,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,
       100000000L,
       true,
-      1.waves,
+      1.TN,
       ts,
       Proofs(Seq(ByteStr.decodeBase58("4DFEtUwJ9gjMQMuEXipv2qK7rnhhWEBqzpC3ZQesW1Kh8D822t62e3cRGWNU3N21r7huWnaty95wj2tZxYSvCfro").get))
     )
@@ -287,7 +287,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       publicKey,
       ByteStr.decodeBase58("DUyJyszsWcmZG7q2Ctk1hisDeGBPB8dEzyU8Gs5V2j3n").get,
       Some(Script.fromBase64String("base64:AQkAAGcAAAACAHho/EXujJiPAJUhuPXZYac+rt2jYg==").right.get),
-      1.waves,
+      1.TN,
       ts,
       Proofs(
         Seq("5sRtXKcdDa",
@@ -316,7 +316,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       publicKey,
       ByteStr.decodeBase58("9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz").get,
       Some(100000),
-      1.waves,
+      1.TN,
       ts,
       Proofs(Seq(ByteStr.decodeBase58("3QrF81WkwGhbNvKcwpAVyBPL1MLuAG5qmR6fmtK9PTYQoFKGsFg1Rtd2kbMBuX2ZfiFX58nR1XwC19LUXZUmkXE7").get))
     )

@@ -14,8 +14,8 @@ import scala.concurrent.duration.DurationInt
 import scala.util.Random
 
 class MatcherRecoveryTestSuite extends MatcherSuiteBase {
-  private def configOverrides = ConfigFactory.parseString("""waves.matcher {
-      |  price-assets = ["WAVES"]
+  private def configOverrides = ConfigFactory.parseString("""TN.matcher {
+      |  price-assets = ["TN"]
       |  snapshots-interval = 51
       |}""".stripMargin)
 

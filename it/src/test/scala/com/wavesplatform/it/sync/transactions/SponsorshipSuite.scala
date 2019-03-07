@@ -28,7 +28,7 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
   val sponsor           = nodes(1)
   val alice             = nodes(2)
   val bob               = nodes(3)
-  val Waves             = 100000000L
+  val TN             = 100000000L
   val Token             = 100L
   val sponsorAssetTotal = 100 * Token
   val minSponsorFee     = Token

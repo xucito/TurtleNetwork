@@ -110,7 +110,7 @@ object ContractInvocationTransactionDiff {
                         minWaves <= wavesFee,
                         (),
                         GenericError(s"Fee in ${tx.assetFee._1
-                          .fold("WAVES")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves WAVES: ${tx.assetFee._2}")
+                          .fold("TN")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves TN: ${tx.assetFee._2}")
                       )
                     }
                     _ <- foldContractTransfers(blockchain, tx)(ps, dataAndPaymentDiff)

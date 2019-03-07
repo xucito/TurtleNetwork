@@ -46,8 +46,8 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
 
     log.debug(s"correctedSellAmount: $correctedSellAmount, adjustedAmount: $adjustedAmount, adjustedTotal: $adjustedTotal")
 
-    "place usd-waves order" in {
-      // Alice wants to sell USD for Waves
+    "place usd-TN order" in {
+      // Alice wants to sell USD for TN
 
       val bobOrder1   = matcherNode.prepareOrder(bobAcc, wavesUsdPair, OrderType.SELL, sellOrderAmount, price)
       val bobOrder1Id = matcherNode.placeOrder(bobOrder1).message.id
@@ -79,7 +79,7 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
       markets.priceAssetInfo shouldBe Some(AssetDecimalsInfo(Decimals))
     }
 
-    "check usd and waves balance after fill" in {
+    "check usd and TN balance after fill" in {
       val aliceWavesBalanceAfter = matcherNode.accountBalances(aliceAcc.address)._1
       val aliceUsdBalance        = matcherNode.assetBalance(aliceAcc.address, UsdId.base58).balance
 
@@ -111,7 +111,7 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
       matcherNode.reservedBalance(aliceAcc) shouldBe empty
     }
 
-    "check waves-usd tradable balance" in {
+    "check TN-usd tradable balance" in {
       val orderHistory = matcherNode.fullOrderHistory(bobAcc)
       orderHistory.size should be(1)
 
@@ -133,8 +133,8 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
 
     val correctedSellAmount2 = correctAmount(sellOrderAmount2, price2)
 
-    "place usd-waves order" in {
-      // Alice wants to sell USD for Waves
+    "place usd-TN order" in {
+      // Alice wants to sell USD for TN
       val bobWavesBalanceBefore = matcherNode.accountBalances(bobAcc.address)._1
       matcherNode.tradableBalance(bobAcc, wavesUsdPair)("TN")
       val bobOrder1   = matcherNode.prepareOrder(bobAcc, wavesUsdPair, OrderType.SELL, sellOrderAmount2, price2)

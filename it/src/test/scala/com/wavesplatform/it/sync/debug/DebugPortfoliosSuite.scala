@@ -10,14 +10,14 @@ class DebugPortfoliosSuite extends BaseTransactionSuite {
     val portfolioBefore = sender.debugPortfoliosFor(firstAddress, considerUnspent = true)
     val utxSizeBefore   = sender.utxSize
 
-    sender.transfer(firstAddress, secondAddress, 5.waves, 5.waves)
-    sender.transfer(secondAddress, firstAddress, 7.waves, 5.waves)
+    sender.transfer(firstAddress, secondAddress, 5.TN, 5.TN)
+    sender.transfer(secondAddress, firstAddress, 7.TN, 5.TN)
 
     sender.waitForUtxIncreased(utxSizeBefore)
 
     val portfolioAfter = sender.debugPortfoliosFor(firstAddress, considerUnspent = true)
 
-    val expectedBalance = portfolioBefore.balance - 10.waves // withdraw + fee
+    val expectedBalance = portfolioBefore.balance - 10.TN // withdraw + fee
     assert(portfolioAfter.balance == expectedBalance)
 
   }
@@ -28,7 +28,7 @@ class DebugPortfoliosSuite extends BaseTransactionSuite {
     val portfolioBefore = sender.debugPortfoliosFor(firstAddress, considerUnspent = false)
     val utxSizeBefore   = sender.utxSize
 
-    sender.transfer(firstAddress, secondAddress, 5.waves, fee = 5.waves)
+    sender.transfer(firstAddress, secondAddress, 5.TN, fee = 5.TN)
     sender.waitForUtxIncreased(utxSizeBefore)
 
     val portfolioAfter = sender.debugPortfoliosFor(firstAddress, considerUnspent = false)

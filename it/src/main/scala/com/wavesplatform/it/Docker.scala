@@ -239,7 +239,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         if (enableProfiling) {
           // https://www.yourkit.com/docs/java/help/startup_options.jsp
           config += s"-agentpath:/usr/local/YourKit-JavaProfiler-2019.1/bin/linux-x86-64/libyjpagent.so=port=$ProfilerPort,listen=all," +
-            s"sampling,monitors,sessionname=WavesNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot,onexit=snapshot "
+            s"sampling,monitors,sessionname=TNNode,dir=$ContainerRoot/profiler,logdir=$ContainerRoot,onexit=snapshot "
         }
 
         val withAspectJ = Option(System.getenv("WITH_ASPECTJ")).fold(false)(_.toBoolean)
@@ -348,7 +348,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       val renderedConfig = renderProperties(asProperties(configUpdates))
 
       log.debug("Set new config directly in the script for starting node")
-      val shPath = "/opt/waves/start-waves.sh"
+      val shPath = "/opt/TN/start-TN.sh"
       val scriptCmd: Array[String] =
         Array("sh", "-c", s"sed -i 's|$$TN_OPTS.*-jar|$$TN_OPTS $renderedConfig -jar|' $shPath && chmod +x $shPath")
 
@@ -538,12 +538,12 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
   private def updateStartScript(node: DockerNode): Unit = {
     val id = node.containerId
 
-    log.debug("Make backup copy of /opt/waves/start-waves.sh")
+    log.debug("Make backup copy of /opt/TN/start-TN.sh")
     val cpCmd: Array[String] =
       Array(
         "sh",
         "-c",
-        s"""cp /opt/waves/start-waves.sh /opt/waves/start-waves.sh.bk"""
+        s"""cp /opt/TN/start-TN.sh /opt/TN/start-TN.sh.bk"""
       )
     val execCpCmd = client.execCreate(id, cpCmd).id()
     client.execStart(execCpCmd)
@@ -553,10 +553,10 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       Array(
         "sh",
         "-c",
-        s"""rm /opt/waves/start-waves.sh && echo '#!/bin/bash' >> /opt/waves/start-waves.sh &&
-             |echo 'java ${renderProperties(asProperties(genesisOverride))} -cp /opt/waves/waves.jar com.wavesplatform.matcher.MatcherTool /opt/waves/template.conf cb > /opt/waves/migration-tool.log' >> /opt/waves/start-waves.sh &&
-             |echo 'less /opt/waves/migration-tool.log | grep -ir completed && cp /opt/waves/start-waves.sh.bk /opt/waves/start-waves.sh && chmod +x /opt/waves/start-waves.sh' >> /opt/waves/start-waves.sh &&
-             |chmod +x /opt/waves/start-waves.sh
+        s"""rm /opt/TN/start-TN.sh && echo '#!/bin/bash' >> /opt/TN/start-TN.sh &&
+             |echo 'java ${renderProperties(asProperties(genesisOverride))} -cp /opt/TN/TN.jar com.wavesplatform.matcher.MatcherTool /opt/TN/template.conf cb > /opt/TN/migration-tool.log' >> /opt/TN/start-TN.sh &&
+             |echo 'less /opt/TN/migration-tool.log | grep -ir completed && cp /opt/TN/start-TN.sh.bk /opt/TN/start-TN.sh && chmod +x /opt/TN/start-TN.sh' >> /opt/TN/start-TN.sh &&
+             |chmod +x /opt/TN/start-TN.sh
            """.stripMargin
       )
     val execScriptCmd = client.execCreate(id, scriptCmd).id()
@@ -574,20 +574,20 @@ object Docker {
   val configTemplate = parseResources("template.conf")
   def genesisOverride = {
     val genesisTs          = System.currentTimeMillis()
-    val timestampOverrides = parseString(s"""waves.blockchain.custom.genesis {
+    val timestampOverrides = parseString(s"""TN.blockchain.custom.genesis {
                                             |  timestamp = $genesisTs
                                             |  block-timestamp = $genesisTs
                                             |}""".stripMargin)
 
     val genesisConfig    = configTemplate.withFallback(timestampOverrides)
-    val gs               = genesisConfig.as[GenesisSettings]("waves.blockchain.custom.genesis")
+    val gs               = genesisConfig.as[GenesisSettings]("TN.blockchain.custom.genesis")
     val genesisSignature = Block.genesis(gs).explicitGet().uniqueId
 
-    timestampOverrides.withFallback(parseString(s"waves.blockchain.custom.genesis.signature = $genesisSignature"))
+    timestampOverrides.withFallback(parseString(s"TN.blockchain.custom.genesis.signature = $genesisSignature"))
   }
 
   AddressScheme.current = new AddressScheme {
-    override val chainId = configTemplate.as[String]("waves.blockchain.custom.address-scheme-character").charAt(0).toByte
+    override val chainId = configTemplate.as[String]("TN.blockchain.custom.address-scheme-character").charAt(0).toByte
   }
 
   def apply(owner: Class[_]): Docker = new Docker(tag = owner.getSimpleName)

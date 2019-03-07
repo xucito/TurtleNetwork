@@ -30,8 +30,8 @@ class SeveralPartialOrdersTestSuite extends MatcherSuiteBase {
     val buyOrderAmount  = 425532L
     val sellOrderAmount = 840340L
 
-    "place usd-waves order" in {
-      // Alice wants to sell USD for Waves
+    "place usd-TN order" in {
+      // Alice wants to sell USD for TN
       val bobWavesBalanceBefore = matcherNode.accountBalances(bobAcc.address)._1
 
       val bobOrder1   = matcherNode.prepareOrder(bobAcc, wavesUsdPair, OrderType.SELL, sellOrderAmount, price)

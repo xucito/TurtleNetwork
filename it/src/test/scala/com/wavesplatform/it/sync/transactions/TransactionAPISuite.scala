@@ -17,7 +17,7 @@ class TransactionAPISuite extends FreeSpec with NodesFromDocker with Matchers wi
   override def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
-      .overrideBase(_.raw("waves.rest-api.transactions-by-address-limit=10"))
+      .overrideBase(_.raw("TN.rest-api.transactions-by-address-limit=10"))
       .withDefault(1)
       .withSpecial(1, _.nonMiner)
       .buildNonConflicting()
@@ -25,10 +25,10 @@ class TransactionAPISuite extends FreeSpec with NodesFromDocker with Matchers wi
   val sender: Node       = nodes.head
   val recipient: Address = Address.fromString(sender.createAddress()).explicitGet()
 
-  val Waves: Long = 100000000L
+  val TN: Long = 100000000L
 
-  val AMT: Long = 1 * Waves
-  val FEE: Long = (0.001 * Waves).toLong
+  val AMT: Long = 1 * TN
+  val FEE: Long = (0.001 * TN).toLong
 
   val transactions: List[TransferTransaction] =
     (for (i <- 0 to 30) yield {

@@ -8,7 +8,7 @@ import com.wavesplatform.transaction.assets.{IssueTransactionV1, IssueTransactio
 import com.wavesplatform.transaction.smart.script.{Script, ScriptCompiler}
 
 package object sync {
-  val smartFee                   = 0.06.TN
+  val smartFee                   = 0.04.TN
   val minFee                        = 0.02.TN
   val leasingFee                 = 0.02.TN
   val issueFee                   = 1000.TN

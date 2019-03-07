@@ -289,10 +289,9 @@ lazy val lang =
       developers := List(Developer("MrTurtle", "Bram N.", "info@blackturtle.eu", url("https://blackturtle.eur"))),
       libraryDependencies ++= Dependencies.meta ++
         Seq(
-        "org.scala-js"                      %% "scalajs-stubs" % "1.0.0-RC1" % "provided",
-        "com.github.spullara.mustache.java" % "compiler" % "0.9.5"
-      ) ++ Dependencies.logging.map(_       % "test") // scrypto logs an error if a signature verification was failed
-
+          "org.scala-js"                      %% "scalajs-stubs" % "1.0.0-RC1" % "provided",
+          "com.github.spullara.mustache.java" % "compiler" % "0.9.5"
+        ) ++ Dependencies.logging.map(_       % "test") // scrypto logs an error if a signature verification was failed
     )
 
 lazy val langJS  = lang.js.dependsOn(commonJS)

@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 
 class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
 
-  test("asset transfer changes sender's and recipient's asset balance; issuer's.waves balance is decreased by fee") {
+  test("asset transfer changes sender's and recipient's asset balance; issuer's.TN balance is decreased by fee") {
     for (v <- supportedVersions) {
       val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
       val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
@@ -35,7 +35,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFail
     }
   }
 
-  test("waves transfer changes waves balances and eff.b.") {
+  test("TN transfer changes TN balances and eff.b.") {
     for (v <- supportedVersions) {
       val (firstBalance, firstEffBalance)   = notMiner.accountBalances(firstAddress)
       val (secondBalance, secondEffBalance) = notMiner.accountBalances(secondAddress)
@@ -49,7 +49,7 @@ class TransferTransactionSuite extends BaseTransactionSuite with CancelAfterFail
     }
   }
 
-  test("invalid signed waves transfer should not be in UTX or blockchain") {
+  test("invalid signed TN transfer should not be in UTX or blockchain") {
     def invalidTx(timestamp: Long = System.currentTimeMillis, fee: Long = 100000): TransferTransactionV1.TransactionT =
       TransferTransactionV1
         .selfSigned(None, sender.privateKey, AddressOrAlias.fromString(sender.address).explicitGet(), 1, timestamp, None, fee, Array.emptyByteArray)

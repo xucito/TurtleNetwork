@@ -26,22 +26,22 @@ object CommonValidation {
   val FeeUnit        = 100000
 
   val FeeConstants: Map[Byte, Long] = Map(
-    GenesisTransaction.typeId                  -> 0,
-    PaymentTransaction.typeId                  -> 1,
-    IssueTransaction.typeId                    -> 1000,
-    ReissueTransaction.typeId                  -> 1000,
-    BurnTransaction.typeId                     -> 1,
-    TransferTransaction.typeId                 -> 1,
-    MassTransferTransaction.typeId             -> 1,
-    LeaseTransaction.typeId                    -> 1,
-    LeaseCancelTransaction.typeId              -> 1,
-    ExchangeTransaction.typeId                 -> 3,
-    CreateAliasTransaction.typeId              -> 1,
-    DataTransaction.typeId                     -> 1,
-    SetScriptTransaction.typeId                -> 10,
-    SponsorFeeTransaction.typeId               -> 1000,
-    SetAssetScriptTransaction.typeId           -> (1000 - 4),
-    smart.ContractInvocationTransaction.typeId -> 5
+    GenesisTransaction.typeId            -> 0,
+    PaymentTransaction.typeId            -> 1,
+    IssueTransaction.typeId              -> 1000,
+    ReissueTransaction.typeId            -> 1000,
+    BurnTransaction.typeId               -> 1,
+    TransferTransaction.typeId           -> 1,
+    MassTransferTransaction.typeId       -> 1,
+    LeaseTransaction.typeId              -> 1,
+    LeaseCancelTransaction.typeId        -> 1,
+    ExchangeTransaction.typeId           -> 3,
+    CreateAliasTransaction.typeId        -> 1,
+    DataTransaction.typeId               -> 1,
+    SetScriptTransaction.typeId          -> 10,
+    SponsorFeeTransaction.typeId         -> 1000,
+    SetAssetScriptTransaction.typeId     -> (1000 - 4),
+    ContractInvocationTransaction.typeId -> 5
   )
 
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
@@ -172,8 +172,8 @@ object CommonValidation {
     val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
     if (!allowTransactionsFromFutureByTimestamp && tx.timestamp - time > settings.maxTransactionTimeForwardOffset.toMillis)
       Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-       |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
-       |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
+                        |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
+                        |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
     else Right(tx)
   }
 
@@ -181,8 +181,8 @@ object CommonValidation {
     prevBlockTime match {
       case Some(t) if (t - tx.timestamp) > settings.maxTransactionTimeBackOffset.toMillis =>
         Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-         |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
-         |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
+                          |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
+                          |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
       case _ => Right(tx)
     }
 
@@ -227,7 +227,6 @@ object CommonValidation {
                 )
               } yield (Some((assetId, assetInfo)), wavesFee)
           }
-
         } yield r
 
     def isSmartToken(input: FeeInfo): Boolean = input._1.map(_._1).flatMap(blockchain.assetDescription).exists(_.script.isDefined)

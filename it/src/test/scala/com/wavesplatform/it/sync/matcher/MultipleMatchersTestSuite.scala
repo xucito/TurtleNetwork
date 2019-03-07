@@ -16,13 +16,13 @@ import scala.util.Random
 
 // Works only with kafka
 class MultipleMatchersTestSuite extends MatcherSuiteBase {
-  private def configOverrides = ConfigFactory.parseString("""waves.matcher {
-      |  price-assets = ["WAVES"]
+  private def configOverrides = ConfigFactory.parseString("""TN.matcher {
+      |  price-assets = ["TN"]
       |  snapshots-interval = 51
       |}""".stripMargin)
 
   private def matcher1NodeConfig = Default.last
-  private def matcher2NodeConfig = ConfigFactory.parseString("""waves.network.node-name = node11
+  private def matcher2NodeConfig = ConfigFactory.parseString("""TN.network.node-name = node11
       |akka.kafka.consumer.kafka-clients.group.id = 1""".stripMargin).withFallback(matcher1NodeConfig)
 
   override protected def nodeConfigs: Seq[Config] =

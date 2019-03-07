@@ -39,7 +39,7 @@ trait BaseState {
   private var _lastBlock: Block = _
   def lastBlock: Block          = _lastBlock
 
-  protected def waves(n: Float): Long              = (n * 100000000L).toLong
+  protected def TN(n: Float): Long              = (n * 100000000L).toLong
   protected val accountGen: Gen[PrivateKeyAccount] = Gen.containerOfN[Array, Byte](32, Arbitrary.arbitrary[Byte]).map(seed => PrivateKeyAccount(seed))
 
   protected def updateFunctionalitySettings(base: FunctionalitySettings): FunctionalitySettings = base
@@ -61,7 +61,7 @@ trait BaseState {
   private val initGen: Gen[(PrivateKeyAccount, Block)] = for {
     rich <- accountGen
   } yield {
-    val genesisTx = GenesisTransaction.create(rich, waves(100000000L), System.currentTimeMillis() - 10000).explicitGet()
+    val genesisTx = GenesisTransaction.create(rich, TN(100000000L), System.currentTimeMillis() - 10000).explicitGet()
     (rich, TestBlock.create(time = genesisTx.timestamp, Seq(genesisTx)))
   }
 

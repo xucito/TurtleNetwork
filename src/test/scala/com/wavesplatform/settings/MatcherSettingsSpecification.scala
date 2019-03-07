@@ -11,9 +11,7 @@ import scala.concurrent.duration._
 
 class MatcherSettingsSpecification extends FlatSpec with Matchers {
   "MatcherSettings" should "read values" in {
-    val config = loadConfig(
-      ConfigFactory.parseString(
-        """TN {
+    val config = loadConfig(ConfigFactory.parseString("""TN {
         |  directory: "/TN"
         |  matcher {
         |    enable: yes
