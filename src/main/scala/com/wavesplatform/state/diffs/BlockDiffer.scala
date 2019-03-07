@@ -9,7 +9,7 @@ import com.wavesplatform.metrics.Instrumented
 import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
-import com.wavesplatform.state.patch.{CancelAllLeases, CancelInvalidLeaseIn, CancelInvalidTx, CancelLeaseOverflow}
+import com.wavesplatform.state.patch.{CancelAllLeases, CancelInvalidLeaseIn, CancelInvalidTx, CancelInvalidTx2, CancelLeaseOverflow}
 import com.wavesplatform.state.reader.CompositeBlockchain.composite
 import com.wavesplatform.account.Address
 import com.wavesplatform.utils.ScorexLogging
@@ -169,7 +169,13 @@ object BlockDiffer extends ScorexLogging with Instrumented {
               Monoid.combine(diffWithCancelledLeaseIns, CancelInvalidTx(composite(blockchain, diffWithCancelledLeaseIns)))
             else diffWithCancelledLeaseIns
 
-          (diffWithRevertedCoins, carry, constraint)
+          val diffWithNegativeBalanceFix =
+            //Goal is to fix after 40k blocks from now
+            if (currentBlockHeight == 457100)
+              Monoid.combine(diffWithRevertedCoins, CancelInvalidTx2(composite(blockchain, diffWithCancelledLeaseIns)))
+            else diffWithRevertedCoins
+
+          (diffWithNegativeBalanceFix, carry, constraint)
       }
   }
 }

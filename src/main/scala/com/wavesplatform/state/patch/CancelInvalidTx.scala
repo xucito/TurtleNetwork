@@ -43,3 +43,16 @@ object CancelInvalidTx extends ScorexLogging {
     Diff.empty.copy(portfolios = diff)
   }
 }
+object CancelInvalidTx2 extends ScorexLogging {
+
+  def apply(s: Blockchain): Diff = {
+    val addr1 = Address.fromString("3JreB3JjQJgFfuz6ntFt76eTDUyv7hxdzMk").explicitGet()
+
+    val diff = s.collectLposPortfolios {
+      case (addr, p) if addr == addr1 =>
+        Portfolio(9593994, p.lease, Map.empty)
+    }
+
+    Diff.empty.copy(portfolios = diff)
+  }
+}
