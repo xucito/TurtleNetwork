@@ -275,7 +275,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
       accountA,
       ByteStr.decodeBase58(assetWScript).get,
       Some(unchangeableScript),
-      setAssetScriptFee + 0.004.TN,
+      setAssetScriptFee + 0.04.TN,
       System.currentTimeMillis,
       Proofs.empty
     )
@@ -296,7 +296,7 @@ class SetAssetScriptTransactionSuite extends BaseTransactionSuite {
       accountA,
       ByteStr.decodeBase58(assetWScript).get,
       Some(script),
-      setAssetScriptFee + 0.004.TN,
+      setAssetScriptFee + 0.04.TN,
       System.currentTimeMillis,
       Proofs.empty
     )

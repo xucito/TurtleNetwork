@@ -29,7 +29,7 @@ object MatcherDefaultConfig {
                                      |  enable = yes
                                      |  account = 3HmFkAoQRs4Y3PE2uR6ohN7wS4VqPBGKv7k
                                      |  bind-address = "0.0.0.0"
-                                     |  order-match-tx-fee = 300000
+                                     |  order-match-tx-fee = 4000000
                                      |  blacklisted-assets = ["$ForbiddenAssetId"]
                                      |  balance-watching.enable = yes
                                      |  rest-order-limit=$orderLimit

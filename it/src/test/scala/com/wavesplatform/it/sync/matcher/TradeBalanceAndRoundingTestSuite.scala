@@ -278,13 +278,13 @@ class TradeBalanceAndRoundingTestSuite extends MatcherSuiteBase {
 
   "Alice and Bob trade ETH-TN" - {
     "reserved balance is empty after the total execution" in {
-      val counterId1 = matcherNode.placeOrder(aliceAcc, ethWavesPair, SELL, 2864310, 300000, matcherFee).message.id
+      val counterId1 = matcherNode.placeOrder(aliceAcc, ethWavesPair, SELL, 2864310, 4000000, matcherFee).message.id
       matcherNode.waitOrderStatus(ethWavesPair, counterId1, "Accepted", 1.minute)
 
-      val counterId2 = matcherNode.placeOrder(aliceAcc, ethWavesPair, SELL, 7237977, 300000, matcherFee).message.id
+      val counterId2 = matcherNode.placeOrder(aliceAcc, ethWavesPair, SELL, 7237977, 4000000, matcherFee).message.id
       matcherNode.waitOrderStatus(ethWavesPair, counterId2, "Accepted", 1.minute)
 
-      val submittedId = matcherNode.placeOrder(bobAcc, ethWavesPair, BUY, 4373667, 300000, matcherFee).message.id
+      val submittedId = matcherNode.placeOrder(bobAcc, ethWavesPair, BUY, 4373667, 4000000, matcherFee).message.id
 
       matcherNode.waitOrderStatus(ethWavesPair, counterId1, "Filled", 1.minute)
       matcherNode.waitOrderStatus(ethWavesPair, counterId2, "PartiallyFilled", 1.minute)

@@ -82,7 +82,7 @@ object CustomFeeTransactionSuite {
       quantity = defaultAssetQuantity,
       decimals = 2,
       reissuable = false,
-      fee = 1.TN,
+      fee = 1000.TN,
       timestamp = System.currentTimeMillis()
     )
     .right

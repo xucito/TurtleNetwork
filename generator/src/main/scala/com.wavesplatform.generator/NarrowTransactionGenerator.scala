@@ -140,7 +140,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             val sellOrder = OrderV1.sell(seller, matcher, pair, 1, 100000000, ts, ts + 30.days.toMillis, moreThatStandartFee * 3)
             val buyer     = randomFrom(accounts).get
             val buyOrder  = OrderV1.buy(buyer, matcher, pair, 1, 100000000, ts, ts + 1.day.toMillis, moreThatStandartFee * 3)
-            logOption(ExchangeTransactionV1.create(matcher, buyOrder, sellOrder, 1, 100000000, 300000, 300000, moreThatStandartFee * 3, ts))
+            logOption(ExchangeTransactionV1.create(matcher, buyOrder, sellOrder, 1, 100000000, 4000000, 4000000, moreThatStandartFee * 3, ts))
           case ExchangeTransactionV2 =>
             val matcher = randomFrom(accounts).get
             val seller  = randomFrom(accounts).get
@@ -149,7 +149,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[PrivateKe
             val sellOrder = OrderV1.sell(seller, matcher, pair, 100000000, 1, ts, ts + 30.days.toMillis, moreThatStandartFee * 3)
             val buyer     = randomFrom(accounts).get
             val buyOrder  = OrderV1.buy(buyer, matcher, pair, 100000000, 1, ts, ts + 1.day.toMillis, moreThatStandartFee * 3)
-            logOption(ExchangeTransactionV2.create(matcher, buyOrder, sellOrder, 100000000, 1, 300000, 300000, moreThatStandartFee * 3, ts))
+            logOption(ExchangeTransactionV2.create(matcher, buyOrder, sellOrder, 100000000, 1, 4000000, 4000000, moreThatStandartFee * 3, ts))
           case LeaseTransactionV1 =>
             val sender   = randomFrom(accounts).get
             val useAlias = r.nextBoolean()

@@ -30,7 +30,7 @@ trait TransferSending extends ScorexLogging {
   }
 
   def generateTransfersFromAccount(n: Int, accountAddress: String): Seq[Req] = {
-    val fee      = 100000 + 400000 // + 400000 for scripted accounts
+    val fee      = 2000000 + 4000000 // + 400000 for scripted accounts
     val seedSize = 32
 
     val srcSeed = NodeConfigs.Default
@@ -53,7 +53,7 @@ trait TransferSending extends ScorexLogging {
   }
 
   def generateTransfersBetweenAccounts(n: Int, balances: Map[Config, Long]): Seq[Req] = {
-    val fee = 100000
+    val fee = 2000000
     val srcDest = balances.toSeq
       .map {
         case (config, _) =>

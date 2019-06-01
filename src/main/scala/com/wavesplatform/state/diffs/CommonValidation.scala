@@ -22,25 +22,25 @@ import scala.util.{Left, Right}
 
 object CommonValidation {
 
-  val ScriptExtraFee = 400000L
-  val FeeUnit        = 100000
+  val ScriptExtraFee = 4000000L
+  val FeeUnit        = 2000000
 
   val FeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
     PaymentTransaction.typeId            -> 1,
-    IssueTransaction.typeId              -> 1000,
-    ReissueTransaction.typeId            -> 1000,
-    BurnTransaction.typeId               -> 1,
+    IssueTransaction.typeId              -> 50000,
+    ReissueTransaction.typeId            -> 50000,
+    BurnTransaction.typeId               -> 500,
     TransferTransaction.typeId           -> 1,
     MassTransferTransaction.typeId       -> 1,
     LeaseTransaction.typeId              -> 1,
     LeaseCancelTransaction.typeId        -> 1,
-    ExchangeTransaction.typeId           -> 3,
-    CreateAliasTransaction.typeId        -> 1,
+    ExchangeTransaction.typeId           -> 2,
+    CreateAliasTransaction.typeId        -> 500,
     DataTransaction.typeId               -> 1,
-    SetScriptTransaction.typeId          -> 10,
-    SponsorFeeTransaction.typeId         -> 1000,
-    SetAssetScriptTransaction.typeId     -> (1000 - 4),
+    SetScriptTransaction.typeId          -> 50,
+    SponsorFeeTransaction.typeId         -> 500,
+    SetAssetScriptTransaction.typeId     -> 50,
     ContractInvocationTransaction.typeId -> 5
   )
 

@@ -55,7 +55,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           amount = 1.TN,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = minFee + 0.004.TN,
+          feeAmount = minFee + 0.04.TN,
           attachment = Array.emptyByteArray
         )
         .right
@@ -74,7 +74,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           amount = 1.TN,
           timestamp = System.currentTimeMillis(),
           feeAssetId = None,
-          feeAmount = minFee + 0.004.TN,
+          feeAmount = minFee + 0.04.TN,
           attachment = Array.emptyByteArray
         )
         .right

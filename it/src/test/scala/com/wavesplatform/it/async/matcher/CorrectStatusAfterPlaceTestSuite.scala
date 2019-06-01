@@ -134,7 +134,7 @@ object CorrectStatusAfterPlaceTestSuite {
       quantity = Long.MaxValue,
       decimals = 0,
       reissuable = false,
-      fee = 1.TN,
+      fee = 1000.TN,
       timestamp = System.currentTimeMillis()
     )
     .explicitGet()
@@ -147,7 +147,7 @@ object CorrectStatusAfterPlaceTestSuite {
       quantity = Long.MaxValue,
       decimals = 0,
       reissuable = false,
-      fee = 1.TN,
+      fee = 1000.TN,
       timestamp = System.currentTimeMillis()
     )
     .explicitGet()

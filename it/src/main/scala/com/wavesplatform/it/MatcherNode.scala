@@ -32,7 +32,7 @@ trait MatcherNode extends BeforeAndAfterAll with Nodes with ScorexLogging {
   def initialBalances(): Unit = {
     List(matcherNode, aliceNode, bobNode).indices
       .map { i =>
-        nodes(i).transfer(nodes(i).address, addresses(i), 10000.TN, 0.001.TN).id
+        nodes(i).transfer(nodes(i).address, addresses(i), 10000.TN, 0.02.TN).id
       }
       .foreach(nodes.waitForTransaction)
   }

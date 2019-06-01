@@ -32,16 +32,16 @@ class IssueTransactionV2Specification extends PropSpec with PropertyChecks with 
   property("JSON format validation") {
     val js = Json.parse("""{
                        "type": 3,
-                       "id": "2ykNAo5JrvNCcL8PtCmc9pTcNtKUy2PjJkrFdRvTfUf4",
+                       "id": "58BMiJr8CZMVgQ97V1BeuCyP8qzrXiDKxQopbaYvWYGT",
                        "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
-                       "fee": 100000000,
+                       "fee": 100000000000,
                        "timestamp": 1526287561757,
                        "proofs": [
                        "43TCfWBa6t2o2ggsD4bU9FpvH3kmDbSBWKE1Z6B5i5Ax5wJaGT2zAvBihSbnSS3AikZLcicVWhUk1bQAMWVzTG5g"
                        ],
                        "version": 2,
-                       "assetId": "2ykNAo5JrvNCcL8PtCmc9pTcNtKUy2PjJkrFdRvTfUf4",
+                       "assetId": "58BMiJr8CZMVgQ97V1BeuCyP8qzrXiDKxQopbaYvWYGT",
                        "chainId": 84,
                        "name": "Gigacoin",
                        "quantity": 10000000000,
@@ -62,7 +62,7 @@ class IssueTransactionV2Specification extends PropSpec with PropertyChecks with 
         8,
         true,
         None,
-        100000000,
+        100000000000L,
         1526287561757L,
         Proofs(Seq(ByteStr.decodeBase58("43TCfWBa6t2o2ggsD4bU9FpvH3kmDbSBWKE1Z6B5i5Ax5wJaGT2zAvBihSbnSS3AikZLcicVWhUk1bQAMWVzTG5g").get))
       )

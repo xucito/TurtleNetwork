@@ -19,8 +19,8 @@ class TransferTransactionV1Suite extends BaseTransactionSuite with TransferSendi
   private val defaultAssetQuantity = 100000
   private val transferAmount       = 5.TN
   private val leasingAmount        = 5.TN
-  private val leasingFee           = 0.003.TN
-  private val transferFee          = 0.002.TN
+  private val leasingFee           = 0.04.TN
+  private val transferFee          = 0.02.TN
   private val issueFee             = 5.TN
 
   test("asset transfer changes sender's and recipient's asset balance; issuer's.TN balance is decreased by fee") {

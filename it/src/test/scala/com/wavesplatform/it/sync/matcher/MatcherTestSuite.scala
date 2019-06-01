@@ -18,7 +18,7 @@ import scala.util.Random
 
 class MatcherTestSuite extends MatcherSuiteBase with TableDrivenPropertyChecks {
   private val aliceSellAmount                     = 500
-  private val exTxFee                             = 300000
+  private val exTxFee                             = 4000000
   private val amountAssetName                     = "AliceCoin"
   private val AssetQuantity                       = 1000
   private val aliceCoinDecimals: Byte             = 0
@@ -126,7 +126,7 @@ class MatcherTestSuite extends MatcherSuiteBase with TableDrivenPropertyChecks {
         // Alice checks that part of her order still in the order book
         val orders = matcherNode.orderBook(aliceWavesPair)
         orders.asks.head.amount shouldBe 300
-        orders.asks.head.price shouldBe 2000.waves
+        orders.asks.head.price shouldBe 2000.TN
 
         // Alice checks that she sold some assets
         matcherNode.assertAssetBalance(aliceAcc.address, aliceAsset, 800)

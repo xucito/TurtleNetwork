@@ -28,15 +28,15 @@ class IssueTransactionV1Specification extends PropSpec with PropertyChecks with 
   property("JSON format validation") {
     val js = Json.parse("""{
                        "type": 3,
-                       "id": "9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz",
+                       "id": "9KTBCwwkRBtkpsUvmzQTPLHsxCjdg6oxFCFwWnQiGpsU",
                        "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
                        "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
-                       "fee": 100000000,
+                       "fee": 100000000000,
                        "timestamp": 1526287561757,
                        "version": 1,
                        "signature": "28kE1uN1pX2bwhzr9UHw5UuB9meTFEDFgeunNgy6nZWpHX4pzkGYotu8DhQ88AdqUG6Yy5wcXgHseKPBUygSgRMJ",
                        "proofs": ["28kE1uN1pX2bwhzr9UHw5UuB9meTFEDFgeunNgy6nZWpHX4pzkGYotu8DhQ88AdqUG6Yy5wcXgHseKPBUygSgRMJ"],
-                       "assetId": "9ekQuYn92natMnMq8KqeGK3Nn7cpKd3BvPEGgD6fFyyz",
+                       "assetId": "9KTBCwwkRBtkpsUvmzQTPLHsxCjdg6oxFCFwWnQiGpsU",
                        "name": "Gigacoin",
                        "quantity": 10000000000,
                        "reissuable": true,
@@ -53,7 +53,7 @@ class IssueTransactionV1Specification extends PropSpec with PropertyChecks with 
         10000000000L,
         8,
         true,
-        100000000,
+        100000000000L,
         1526287561757L,
         ByteStr.decodeBase58("28kE1uN1pX2bwhzr9UHw5UuB9meTFEDFgeunNgy6nZWpHX4pzkGYotu8DhQ88AdqUG6Yy5wcXgHseKPBUygSgRMJ").get
       )

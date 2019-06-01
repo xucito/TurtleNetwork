@@ -111,7 +111,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
             .explicitGet()
         else
           IssueTransactionV1
-            .selfSigned(richAcc, "test".getBytes(), "desc".getBytes(), Long.MaxValue, 2, reissuable = false, Constants.UnitsInWave, ts)
+            .selfSigned(richAcc, "test".getBytes(), "desc".getBytes(), Long.MaxValue, 2, reissuable = false, 1000 * Constants.UnitsInWave, ts)
             .explicitGet()
 
       val transferWavesTx = TransferTransactionV1
@@ -136,9 +136,9 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
           Seq(
             SponsorFeeTransaction
               .selfSigned(richAcc, issueTx.id(), Some(10), if (smartToken) {
-                Constants.UnitsInWave + ScriptExtraFee
+                10 * Constants.UnitsInWave + ScriptExtraFee
               } else {
-                Constants.UnitsInWave
+                10 * Constants.UnitsInWave
               }, ts)
               .explicitGet()
           )

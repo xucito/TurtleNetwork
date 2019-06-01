@@ -222,11 +222,11 @@ class ProofAndAssetPairTestSuite extends MatcherSuiteBase {
 
           val exchangeTx1 = matcherNode.transactionsByOrder(bobOrd1).headOption.getOrElse(fail("Expected an exchange transaction"))
           matcherNode.waitForTransaction(exchangeTx1.id)
-          assert(exchangeTx1.fee == 300000)
+          assert(exchangeTx1.fee == 4000000)
 
           val exchangeTx2 = matcherNode.transactionsByOrder(bobOrd2).headOption.getOrElse(fail("Expected an exchange transaction"))
           matcherNode.waitForTransaction(exchangeTx2.id)
-          assert(exchangeTx2.fee == 300000)
+          assert(exchangeTx2.fee == 4000000)
 
           matcherNode.reservedBalance(bobAcc) shouldBe empty
 
@@ -288,11 +288,11 @@ class ProofAndAssetPairTestSuite extends MatcherSuiteBase {
 
           val exchangeTx1 = matcherNode.transactionsByOrder(bobOrd1).headOption.getOrElse(fail("Expected an exchange transaction"))
           matcherNode.waitForTransaction(exchangeTx1.id)
-          assert(exchangeTx1.fee == 300000)
+          assert(exchangeTx1.fee == 4000000)
 
           val exchangeTx2 = matcherNode.transactionsByOrder(bobOrd2).headOption.getOrElse(fail("Expected an exchange transaction"))
           matcherNode.waitForTransaction(exchangeTx2.id)
-          assert(exchangeTx2.fee == 300000)
+          assert(exchangeTx2.fee == 4000000)
 
           matcherNode.reservedBalance(bobAcc) shouldBe empty
         }

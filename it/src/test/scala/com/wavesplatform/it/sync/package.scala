@@ -14,8 +14,8 @@ package object sync {
   val issueFee                   = 1000.TN
   val burnFee                    = 10.TN
   val sponsorFee                 = 10.TN
-  val setAssetScriptFee          = 10.TN
-  val setScriptFee               = 0.04.TN
+  val setAssetScriptFee          = 1.TN
+  val setScriptFee               = 1.TN
   val transferAmount             = 10.TN
   val leasingAmount              = transferAmount
   val issueAmount                = transferAmount
@@ -23,7 +23,7 @@ package object sync {
   val someAssetAmount            = 9999999999999L
   val matcherFee                 = 0.04.TN
   val orderFee                   = matcherFee
-  val smartMatcherFee            = 0.06.TN
+  val smartMatcherFee            = 0.08.TN
   val smartMinFee                = minFee + smartFee
 
   def calcDataFee(data: List[DataEntry[_]]): Long = {

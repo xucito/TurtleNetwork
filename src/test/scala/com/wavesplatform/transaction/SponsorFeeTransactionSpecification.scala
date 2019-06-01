@@ -16,7 +16,7 @@ import org.scalatest.prop.PropertyChecks
 import play.api.libs.json.Json
 
 class SponsorFeeTransactionSpecification extends PropSpec with PropertyChecks with Matchers with TransactionGen {
-  val One = 100000000L
+  val One = 1000000000L
   val NgAndSponsorshipSettings = TestFunctionalitySettings.Enabled.copy(preActivatedFeatures =
                                                                           Map(NG.id -> 0, FeeSponsorship.id -> 0, SmartAccounts.id -> 0),
                                                                         blocksForFeatureActivation = 1,
@@ -39,7 +39,7 @@ class SponsorFeeTransactionSpecification extends PropSpec with PropertyChecks wi
   property("JSON format validation") {
     val js = Json.parse(s"""{
  "type": 14,
- "id": "Gobt7AiyQAfduRkW8Mk3naWbzH67Zsv9rdmgRNmon1Mb",
+ "id": "3wBKKihccS8J6zNj61smU4xxFajfdSWcWSRqWKvRpTUc",
  "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
  "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
  "fee": $One,
@@ -70,7 +70,7 @@ class SponsorFeeTransactionSpecification extends PropSpec with PropertyChecks wi
   property("JSON format validation for canceling sponsorship") {
     val js = Json.parse(s"""{
  "type": 14,
- "id": "HsEHzgJEkmjy2aenmbNVFrK1Na9rz4V4p7o2fY9eB9za",
+ "id": "888hm1j6jaPCyQZHDT1rG4Y6LtFw5Dhx73uEijKNtEC9",
  "sender": "3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh",
  "senderPublicKey": "FM5ojNqW7e9cZ9zhPYGkpSP1Pcd8Z3e3MNKYVS5pGJ8Z",
  "fee": $One,

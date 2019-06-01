@@ -68,7 +68,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 2000000
         }
       }
 
@@ -103,7 +103,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 200000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 4000000
         }
       }
     }
@@ -134,7 +134,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").asOpt[String] shouldBe empty
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 100000
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 2000000
         }
       }
 
@@ -219,7 +219,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").as[String] shouldBe assetId.base58
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 45
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 25
         }
       }
     }

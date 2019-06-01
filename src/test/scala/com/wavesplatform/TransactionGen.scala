@@ -38,7 +38,7 @@ trait TransactionGen extends TransactionGenBase { _: Suite =>
 
 trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
 
-  val ScriptExtraFee                  = 400000L
+  val ScriptExtraFee                  = 4000000L
   protected def waves(n: Float): Long = (n * 100000000L).toLong
 
   def byteArrayGen(length: Int): Gen[Array[Byte]] = Gen.containerOfN[Array, Byte](length, Arbitrary.arbitrary[Byte])
@@ -90,7 +90,7 @@ trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
 
   val positiveLongGen: Gen[Long] = Gen.choose(1, 100000000L * 100000000L / 100)
   val positiveIntGen: Gen[Int]   = Gen.choose(1, Int.MaxValue / 100)
-  val smallFeeGen: Gen[Long]     = Gen.choose(400000, 100000000)
+  val smallFeeGen: Gen[Long]     = Gen.choose(4000000, 100000000)
 
   val maxOrderTimeGen: Gen[Long] = Gen.choose(10000L, Order.MaxLiveTime).map(_ + ntpTime.correctedTime())
   val timestampGen: Gen[Long]    = Gen.choose(1, Long.MaxValue - 100)
@@ -348,7 +348,7 @@ trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
       recipients <- Gen.listOfN(transferCount, transferGen)
     } yield MassTransferTransaction.selfSigned(assetId, sender, recipients, timestamp, feeAmount, attachment).explicitGet()
 
-  val MinIssueFee = 100000000
+  val MinIssueFee = 100000000000L
 
   val createAliasGen: Gen[CreateAliasTransaction] = for {
     timestamp: Long           <- positiveLongGen
@@ -473,7 +473,7 @@ trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
                     fixedQuantity.getOrElse(quantity),
                     decimals,
                     reissuable = false,
-                    1 * Constants.UnitsInWave,
+                    1000 * Constants.UnitsInWave,
                     timestamp)
         .right
         .get
@@ -496,9 +496,9 @@ trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
       assetId = issue.assetId()
     } yield
       (issue,
-       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee), 1 * Constants.UnitsInWave, timestamp).explicitGet(),
-       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee1), 1 * Constants.UnitsInWave, timestamp).explicitGet(),
-       SponsorFeeTransaction.selfSigned(sender, assetId, None, 1 * Constants.UnitsInWave, timestamp).explicitGet(),
+       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee), 100 * Constants.UnitsInWave, timestamp).explicitGet(),
+       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee1), 100 * Constants.UnitsInWave, timestamp).explicitGet(),
+       SponsorFeeTransaction.selfSigned(sender, assetId, None, 100 * Constants.UnitsInWave, timestamp).explicitGet(),
       )
 
   val sponsorFeeGen = for {
@@ -536,9 +536,9 @@ trait TransactionGenBase extends ScriptGen with NTPTime { _: Suite =>
     timestamp <- timestampGen
   } yield ContractInvocationTransaction.selfSigned(sender, contractAddress, fc, po, fee, timestamp).explicitGet()
 
-  val priceGen: Gen[Long]            = Gen.choose(1, 3 * 100000L * 100000000L)
-  val matcherAmountGen: Gen[Long]    = Gen.choose(1, 3 * 100000L * 100000000L)
-  val matcherFeeAmountGen: Gen[Long] = Gen.choose(1, 3 * 100000L * 100000000L)
+  val priceGen: Gen[Long]            = Gen.choose(1, 1 * 100000L * 100000000L)
+  val matcherAmountGen: Gen[Long]    = Gen.choose(1, 1 * 100000L * 100000000L)
+  val matcherFeeAmountGen: Gen[Long] = Gen.choose(1, 1 * 100000L * 100000000L)
 
   val orderTypeGen: Gen[OrderType] = Gen.oneOf(OrderType.BUY, OrderType.SELL)
 

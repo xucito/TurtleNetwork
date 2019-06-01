@@ -126,7 +126,7 @@ class Worker(workerSettings: Settings,
       implicit tag: String): Future[Transaction] =
     to(endpoint).balance(sender.address, assetId).flatMap { balance =>
       val halfAmount     = if (halfBalance) balance / 2 else balance
-      val transferAmount = assetId.fold(halfAmount - 0.001.TN)(_ => halfAmount)
+      val transferAmount = assetId.fold(halfAmount - 0.02.TN)(_ => halfAmount)
 
       TransferTransactionV1.selfSigned(assetId,
                                        sender,

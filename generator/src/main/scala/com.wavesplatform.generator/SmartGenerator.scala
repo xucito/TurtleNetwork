@@ -51,10 +51,10 @@ class SmartGenerator(settings: SmartGenerator.Settings, val accounts: Seq[Privat
       val asset           = randomFrom(settings.assets.toSeq)
       val tradeAssetIssue = ByteStr.decodeBase58(asset.get).toOption
       val pair            = AssetPair(None, tradeAssetIssue)
-      val sellOrder       = OrderV2.sell(seller, matcher, pair, 100000000L, 1, ts, ts + 30.days.toMillis, 0.003.TN)
-      val buyOrder        = OrderV2.buy(buyer, matcher, pair, 100000000L, 1, ts, ts + 1.day.toMillis, 0.003.TN)
+      val sellOrder       = OrderV2.sell(seller, matcher, pair, 100000000L, 1, ts, ts + 30.days.toMillis, 0.04.TN)
+      val buyOrder        = OrderV2.buy(buyer, matcher, pair, 100000000L, 1, ts, ts + 1.day.toMillis, 0.04.TN)
 
-      ExchangeTransactionV2.create(matcher, buyOrder, sellOrder, 100000000, 1, 0.003.TN, 0.003.TN, 0.011.TN, ts).explicitGet()
+      ExchangeTransactionV2.create(matcher, buyOrder, sellOrder, 100000000, 1, 0.04.TN, 0.04.TN, 0.011.TN, ts).explicitGet()
     }
 
     setScripts ++ txs ++ extxs

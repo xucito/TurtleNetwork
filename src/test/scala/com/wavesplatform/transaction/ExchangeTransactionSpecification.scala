@@ -129,7 +129,7 @@ class ExchangeTransactionSpecification extends PropSpec with PropertyChecks with
   }
 
   def createExTx(buy: Order, sell: Order, price: Long, matcher: PrivateKeyAccount, version: Byte): Either[ValidationError, ExchangeTransaction] = {
-    val mf     = 300000L
+    val mf     = 4000000L
     val amount = math.min(buy.amount, sell.amount)
     if (version == 1) {
       ExchangeTransactionV1.create(
@@ -174,7 +174,7 @@ class ExchangeTransactionSpecification extends PropSpec with PropertyChecks with
       val expirationTimestamp  = time + Order.MaxLiveTime
       val buyPrice             = 1 * Order.PriceConstant
       val sellPrice            = (0.50 * Order.PriceConstant).toLong
-      val mf                   = 300000L
+      val mf                   = 4000000L
       val (o1ver, o2ver, tver) = versions
 
       val sell = Order.sell(sender2, matcher, pair, 2, sellPrice, time, expirationTimestamp, mf, o1ver)

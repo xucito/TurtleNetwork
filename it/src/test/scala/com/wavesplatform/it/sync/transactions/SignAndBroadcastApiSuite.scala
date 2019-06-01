@@ -357,7 +357,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
       val expirationTimestamp = ts + Order.MaxLiveTime
       val buyPrice            = 1 * Order.PriceConstant
       val sellPrice           = (0.50 * Order.PriceConstant).toLong
-      val mf                  = 300000L
+      val mf                  = 4000000L
       val buyAmount           = 2
       val sellAmount          = 3
       val assetPair           = AssetPair.createAssetPair("TN", issueTx).get

@@ -15,7 +15,7 @@ import com.wavesplatform.transaction.assets.exchange.{AssetPair, Order, OrderTyp
 import scala.util.Random
 
 class TradersTestSuite extends MatcherSuiteBase {
-  private val exTxFee                             = 300000
+  private val exTxFee                             = 4000000
   private def orderVersion                        = (Random.nextInt(2) + 1).toByte
   override protected def nodeConfigs: Seq[Config] = Configs
 
