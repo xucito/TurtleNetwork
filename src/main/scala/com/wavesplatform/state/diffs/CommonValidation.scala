@@ -23,7 +23,7 @@ object CommonValidation {
 
   val ScriptExtraFee = 4000000L
   val FeeUnit        = 2000000
-  val wrongFeesUntil = 675000
+  val wrongFeesUntil = 650000
   val scheme         = AddressScheme.current
 
   val FeeConstants: Map[Byte, Long] = Map(
