@@ -1,22 +1,21 @@
 package com.wavesplatform.state.diffs
 
 import cats._
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.lang.StdLibVersion._
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError._
+import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease._
-import com.wavesplatform.transaction.smart.script.ContractScript
-import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.transaction.smart.script.{ContractScript, Script}
 import com.wavesplatform.transaction.smart.script.v1.ExprScript.ExprScriprImpl
 import com.wavesplatform.transaction.smart.{ContractInvocationTransaction, SetScriptTransaction}
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{smart, _}
 
 import scala.util.{Left, Right}
 
@@ -24,6 +23,8 @@ object CommonValidation {
 
   val ScriptExtraFee = 4000000L
   val FeeUnit        = 2000000
+  val wrongFeesUntil = 625000
+  val scheme         = AddressScheme.current
 
   val FeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
@@ -115,21 +116,25 @@ object CommonValidation {
 
     def scriptActivation(sc: Script) = {
       val ab = activationBarrier(BlockchainFeatures.Ride4DApps, Some("Ride4DApps"))
+
       def scriptVersionActivation(sc: Script) = sc.stdLibVersion match {
         case V1 | V2 if sc.containsBlockV2.value => ab
         case V1 | V2                             => Right(tx)
         case V3                                  => ab
       }
+
       def scriptTypeActivation(sc: Script) = sc match {
         case e: ExprScriprImpl                    => Right(tx)
         case c: ContractScript.ContractScriptImpl => ab
       }
+
       for {
         _ <- scriptVersionActivation(sc)
         _ <- scriptTypeActivation(sc)
       } yield tx
 
     }
+
     tx match {
       case _: BurnTransactionV1        => Right(tx)
       case _: PaymentTransaction       => Right(tx)
@@ -172,8 +177,8 @@ object CommonValidation {
     val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
     if (!allowTransactionsFromFutureByTimestamp && tx.timestamp - time > settings.maxTransactionTimeForwardOffset.toMillis)
       Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-                        |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
-                        |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
+           |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
+           |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
     else Right(tx)
   }
 
@@ -181,8 +186,8 @@ object CommonValidation {
     prevBlockTime match {
       case Some(t) if (t - tx.timestamp) > settings.maxTransactionTimeBackOffset.toMillis =>
         Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-                          |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
-                          |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
+             |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
+             |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
       case _ => Right(tx)
     }
 
@@ -190,14 +195,18 @@ object CommonValidation {
     FeeConstants
       .get(tx.builder.typeId)
       .map { baseFee =>
-        tx match {
-          case tx: MassTransferTransaction =>
-            baseFee + (tx.transfers.size + 1) / 2
-          case tx: DataTransaction =>
-            val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-            baseFee + (base.length - 1) / 1024
-          case _ => baseFee
-        }
+        if (height <= wrongFeesUntil && scheme.chainId == 76)
+          baseFee / 20
+        else
+          tx match {
+            case tx: MassTransferTransaction =>
+              baseFee + (tx.transfers.size + 1) / 2
+            case tx: DataTransaction =>
+              val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
+              baseFee + (base.length - 1) / 1024
+            case _ =>
+              baseFee
+          }
       }
       .toRight(UnsupportedTransactionType)
   }
@@ -239,9 +248,13 @@ object CommonValidation {
       }
       if (isSmartToken(inputFee)) {
         //Left(GenericError("Using smart asset for sponsorship is disabled."))
-        Right { (feeAssetInfo, feeAmount + ScriptExtraFee * (1 + assetsCount)) }
+        Right {
+          (feeAssetInfo, feeAmount + ScriptExtraFee * (1 + assetsCount))
+        }
       } else {
-        Right { (feeAssetInfo, feeAmount + ScriptExtraFee * assetsCount) }
+        Right {
+          (feeAssetInfo, feeAmount + ScriptExtraFee * assetsCount)
+        }
       }
     }
 
