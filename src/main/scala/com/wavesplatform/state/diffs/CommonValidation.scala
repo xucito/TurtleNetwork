@@ -30,7 +30,7 @@ object CommonValidation {
     PaymentTransaction.typeId            -> 1,
     IssueTransaction.typeId              -> 50000,
     ReissueTransaction.typeId            -> 50000,
-    BurnTransaction.typeId               -> 500,
+    BurnTransaction.typeId               -> 1,
     TransferTransaction.typeId           -> 1,
     MassTransferTransaction.typeId       -> 1,
     LeaseTransaction.typeId              -> 1,
