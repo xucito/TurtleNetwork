@@ -8,59 +8,59 @@ import com.wavesplatform.lang.StdLibVersion._
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.ValidationError._
+import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets._
 import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease._
-import com.wavesplatform.transaction.smart.script.ContractScript
-import com.wavesplatform.transaction.smart.script.Script
+import com.wavesplatform.transaction.smart.script.{ContractScript, Script}
 import com.wavesplatform.transaction.smart.script.v1.ExprScript.ExprScriprImpl
 import com.wavesplatform.transaction.smart.{ContractInvocationTransaction, SetScriptTransaction}
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction._
+import com.wavesplatform.utils.ScorexLogging
 
 import scala.util.{Left, Right}
 
-object CommonValidation {
+object CommonValidation extends ScorexLogging {
 
-  val ScriptExtraFee = 400000L
-  val FeeUnit        = 2000000
-  val wrongFeesUntil = 625000
+  val ScriptExtraFee = 4000000L
+  val FeeUnit        = 100000
+  val wrongFeesUntil = 650000
   val scheme         = AddressScheme.current
   val oldFeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
-    PaymentTransaction.typeId            -> 1 / 20,
-    IssueTransaction.typeId              -> 1000 / 20,
-    ReissueTransaction.typeId            -> 1000 / 20,
-    BurnTransaction.typeId               -> 1 / 20,
-    TransferTransaction.typeId           -> 1 / 20,
-    MassTransferTransaction.typeId       -> 1 / 20,
-    LeaseTransaction.typeId              -> 1 / 20,
-    LeaseCancelTransaction.typeId        -> 1 / 20,
-    ExchangeTransaction.typeId           -> 3 / 20,
-    CreateAliasTransaction.typeId        -> 1 / 20,
-    DataTransaction.typeId               -> 1 / 20,
-    SetScriptTransaction.typeId          -> 10 / 20,
-    SponsorFeeTransaction.typeId         -> 1000 / 20,
-    SetAssetScriptTransaction.typeId     -> (1000 - 4) / 20,
-    ContractInvocationTransaction.typeId -> 5 / 20
-  )
-  val newFeeConstants: Map[Byte, Long] = Map(
-    GenesisTransaction.typeId            -> 0,
     PaymentTransaction.typeId            -> 1,
-    IssueTransaction.typeId              -> 50000,
-    ReissueTransaction.typeId            -> 50000,
+    IssueTransaction.typeId              -> 1000,
+    ReissueTransaction.typeId            -> 1000,
     BurnTransaction.typeId               -> 1,
     TransferTransaction.typeId           -> 1,
     MassTransferTransaction.typeId       -> 1,
     LeaseTransaction.typeId              -> 1,
     LeaseCancelTransaction.typeId        -> 1,
-    ExchangeTransaction.typeId           -> 2,
-    CreateAliasTransaction.typeId        -> 500,
+    ExchangeTransaction.typeId           -> 3,
+    CreateAliasTransaction.typeId        -> 1,
     DataTransaction.typeId               -> 1,
-    SetScriptTransaction.typeId          -> 50,
-    SponsorFeeTransaction.typeId         -> 500,
-    SetAssetScriptTransaction.typeId     -> 50,
+    SetScriptTransaction.typeId          -> 10,
+    SponsorFeeTransaction.typeId         -> 1000,
+    SetAssetScriptTransaction.typeId     -> (1000 - 4),
     ContractInvocationTransaction.typeId -> 5
+  )
+  val newFeeConstants: Map[Byte, Long] = Map(
+    GenesisTransaction.typeId            -> 0,
+    PaymentTransaction.typeId            -> 1 * 20,
+    IssueTransaction.typeId              -> 50000 * 20,
+    ReissueTransaction.typeId            -> 50000 * 20,
+    BurnTransaction.typeId               -> 1 * 20,
+    TransferTransaction.typeId           -> 1 * 20,
+    MassTransferTransaction.typeId       -> 1 * 20,
+    LeaseTransaction.typeId              -> 1 * 20,
+    LeaseCancelTransaction.typeId        -> 1 * 20,
+    ExchangeTransaction.typeId           -> 2 * 20,
+    CreateAliasTransaction.typeId        -> 500 * 20,
+    DataTransaction.typeId               -> 1 * 20,
+    SetScriptTransaction.typeId          -> 50 * 20,
+    SponsorFeeTransaction.typeId         -> 500 * 20,
+    SetAssetScriptTransaction.typeId     -> 50 * 20,
+    ContractInvocationTransaction.typeId -> 5 * 20
   )
   val FeeConstants: Map[Byte, Long] = newFeeConstants
 
@@ -207,16 +207,17 @@ object CommonValidation {
     }
 
   private def feeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-    val fees = if (650000 >= height && scheme.chainId == 78) oldFeeConstants else FeeConstants
+    val fees = if (height < wrongFeesUntil && scheme.chainId == 76) oldFeeConstants else FeeConstants
+
     fees
       .get(tx.builder.typeId)
       .map { baseFee =>
         tx match {
           case tx: MassTransferTransaction =>
-            baseFee + (tx.transfers.size + 1) / 2
+            baseFee + baseFee * (tx.transfers.size + 1) / 2
           case tx: DataTransaction =>
             val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-            baseFee + (base.length - 1) / 1024
+            baseFee + baseFee * (base.length - 1) / 1024
           case _ =>
             baseFee
         }
