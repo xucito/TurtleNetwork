@@ -26,8 +26,25 @@ object CommonValidation {
   val FeeUnit        = 2000000
   val wrongFeesUntil = 625000
   val scheme         = AddressScheme.current
-
-  val FeeConstants: Map[Byte, Long] = Map(
+  val oldFeeConstants: Map[Byte, Long] = Map(
+    GenesisTransaction.typeId            -> 0,
+    PaymentTransaction.typeId            -> 1 / 20,
+    IssueTransaction.typeId              -> 1000 / 20,
+    ReissueTransaction.typeId            -> 1000 / 20,
+    BurnTransaction.typeId               -> 1 / 20,
+    TransferTransaction.typeId           -> 1 / 20,
+    MassTransferTransaction.typeId       -> 1 / 20,
+    LeaseTransaction.typeId              -> 1 / 20,
+    LeaseCancelTransaction.typeId        -> 1 / 20,
+    ExchangeTransaction.typeId           -> 3 / 20,
+    CreateAliasTransaction.typeId        -> 1 / 20,
+    DataTransaction.typeId               -> 1 / 20,
+    SetScriptTransaction.typeId          -> 10 / 20,
+    SponsorFeeTransaction.typeId         -> 1000 / 20,
+    SetAssetScriptTransaction.typeId     -> (1000 - 4) / 20,
+    ContractInvocationTransaction.typeId -> 5 / 20
+  )
+  val newFeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
     PaymentTransaction.typeId            -> 1,
     IssueTransaction.typeId              -> 50000,
@@ -45,6 +62,7 @@ object CommonValidation {
     SetAssetScriptTransaction.typeId     -> 50,
     ContractInvocationTransaction.typeId -> 5
   )
+  val FeeConstants: Map[Byte, Long] = newFeeConstants
 
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           settings: FunctionalitySettings,
@@ -189,23 +207,22 @@ object CommonValidation {
     }
 
   private def feeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-    FeeConstants
+    val fees = if (650000 >= height && scheme.chainId == 78) oldFeeConstants else FeeConstants
+    fees
       .get(tx.builder.typeId)
       .map { baseFee =>
-        if (height <= wrongFeesUntil && scheme.chainId == 76)
-          baseFee / 20
-        else
-          tx match {
-            case tx: MassTransferTransaction =>
-              baseFee + (tx.transfers.size + 1) / 2
-            case tx: DataTransaction =>
-              val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-              baseFee + (base.length - 1) / 1024
-            case _ =>
-              baseFee
-          }
+        tx match {
+          case tx: MassTransferTransaction =>
+            baseFee + (tx.transfers.size + 1) / 2
+          case tx: DataTransaction =>
+            val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
+            baseFee + (base.length - 1) / 1024
+          case _ =>
+            baseFee
+        }
       }
       .toRight(UnsupportedTransactionType)
+
   }
 
   def getMinFee(blockchain: Blockchain,

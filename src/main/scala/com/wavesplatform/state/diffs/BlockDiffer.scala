@@ -11,7 +11,7 @@ import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state._
 import com.wavesplatform.state.patch.{CancelAllLeases, CancelInvalidLeaseIn, CancelInvalidTx, CancelInvalidTx2, CancelLeaseOverflow}
 import com.wavesplatform.state.reader.CompositeBlockchain.composite
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.utils.ScorexLogging
 import com.wavesplatform.block.{Block, MicroBlock}
 import com.wavesplatform.transaction.ValidationError.ActivationError
@@ -107,6 +107,7 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     val initDiff       = Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty))
     val hasNg          = currentBlockFeeDistr.isEmpty
     val hasSponsorship = currentBlockHeight >= Sponsorship.sponsoredFeesSwitchHeight(blockchain, settings)
+    val scheme         = AddressScheme.current
 
     def clearSponsorship(blockchain: Blockchain, portfolio: Portfolio): (Portfolio, Long) = {
       val spPf =
@@ -165,13 +166,13 @@ object BlockDiffer extends ScorexLogging with Instrumented {
 
           val diffWithRevertedCoins =
             //Goal is to fix after 40k blocks from now
-            if (currentBlockHeight == 450000)
+            if (currentBlockHeight == 450000 && scheme.chainId == 76)
               Monoid.combine(diffWithCancelledLeaseIns, CancelInvalidTx(composite(blockchain, diffWithCancelledLeaseIns)))
             else diffWithCancelledLeaseIns
 
           val diffWithNegativeBalanceFix =
             //Goal is to fix after 40k blocks from now
-            if (currentBlockHeight == 457100)
+            if (currentBlockHeight == 457100 && scheme.chainId == 76)
               Monoid.combine(diffWithRevertedCoins, CancelInvalidTx2(composite(blockchain, diffWithCancelledLeaseIns)))
             else diffWithRevertedCoins
 
