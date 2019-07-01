@@ -16,11 +16,10 @@ import com.wavesplatform.transaction.smart.script.{ContractScript, Script}
 import com.wavesplatform.transaction.smart.script.v1.ExprScript.ExprScriprImpl
 import com.wavesplatform.transaction.smart.{ContractInvocationTransaction, SetScriptTransaction}
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.utils.ScorexLogging
 
 import scala.util.{Left, Right}
 
-object CommonValidation extends ScorexLogging {
+object CommonValidation{
 
   val ScriptExtraFee = 4000000L
   val FeeUnit        = 100000
