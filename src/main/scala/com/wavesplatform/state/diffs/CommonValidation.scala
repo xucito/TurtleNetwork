@@ -19,31 +19,49 @@ import com.wavesplatform.transaction.transfer._
 
 import scala.util.{Left, Right}
 
-object CommonValidation {
+object CommonValidation{
 
   val ScriptExtraFee = 4000000L
-  val FeeUnit        = 2000000
+  val FeeUnit        = 100000
   val wrongFeesUntil = 650000
   val scheme         = AddressScheme.current
-
-  val FeeConstants: Map[Byte, Long] = Map(
+  val oldFeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
     PaymentTransaction.typeId            -> 1,
-    IssueTransaction.typeId              -> 50000,
-    ReissueTransaction.typeId            -> 50000,
+    IssueTransaction.typeId              -> 1000,
+    ReissueTransaction.typeId            -> 1000,
     BurnTransaction.typeId               -> 1,
     TransferTransaction.typeId           -> 1,
     MassTransferTransaction.typeId       -> 1,
     LeaseTransaction.typeId              -> 1,
     LeaseCancelTransaction.typeId        -> 1,
-    ExchangeTransaction.typeId           -> 2,
-    CreateAliasTransaction.typeId        -> 500,
+    ExchangeTransaction.typeId           -> 3,
+    CreateAliasTransaction.typeId        -> 1,
     DataTransaction.typeId               -> 1,
-    SetScriptTransaction.typeId          -> 50,
-    SponsorFeeTransaction.typeId         -> 500,
-    SetAssetScriptTransaction.typeId     -> 50,
+    SetScriptTransaction.typeId          -> 10,
+    SponsorFeeTransaction.typeId         -> 1000,
+    SetAssetScriptTransaction.typeId     -> (1000 - 4),
     ContractInvocationTransaction.typeId -> 5
   )
+  val newFeeConstants: Map[Byte, Long] = Map(
+    GenesisTransaction.typeId            -> 0,
+    PaymentTransaction.typeId            -> 1 * 20,
+    IssueTransaction.typeId              -> 50000 * 20,
+    ReissueTransaction.typeId            -> 50000 * 20,
+    BurnTransaction.typeId               -> 1 * 20,
+    TransferTransaction.typeId           -> 1 * 20,
+    MassTransferTransaction.typeId       -> 1 * 20,
+    LeaseTransaction.typeId              -> 1 * 20,
+    LeaseCancelTransaction.typeId        -> 1 * 20,
+    ExchangeTransaction.typeId           -> 2 * 20,
+    CreateAliasTransaction.typeId        -> 500 * 20,
+    DataTransaction.typeId               -> 1 * 20,
+    SetScriptTransaction.typeId          -> 50 * 20,
+    SponsorFeeTransaction.typeId         -> 500 * 20,
+    SetAssetScriptTransaction.typeId     -> 50 * 20,
+    ContractInvocationTransaction.typeId -> 5 * 20
+  )
+  val FeeConstants: Map[Byte, Long] = newFeeConstants
 
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           settings: FunctionalitySettings,
@@ -116,25 +134,21 @@ object CommonValidation {
 
     def scriptActivation(sc: Script) = {
       val ab = activationBarrier(BlockchainFeatures.Ride4DApps, Some("Ride4DApps"))
-
       def scriptVersionActivation(sc: Script) = sc.stdLibVersion match {
         case V1 | V2 if sc.containsBlockV2.value => ab
         case V1 | V2                             => Right(tx)
         case V3                                  => ab
       }
-
       def scriptTypeActivation(sc: Script) = sc match {
         case e: ExprScriprImpl                    => Right(tx)
         case c: ContractScript.ContractScriptImpl => ab
       }
-
       for {
         _ <- scriptVersionActivation(sc)
         _ <- scriptTypeActivation(sc)
       } yield tx
 
     }
-
     tx match {
       case _: BurnTransactionV1        => Right(tx)
       case _: PaymentTransaction       => Right(tx)
@@ -177,8 +191,8 @@ object CommonValidation {
     val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
     if (!allowTransactionsFromFutureByTimestamp && tx.timestamp - time > settings.maxTransactionTimeForwardOffset.toMillis)
       Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-           |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
-           |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
+                        |is more than ${settings.maxTransactionTimeForwardOffset.toMillis}ms in the future
+                        |relative to block timestamp $time""".stripMargin.replaceAll("\n", " ")))
     else Right(tx)
   }
 
@@ -186,29 +200,29 @@ object CommonValidation {
     prevBlockTime match {
       case Some(t) if (t - tx.timestamp) > settings.maxTransactionTimeBackOffset.toMillis =>
         Left(Mistiming(s"""Transaction timestamp ${tx.timestamp}
-             |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
-             |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
+                          |is more than ${settings.maxTransactionTimeBackOffset.toMillis}ms in the past
+                          |relative to previous block timestamp $prevBlockTime""".stripMargin.replaceAll("\n", " ")))
       case _ => Right(tx)
     }
 
   private def feeInUnits(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Long] = {
-    FeeConstants
+    val fees = if (height < wrongFeesUntil && scheme.chainId == 76) oldFeeConstants else FeeConstants
+
+    fees
       .get(tx.builder.typeId)
       .map { baseFee =>
-        if (height <= wrongFeesUntil && scheme.chainId == 76)
-          baseFee / 20
-        else
-          tx match {
-            case tx: MassTransferTransaction =>
-              baseFee + (tx.transfers.size + 1) / 2
-            case tx: DataTransaction =>
-              val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-              baseFee + (base.length - 1) / 1024
-            case _ =>
-              baseFee
-          }
+        tx match {
+          case tx: MassTransferTransaction =>
+            baseFee + baseFee * (tx.transfers.size + 1) / 2
+          case tx: DataTransaction =>
+            val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
+            baseFee + baseFee * (base.length - 1) / 1024
+          case _ =>
+            baseFee
+        }
       }
       .toRight(UnsupportedTransactionType)
+
   }
 
   def getMinFee(blockchain: Blockchain,
@@ -248,13 +262,9 @@ object CommonValidation {
       }
       if (isSmartToken(inputFee)) {
         //Left(GenericError("Using smart asset for sponsorship is disabled."))
-        Right {
-          (feeAssetInfo, feeAmount + ScriptExtraFee * (1 + assetsCount))
-        }
+        Right { (feeAssetInfo, feeAmount + ScriptExtraFee * (1 + assetsCount)) }
       } else {
-        Right {
-          (feeAssetInfo, feeAmount + ScriptExtraFee * assetsCount)
-        }
+        Right { (feeAssetInfo, feeAmount + ScriptExtraFee * assetsCount) }
       }
     }
 
