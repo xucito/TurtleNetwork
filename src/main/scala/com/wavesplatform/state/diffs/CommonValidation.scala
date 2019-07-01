@@ -1,7 +1,7 @@
 package com.wavesplatform.state.diffs
 
 import cats._
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.lang.StdLibVersion._
@@ -16,31 +16,33 @@ import com.wavesplatform.transaction.smart.script.Script
 import com.wavesplatform.transaction.smart.script.v1.ExprScript.ExprScriprImpl
 import com.wavesplatform.transaction.smart.{ContractInvocationTransaction, SetScriptTransaction}
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.transaction.{smart, _}
+import com.wavesplatform.transaction._
 
 import scala.util.{Left, Right}
 
 object CommonValidation {
 
   val ScriptExtraFee = 400000L
-  val FeeUnit        = 100000
+  val FeeUnit        = 2000000
+  val wrongFeesUntil = 625000
+  val scheme         = AddressScheme.current
 
   val FeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
     PaymentTransaction.typeId            -> 1,
-    IssueTransaction.typeId              -> 1000,
-    ReissueTransaction.typeId            -> 1000,
+    IssueTransaction.typeId              -> 50000,
+    ReissueTransaction.typeId            -> 50000,
     BurnTransaction.typeId               -> 1,
     TransferTransaction.typeId           -> 1,
     MassTransferTransaction.typeId       -> 1,
     LeaseTransaction.typeId              -> 1,
     LeaseCancelTransaction.typeId        -> 1,
-    ExchangeTransaction.typeId           -> 3,
-    CreateAliasTransaction.typeId        -> 1,
+    ExchangeTransaction.typeId           -> 2,
+    CreateAliasTransaction.typeId        -> 500,
     DataTransaction.typeId               -> 1,
-    SetScriptTransaction.typeId          -> 10,
-    SponsorFeeTransaction.typeId         -> 1000,
-    SetAssetScriptTransaction.typeId     -> (1000 - 4),
+    SetScriptTransaction.typeId          -> 50,
+    SponsorFeeTransaction.typeId         -> 500,
+    SetAssetScriptTransaction.typeId     -> 50,
     ContractInvocationTransaction.typeId -> 5
   )
 
@@ -190,14 +192,18 @@ object CommonValidation {
     FeeConstants
       .get(tx.builder.typeId)
       .map { baseFee =>
-        tx match {
-          case tx: MassTransferTransaction =>
-            baseFee + (tx.transfers.size + 1) / 2
-          case tx: DataTransaction =>
-            val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
-            baseFee + (base.length - 1) / 1024
-          case _ => baseFee
-        }
+        if (height <= wrongFeesUntil && scheme.chainId == 76)
+          baseFee / 20
+        else
+          tx match {
+            case tx: MassTransferTransaction =>
+              baseFee + (tx.transfers.size + 1) / 2
+            case tx: DataTransaction =>
+              val base = if (blockchain.isFeatureActivated(BlockchainFeatures.SmartAccounts, height)) tx.bodyBytes() else tx.bytes()
+              baseFee + (base.length - 1) / 1024
+            case _ =>
+              baseFee
+          }
       }
       .toRight(UnsupportedTransactionType)
   }
