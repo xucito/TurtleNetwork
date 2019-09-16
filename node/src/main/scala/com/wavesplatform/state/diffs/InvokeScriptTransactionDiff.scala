@@ -151,7 +151,7 @@ object InvokeScriptTransactionDiff {
               minWaves <= wavesFee,
               (),
               GenericError(s"Fee in ${tx.assetFee._1
-                .fold("WAVES")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves WAVES: ${tx.assetFee._2}")
+                .fold("TN")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves TN: ${tx.assetFee._2}")
             )
           }
           scriptsInvoked <- TracedResult {
@@ -166,7 +166,7 @@ object InvokeScriptTransactionDiff {
               minWaves <= wavesFee,
               totalScriptsInvoked,
               GenericError(s"Fee in ${tx.assetFee._1
-                .fold("WAVES")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves WAVES: ${tx.assetFee._2}")
+                .fold("TN")(_.toString)} for ${tx.builder.classTag} with $totalScriptsInvoked total scripts invoked does not exceed minimal value of $minWaves TN: ${tx.assetFee._2}")
             )
           }
 

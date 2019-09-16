@@ -49,7 +49,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 inTask(assembly)(
   Seq(
     test := {},
-    assemblyJarName := s"waves-all-${version.value}.jar",
+    assemblyJarName := s"TN-all-${version.value}.jar",
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
       case PathList("META-INF", "aop.xml")                      => aopMerge
@@ -58,15 +58,15 @@ inTask(assembly)(
   ))
 
 scriptClasspath += "*" // adds "$lib_dir/*" to app_classpath in the executable file
-// Logback creates a "waves.directory_UNDEFINED" without this option.
+// Logback creates a "TN.directory_UNDEFINED" without this option.
 bashScriptExtraDefines ++= Seq(
-  s"""addJava "-Dwaves.defaults.directory=/var/lib/${(Universal / normalizedName).value}"""",
-  s"""addJava "-Dwaves.defaults.config.directory=/etc/${(Universal / normalizedName).value}""""
+  s"""addJava "-DTN.defaults.directory=/var/lib/${(Universal / normalizedName).value}"""",
+  s"""addJava "-DTN.defaults.config.directory=/etc/${(Universal / normalizedName).value}""""
 )
 
 inConfig(Universal)(
   Seq(
-    mappings += (baseDirectory.value / s"waves-${network.value}.conf" -> "doc/waves.conf.sample"),
+    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/waves.conf.sample"),
     mappings := {
       val linuxScriptPattern = "bin/(.+)".r
       val batScriptPattern   = "bin/([^.]+)\\.bat".r
@@ -104,9 +104,9 @@ inConfig(Universal)(
 
 inConfig(Linux)(
   Seq(
-    maintainer := "wavesplatform.com",
-    packageSummary := "Waves node",
-    packageDescription := "Waves node"
+    maintainer := "turtlenetwork.eu",
+    packageSummary := "TN node",
+    packageDescription := "TN node"
   ))
 
 inConfig(Debian)(
@@ -139,12 +139,12 @@ inConfig(Debian)(
 
 // Hack for https://youtrack.jetbrains.com/issue/SCL-15210
 
-moduleName := s"waves${network.value.packageSuffix}" // waves-*.jar instead of node-*.jar
+moduleName := s"TN${network.value.packageSuffix}" // TN-*.jar instead of node-*.jar
 executableScriptName := moduleName.value // bin/waves instead of bin/node
 
 // Variable options are used in different tasks and configs, so we will specify all of them
 val nameFix = Seq(
-  name := "waves",
+  name := "TN",
   packageName := s"${name.value}${network.value.packageSuffix}",
   normalizedName := s"${name.value}${network.value.packageSuffix}"
 )

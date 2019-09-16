@@ -44,7 +44,7 @@ object LeaseTransaction {
 
   def validateLeaseParams(amount: Long, fee: Long, recipient: AddressOrAlias, sender: PublicKey): Either[ValidationError, Unit] =
     if (amount <= 0) {
-      Left(TxValidationError.NonPositiveAmount(amount, "waves"))
+      Left(TxValidationError.NonPositiveAmount(amount, "TN"))
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
       Left(TxValidationError.OverflowError)
     } else if (fee <= 0) {

@@ -75,7 +75,7 @@ object GenesisTransaction extends TransactionParserFor[GenesisTransaction] with 
 
       byteTailDescription.deserializeFromByteArray(bytes).flatMap { tx =>
         Either
-          .cond(tx.amount >= 0, tx, TxValidationError.NegativeAmount(tx.amount, "waves"))
+          .cond(tx.amount >= 0, tx, TxValidationError.NegativeAmount(tx.amount, "TN"))
           .foldToTry
       }
     }.flatten

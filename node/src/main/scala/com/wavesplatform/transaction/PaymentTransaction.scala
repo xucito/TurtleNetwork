@@ -63,7 +63,7 @@ object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with 
              timestamp: Long,
              signature: ByteStr): Either[ValidationError, TransactionT] = {
     if (amount <= 0) {
-      Left(TxValidationError.NonPositiveAmount(amount, "waves")) //CHECK IF AMOUNT IS POSITIVE
+      Left(TxValidationError.NonPositiveAmount(amount, "TN")) //CHECK IF AMOUNT IS POSITIVE
     } else if (fee <= 0) {
       Left(TxValidationError.InsufficientFee()) //CHECK IF FEE IS POSITIVE
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
@@ -81,7 +81,7 @@ object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with 
       byteTailDescription.deserializeFromByteArray(bytes).flatMap { tx =>
         (
           if (tx.amount <= 0) {
-            Left(TxValidationError.NonPositiveAmount(tx.amount, "waves")) //CHECK IF AMOUNT IS POSITIVE
+            Left(TxValidationError.NonPositiveAmount(tx.amount, "TN")) //CHECK IF AMOUNT IS POSITIVE
           } else if (tx.fee <= 0) {
             Left(TxValidationError.InsufficientFee) //CHECK IF FEE IS POSITIVE
           } else if (Try(Math.addExact(tx.amount, tx.fee)).isFailure) {

@@ -25,7 +25,7 @@ case class WavesSettings(directory: String,
 
 object WavesSettings extends CustomValueReaders {
   def fromRootConfig(rootConfig: Config): WavesSettings = {
-    val waves = rootConfig.getConfig("waves")
+    val waves = rootConfig.getConfig("TN")
 
     val directory                 = waves.as[String]("directory")
     val ntpServer                 = waves.as[String]("ntp-server")

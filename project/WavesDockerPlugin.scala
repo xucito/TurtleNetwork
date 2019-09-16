@@ -17,20 +17,20 @@ object WavesDockerPlugin extends AutoPlugin {
         baseImage := "anapsix/alpine-java:8_server-jre",
         dockerfile := {
           val yourKitArchive = "YourKit-JavaProfiler-2019.1-docker.zip"
-          val bin            = "/opt/waves/start-waves.sh"
+          val bin            = "/opt/TN/start-TN.sh"
 
           new Dockerfile {
             from(baseImage.value)
 
-            runRaw(s"""mkdir -p /opt/waves && \\
+            runRaw(s"""mkdir -p /opt/TN && \\
                     |apk update && \\
                     |apk add --no-cache openssl ca-certificates && \\
-                    |wget --quiet "https://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.9.1/aspectjweaver-1.9.1.jar" -O /opt/waves/aspectjweaver.jar && \\
+                    |wget --quiet "https://search.maven.org/remotecontent?filepath=org/aspectj/aspectjweaver/1.9.1/aspectjweaver-1.9.1.jar" -O /opt/TN/aspectjweaver.jar && \\
                     |wget --quiet "https://www.yourkit.com/download/docker/$yourKitArchive" -P /tmp/ && \\
                     |unzip /tmp/$yourKitArchive -d /usr/local && \\
                     |rm -f /tmp/$yourKitArchive""".stripMargin)
 
-            add(additionalFiles.value, "/opt/waves/")
+            add(additionalFiles.value, "/opt/TN/")
             runShell("chmod", "+x", bin)
             entryPoint(bin)
             expose(exposedPorts.value.toSeq: _*)
@@ -41,7 +41,7 @@ object WavesDockerPlugin extends AutoPlugin {
 }
 
 object WavesDockerKeys {
-  val additionalFiles = taskKey[Seq[File]]("Additional files to copy to /opt/waves")
+  val additionalFiles = taskKey[Seq[File]]("Additional files to copy to /opt/TN")
   val exposedPorts    = taskKey[Set[Int]]("Exposed ports")
   val baseImage       = taskKey[String]("A base image for this container")
 }

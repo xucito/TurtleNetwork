@@ -20,7 +20,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
       quantity = someAssetAmount,
       decimals = 2,
       reissuable = true,
-      fee = 1.waves,
+      fee = 1.TN,
       timestamp = System.currentTimeMillis()
     )
     .right
@@ -54,7 +54,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
       val sellPrice           = 2 * Order.PriceConstant
       val buyAmount           = 1
       val sellAmount          = 1
-      pair = AssetPair.createAssetPair("WAVES", assetId).get
+      pair = AssetPair.createAssetPair("TN", assetId).get
       val buy  = Order.buy(buyer, matcher, pair, buyAmount, buyPrice, ts, expirationTimestamp, matcherFee, o1ver)
       val sell = Order.sell(seller, matcher, pair, sellAmount, sellPrice, ts, expirationTimestamp, matcherFee, o2ver)
 
@@ -106,7 +106,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
 
   test("negative - check orders v2 and v3 with exchange tx v1") {
     if (sender.findTransactionInfo(exchAsset.id().base58).isEmpty) sender.postJson("/transactions/broadcast", exchAsset.json())
-    pair = AssetPair.createAssetPair("WAVES", exchAsset.id().base58).get
+    pair = AssetPair.createAssetPair("TN", exchAsset.id().base58).get
 
     for ((o1ver, o2ver) <- Seq(
            (2: Byte, 1: Byte),
@@ -133,7 +133,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
         quantity = someAssetAmount,
         decimals = 8,
         reissuable = true,
-        fee = 1.waves,
+        fee = 1.TN,
         timestamp = System.currentTimeMillis()
       )
       .right
@@ -168,7 +168,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
       val sellPrice  = 500000
       val buyAmount  = 40000000
       val sellAmount = 40000000
-      val assetPair  = AssetPair.createAssetPair("WAVES", assetId.base58).get
+      val assetPair  = AssetPair.createAssetPair("TN", assetId.base58).get
       val buy        = Order.buy(buyer, matcher, assetPair, buyAmount, buyPrice, ts, expirationTimestamp, matcherFee, o1ver, matcherFeeOrder1)
       val sell       = Order.sell(seller, matcher, assetPair, sellAmount, sellPrice, ts, expirationTimestamp, matcherFee, o2ver, matcherFeeOrder2)
       val amount     = 40000000

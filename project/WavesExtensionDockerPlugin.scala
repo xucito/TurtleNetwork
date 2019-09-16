@@ -16,7 +16,7 @@ object WavesExtensionDockerPlugin extends AutoPlugin {
         dockerfile := {
           new Dockerfile {
             from(baseImage.value)
-            add(additionalFiles.value, "/opt/waves/")
+            add(additionalFiles.value, "/opt/TN/")
             expose(exposedPorts.value.toSeq: _*)
           }
         },

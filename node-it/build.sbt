@@ -11,6 +11,6 @@ inTask(docker)(
     exposedPorts := Set(6863, 6869), // NetworkApi, RestApi
     additionalFiles ++= (LocalProject("node") / Universal / stage).value +: Seq(
       (Test / resourceDirectory).value / "template.conf",
-      (Test / sourceDirectory).value / "container" / "start-waves.sh"
+      (Test / sourceDirectory).value / "container" / "start-TN.sh"
     )
   ))

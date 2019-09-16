@@ -24,9 +24,9 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
   var dAppInitBalance: Long   = 0
   var callerInitBalance: Long = 0
 
-  test("_send waves to dApp and caller accounts") {
-    val dAppTransferId   = sender.transfer(sender.address, dApp.address, 5.waves, minFee).id
-    val callerTransferId = sender.transfer(sender.address, caller.address, 5.waves, minFee).id
+  test("_send TN to dApp and caller accounts") {
+    val dAppTransferId   = sender.transfer(sender.address, dApp.address, 5.TN, minFee).id
+    val callerTransferId = sender.transfer(sender.address, caller.address, 5.TN, minFee).id
 
     nodes.waitForHeightAriseAndTxPresent(callerTransferId)
     nodes.waitForTransaction(dAppTransferId)
@@ -154,7 +154,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         fee = feeAmount - 1,
         feeAssetId = Some(dAppAsset)
       ),
-      s"does not exceed minimal value of 900000 WAVES or $feeAmount"
+      s"does not exceed minimal value of 900000 TN or $feeAmount"
     )
     assertBadRequestAndMessage(
       sender.invokeScript(
@@ -165,7 +165,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         fee = smartFeeAmount - 1,
         feeAssetId = Some(dAppAsset)
       ),
-      s"does not exceed minimal value of 5300000 WAVES"
+      s"does not exceed minimal value of 5300000 TN"
     )
 
     val invokeScript1TxId = sender
@@ -194,7 +194,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     sender.assetBalance(dApp.address, dAppAsset).balance shouldBe halfQuantity + (feeAmount - 10) + smartFeeAmount
     sender.assetBalance(dApp.address, callerAsset).balance shouldBe halfQuantity + paymentAmount
-    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.009.waves - 0.053.waves
+    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.009.TN - 0.053.TN
 
     sender.assetBalance(caller.address, dAppAsset).balance shouldBe halfQuantity + (-feeAmount + 10) - smartFeeAmount
     sender.assetBalance(caller.address, callerAsset).balance shouldBe halfQuantity - paymentAmount

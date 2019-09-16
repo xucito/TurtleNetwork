@@ -230,7 +230,7 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
       timestamp = 11,
       proofs = List("CC1jQ4qkuVfMvB2Kpg2Go6QKXJxUFC8UUswUxBsxwisrR8N5s3Yc8zA6dhjTwfWKfdouSTAnRXCxTXb3T6pJq3T")
     )
-    req.toTx shouldBe Left(NonPositiveAmount(0, "Waves"))
+    req.toTx shouldBe Left(NonPositiveAmount(0, "TN"))
     AddressScheme.current = DefaultAddressScheme
   }
 
@@ -249,7 +249,7 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
       timestamp = 11,
       proofs = List("CC1jQ4qkuVfMvB2Kpg2Go6QKXJxUFC8UUswUxBsxwisrR8N5s3Yc8zA6dhjTwfWKfdouSTAnRXCxTXb3T6pJq3T")
     )
-    req.toTx shouldBe Left(NonPositiveAmount(-1, "Waves"))
+    req.toTx shouldBe Left(NonPositiveAmount(-1, "TN"))
     AddressScheme.current = DefaultAddressScheme
   }
 }

@@ -36,13 +36,13 @@ class Ride4DAppsActivationTestSuite extends BaseTransactionSuite with CancelAfte
                                           |isTrue()
                                         """.stripMargin).explicitGet()._1.bytes().base64
 
-  test("send waves to accounts") {
+  test("send TN to accounts") {
     sender
       .transfer(
         sender.address,
         recipient = smartAcc.address,
         assetId = None,
-        amount = 5.waves,
+        amount = 5.TN,
         fee = minFee,
         waitForTx = true
       )
@@ -53,7 +53,7 @@ class Ride4DAppsActivationTestSuite extends BaseTransactionSuite with CancelAfte
         sender.address,
         recipient = callerAcc.address,
         assetId = None,
-        amount = 5.waves,
+        amount = 5.TN,
         fee = minFee,
         waitForTx = true
       )
@@ -161,7 +161,7 @@ object Ride4DAppsActivationTestSuite {
 
   private val configWithRide4DAppsFeature: Seq[Config] =
     Default.map(ConfigFactory.parseString(s"""
-                                             | waves.blockchain.custom.functionality {
+                                             | TN.blockchain.custom.functionality {
                                              |   pre-activated-features.11 = ${activationHeight - 1}
                                              |}""".stripMargin).withFallback(_))
 

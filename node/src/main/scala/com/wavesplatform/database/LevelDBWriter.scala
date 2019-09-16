@@ -1068,7 +1068,7 @@ class LevelDBWriter(writableDB: DB, spendableBalanceChanged: Observer[(Address, 
     Either.cond(
       height > canGetAfterHeight,
       createMap(),
-      GenericError(s"Cannot get waves distribution at height less than ${canGetAfterHeight + 1}")
+      GenericError(s"Cannot get TN distribution at height less than ${canGetAfterHeight + 1}")
     )
   }
 

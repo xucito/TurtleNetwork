@@ -65,8 +65,8 @@ object FeeValidation {
 
   private def notEnoughFeeError(txType: Byte, feeDetails: FeeDetails, feeAmount: Long): ValidationError = {
     val txName      = Constants.TransactionNames(txType)
-    val actualFee   = s"$feeAmount in ${feeDetails.asset.fold("WAVES")(_.id.base58)}"
-    val requiredFee = s"${feeDetails.minFeeInWaves} WAVES${feeDetails.asset.fold("")(id => s" or ${feeDetails.minFeeInAsset} ${id.id.base58}")}"
+    val actualFee   = s"$feeAmount in ${feeDetails.asset.fold("TN")(_.id.base58)}"
+    val requiredFee = s"${feeDetails.minFeeInWaves} TN${feeDetails.asset.fold("")(id => s" or ${feeDetails.minFeeInAsset} ${id.id.base58}")}"
 
     val errorMessage = s"Fee for $txName ($actualFee) does not exceed minimal value of $requiredFee."
 

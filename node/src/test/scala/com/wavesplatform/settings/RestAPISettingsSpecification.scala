@@ -8,7 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class RestAPISettingsSpecification extends FlatSpec with Matchers {
   "RestAPISettings" should "read values" in {
     val config   = ConfigFactory.parseString("""
-                                               |waves {
+                                               |TN {
                                                |  rest-api {
                                                |    enable: yes
                                                |    bind-address: "127.0.0.1"
@@ -22,7 +22,7 @@ class RestAPISettingsSpecification extends FlatSpec with Matchers {
                                                |  }
                                                |}
       """.stripMargin)
-    val settings = config.as[RestAPISettings]("waves.rest-api")
+    val settings = config.as[RestAPISettings]("TN.rest-api")
 
     settings.enable should be(true)
     settings.bindAddress should be("127.0.0.1")

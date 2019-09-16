@@ -39,17 +39,10 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     miner.assertAssetBalance(secondAddress, assetId, transferAmount)
   }
 
-<<<<<<< HEAD:it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
   test("TN mass transfer changes TN balances") {
-    val (balance1, eff1) = notMiner.accountBalances(firstAddress)
-    val (balance2, eff2) = notMiner.accountBalances(secondAddress)
-    val (balance3, eff3) = notMiner.accountBalances(thirdAddress)
-=======
-  test("waves mass transfer changes waves balances") {
     val (balance1, eff1) = miner.accountBalances(firstAddress)
     val (balance2, eff2) = miner.accountBalances(secondAddress)
     val (balance3, eff3) = miner.accountBalances(thirdAddress)
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node-it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
     val transfers        = List(Transfer(secondAddress, transferAmount), Transfer(thirdAddress, 2 * transferAmount))
 
     val massTransferTransactionFee = calcMassTransferFee(transfers.size)
@@ -63,15 +56,9 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     miner.assertBalances(thirdAddress, balance3 + 2 * transferAmount, eff3 + 2 * transferAmount)
   }
 
-<<<<<<< HEAD:it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
   test("can not make mass transfer without having enough TN") {
-    val (balance1, eff1) = notMiner.accountBalances(firstAddress)
-    val (balance2, eff2) = notMiner.accountBalances(secondAddress)
-=======
-  test("can not make mass transfer without having enough waves") {
     val (balance1, eff1) = miner.accountBalances(firstAddress)
     val (balance2, eff2) = miner.accountBalances(secondAddress)
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node-it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
     val transfers        = List(Transfer(secondAddress, balance1 / 2), Transfer(thirdAddress, balance1 / 2))
 
     assertBadRequestAndResponse(sender.massTransfer(firstAddress, transfers, calcMassTransferFee(transfers.size)), "negative TN balance")
@@ -278,11 +265,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
     createAliasTxs.foreach(sender.waitForTransaction(_))
 
     val transfers = aliases.map { alias =>
-<<<<<<< HEAD:it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
-      Transfer(Alias.buildWithCurrentChainId(alias).explicitGet().stringRepr, 2.TN)
-=======
-      Transfer(Alias.create(alias).explicitGet().stringRepr, 2.waves)
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node-it/src/test/scala/com/wavesplatform/it/sync/transactions/MassTransferTransactionSuite.scala
+      Transfer(Alias.create(alias).explicitGet().stringRepr, 2.TN)
     }
     val txId = sender.massTransfer(firstAddress, transfers, 4000000).id
     nodes.waitForHeightAriseAndTxPresent(txId)

@@ -55,13 +55,13 @@ package object settings {
       .resolve()
 
     val cmdDefaults =
-      Try(withApp.getConfig("waves.defaults"))
+      Try(withApp.getConfig("TN.defaults"))
         .getOrElse(ConfigFactory.empty())
-        .atPath("waves")
+        .atPath("TN")
 
     external
       .withFallback(cmdDefaults)
-      .withFallback(ConfigFactory.parseString(s"waves.directory = ${defaultDirectory(withApp)}"))
+      .withFallback(ConfigFactory.parseString(s"TN.directory = ${defaultDirectory(withApp)}"))
       .withFallback(ConfigFactory.defaultApplication())
       .withFallback(ConfigFactory.defaultReference())
       .resolve()
@@ -84,15 +84,15 @@ package object settings {
     }
 
     def withNetwork(config: Config): String = {
-      val bc = config.getString("waves.blockchain.type")
+      val bc = config.getString("TN.blockchain.type")
       val suffix =
         if (bc == "CUSTOM") {
-          val char = config.getString("waves.blockchain.custom.address-scheme-character").headOption.getOrElse(0.toChar)
+          val char = config.getString("TN.blockchain.custom.address-scheme-character").headOption.getOrElse(0.toChar)
           s"custom-${Integer.toHexString(char)}"
         } else
           bc.toLowerCase
 
-      s"waves-$suffix"
+      s"TN-$suffix"
     }
 
     val parent =

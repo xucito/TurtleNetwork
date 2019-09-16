@@ -90,8 +90,8 @@ object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2]
   val byteTailDescription: ByteEntity[TransferTransactionV2] = {
     (
       PublicKeyBytes(tailIndex(1), "Sender's public key"),
-      OptionBytes(tailIndex(2), "Asset ID", AssetIdBytes(tailIndex(2), "Asset ID"), "flag (1 - asset, 0 - Waves)"),
-      OptionBytes(tailIndex(3), "Fee's asset ID", AssetIdBytes(tailIndex(3), "Fee's asset ID"), "flag (1 - asset, 0 - Waves)"),
+      OptionBytes(tailIndex(2), "Asset ID", AssetIdBytes(tailIndex(2), "Asset ID"), "flag (1 - asset, 0 - TN)"),
+      OptionBytes(tailIndex(3), "Fee's asset ID", AssetIdBytes(tailIndex(3), "Fee's asset ID"), "flag (1 - asset, 0 - TN)"),
       LongBytes(tailIndex(4), "Timestamp"),
       LongBytes(tailIndex(5), "Amount"),
       LongBytes(tailIndex(6), "Fee"),

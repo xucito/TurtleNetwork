@@ -200,7 +200,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime {
         "type"       -> MassTransferTransaction.typeId,
         "version"    -> 1,
         "sender"     -> firstAddress,
-        "transfers"  -> Json.toJson(Seq(Transfer(secondAddress, 1.TN), Transfer(thirdAddress, 2.waves))),
+        "transfers"  -> Json.toJson(Seq(Transfer(secondAddress, 1.TN), Transfer(thirdAddress, 2.TN))),
         "attachment" -> Base58.encode("masspay".getBytes("UTF-8"))
       ),
       usesProofs = true,

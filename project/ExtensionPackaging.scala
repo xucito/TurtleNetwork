@@ -70,9 +70,9 @@ object ExtensionPackaging extends AutoPlugin {
 
   private def maintainerFix = inConfig(Linux)(
     Seq(
-      maintainer := "wavesplatform.com",
-      packageSummary := s"Waves node ${name.value}${network.value.packageSuffix} extension",
-      packageDescription := s"Waves node ${name.value}${network.value.packageSuffix} extension"
+      maintainer := "turtlenetwork.eu",
+      packageSummary := s"TN node ${name.value}${network.value.packageSuffix} extension",
+      packageDescription := s"TN node ${name.value}${network.value.packageSuffix} extension"
     ))
   
   private def nameFix = Seq(

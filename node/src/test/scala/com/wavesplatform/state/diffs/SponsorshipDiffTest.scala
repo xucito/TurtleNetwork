@@ -128,9 +128,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           blockDiffEi should produce("unavailable funds")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-<<<<<<< HEAD:src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
-          blockDiffEi should produce("does not exceed minimal value of 2000000 TN")
-=======
+
           val minFee = Sponsorship
             .fromWaves(
               CommonValidation.FeeConstants(insufficientFee.builder.typeId) * CommonValidation.FeeUnit,
@@ -139,10 +137,9 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
 
           val expectedError =
             s"Fee for TransferTransaction (${insufficientFee.fee} in ${issue.assetId().base58})" ++
-              s" does not exceed minimal value of 100000 WAVES or $minFee ${issue.assetId().base58}"
+              s" does not exceed minimal value of 2000000 TN or $minFee ${issue.assetId().base58}"
 
           blockDiffEi should produce(expectedError)
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node/src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
         }
         assertDiffEi(setupBlocks, block(Seq(wavesOverspend)), s) { blockDiffEi =>
           if (wavesOverspend.fee > issue.quantity)
@@ -229,11 +226,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           blockDiffEi should produce("Asset was issued by other address")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-<<<<<<< HEAD:src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
-          blockDiffEi should produce("does not exceed minimal value of 1000000000 TN: 999999999")
-=======
-          blockDiffEi should produce("(99999999 in WAVES) does not exceed minimal value of 100000000 WAVES")
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node/src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
+          blockDiffEi should produce("(99999999 in TN) does not exceed minimal value of 100000000 TN")
         }
     }
   }
@@ -265,11 +258,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
           blockDiffEi should produce("Asset was issued by other address")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-<<<<<<< HEAD:src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
-          blockDiffEi should produce("does not exceed minimal value of 1000000000 TN: 999999999")
-=======
-          blockDiffEi should produce("(99999999 in WAVES) does not exceed minimal value of 100000000 WAVES")
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node/src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
+          blockDiffEi should produce("(99999999 in TN) does not exceed minimal value of 100000000 TN")
         }
     }
   }
@@ -282,29 +271,16 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
       ts        <- timestampGen
       genesis: GenesisTransaction = GenesisTransaction.create(master, 300000000000L, ts).explicitGet()
       issue = IssueTransactionV1
-<<<<<<< HEAD:src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
-        .selfSigned(master, Base58.decode("Asset").get, Array.emptyByteArray, 100, 2, reissuable = false, 100000000000L, ts + 1)
-        .explicitGet()
-      assetId = issue.id()
-      sponsor = SponsorFeeTransaction.selfSigned(master, assetId, Some(100), 1000000000L, ts + 2).explicitGet()
-      assetTransfer = TransferTransactionV1
-        .selfSigned(Some(assetId), master, recipient, issue.quantity, ts + 3, None, 2000000, Array.emptyByteArray)
-        .right
-        .get
-      wavesTransfer = TransferTransactionV1
-        .selfSigned(None, master, recipient, 99800000, ts + 4, None, 2000000, Array.emptyByteArray)
-=======
-        .selfSigned(master, Base58.tryDecodeWithLimit("Asset").get, Array.emptyByteArray, 100, 2, reissuable = false, 100000000, ts + 1)
+        .selfSigned(master, Base58.tryDecodeWithLimit("Asset").get, Array.emptyByteArray, 100, 2, reissuable = false, 100000000000L, ts + 1)
         .explicitGet()
       assetId = IssuedAsset(issue.id())
-      sponsor = SponsorFeeTransaction.selfSigned(master, assetId, Some(100), 100000000, ts + 2).explicitGet()
+      sponsor = SponsorFeeTransaction.selfSigned(master, assetId, Some(100), 1000000000L, ts + 2).explicitGet()
       assetTransfer = TransferTransactionV1
-        .selfSigned(assetId, master, recipient, issue.quantity, ts + 3, Waves, 100000, Array.emptyByteArray)
+        .selfSigned(assetId, master, recipient, issue.quantity, ts + 3, Waves, 2000000, Array.emptyByteArray)
         .right
         .get
       wavesTransfer = TransferTransactionV1
-        .selfSigned(Waves, master, recipient, 99800000, ts + 4, Waves, 100000, Array.emptyByteArray)
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node/src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
+        .selfSigned(Waves, master, recipient, 99800000, ts + 4, Waves, 2000000, Array.emptyByteArray)
         .right
         .get
       backWavesTransfer = TransferTransactionV1
@@ -318,13 +294,8 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with Matchers wit
         assertDiffAndState(Seq(block(Seq(genesis, issue, sponsor, assetTransfer, wavesTransfer))), block(Seq(backWavesTransfer)), s) {
           case (_, state) =>
             val portfolio = state.portfolio(genesis.recipient)
-<<<<<<< HEAD:src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
             portfolio.balance shouldBe 198894300000L
-            portfolio.assets(issue.id()) shouldBe issue.quantity
-=======
-            portfolio.balance shouldBe 0
             portfolio.assets(IssuedAsset(issue.id())) shouldBe issue.quantity
->>>>>>> c4f0fcf38824683d56e0685f9181df46b63c7299:node/src/test/scala/com/wavesplatform/state/diffs/SponsorshipDiffTest.scala
         }
     }
   }

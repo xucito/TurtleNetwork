@@ -20,10 +20,10 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
   var asset1: String = ""
   var asset2: String = ""
 
-  test("_send waves to dApp and caller accounts") {
-    val dAppTransferId        = sender.transfer(sender.address, dApp.address, 5.waves, minFee).id
-    val callerTransferId      = sender.transfer(sender.address, caller.address, 5.waves, minFee).id
-    val smartCallerTransferId = sender.transfer(sender.address, smartCaller.address, 5.waves, minFee).id
+  test("_send TN to dApp and caller accounts") {
+    val dAppTransferId        = sender.transfer(sender.address, dApp.address, 5.TN, minFee).id
+    val callerTransferId      = sender.transfer(sender.address, caller.address, 5.TN, minFee).id
+    val smartCallerTransferId = sender.transfer(sender.address, smartCaller.address, 5.TN, minFee).id
 
     nodes.waitForHeightAriseAndTxPresent(smartCallerTransferId)
     nodes.waitForTransaction(callerTransferId)
@@ -188,13 +188,13 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         smartCaller.address,
         dApp.address,
         Some("justWriteData"),
-        fee = 0.00899999.waves
+        fee = 0.00899999.TN
       ),
-      s"does not exceed minimal value of 900000 WAVES"
+      s"does not exceed minimal value of 900000 TN"
     )
   }
 
-  test("max fee is 0.053 Waves (0.005 + extraFee(1 smart caller + 1 payment + 10 transfers))") {
+  test("max fee is 0.053 TN (0.005 + extraFee(1 smart caller + 1 payment + 10 transfers))") {
     val paymentAmount = 20
     assertBadRequestAndMessage(
       sender.invokeScript(
@@ -202,7 +202,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         dApp.address,
         Some("spendMaxFee"),
         payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
-        fee = 0.05299999.waves
+        fee = 0.05299999.TN
       ),
       s"with 12 total scripts invoked does not exceed minimal value of 5300000"
     )
@@ -249,7 +249,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           fee = smartMinFee
         )
         .id,
-      "does not exceed minimal value of 900000 WAVES"
+      "does not exceed minimal value of 900000 TN"
     )
   }
 

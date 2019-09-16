@@ -137,7 +137,7 @@ object InvokeScriptTransaction extends TransactionParserFor[InvokeScriptTransact
         p =>
           NonPositiveAmount(
             p.amount,
-            p.assetId.fold("Waves")(_.toString)
+            p.assetId.fold("TN")(_.toString)
           ).asLeft[Unit])
 
   def signed(sender: PublicKey,
@@ -206,7 +206,7 @@ object InvokeScriptTransaction extends TransactionParserFor[InvokeScriptTransact
       OptionBytes(tailIndex(4), "Function call", FunctionCallBytes(tailIndex(4), "Function call")),
       SeqBytes(tailIndex(5), "Payments", PaymentBytes(tailIndex(5), "Payment")),
       LongBytes(tailIndex(6), "Fee"),
-      OptionBytes(tailIndex(7), "Fee's asset ID", AssetIdBytes(tailIndex(7), "Fee's asset ID"), "flag (1 - asset, 0 - Waves)")
+      OptionBytes(tailIndex(7), "Fee's asset ID", AssetIdBytes(tailIndex(7), "Fee's asset ID"), "flag (1 - asset, 0 - TN)")
         .map(_.getOrElse(Waves)),
       LongBytes(tailIndex(8), "Timestamp"),
       ProofsBytes(tailIndex(9))

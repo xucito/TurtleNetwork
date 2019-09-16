@@ -71,7 +71,7 @@ object TransferTransaction {
 
   def validate(amt: Long, maybeAmtAsset: Asset, feeAmt: Long, maybeFeeAsset: Asset, attachment: Array[Byte]): Either[ValidationError, Unit] = {
     (
-      validateAmount(amt, maybeAmtAsset.maybeBase58Repr.getOrElse("waves")),
+      validateAmount(amt, maybeAmtAsset.maybeBase58Repr.getOrElse("TN")),
       validateFee(feeAmt),
       validateAttachment(attachment)
     ).mapN { case _ => () }

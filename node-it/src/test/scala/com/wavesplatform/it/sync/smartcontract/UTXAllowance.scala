@@ -54,7 +54,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
           recipient = accounts(1).address,
           assetId = None,
           amount = 1.01.TN,
-          fee = minFee + 0.04.waves,
+          fee = minFee + 0.04.TN,
           version = 2
         )
         .id

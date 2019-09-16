@@ -174,7 +174,7 @@ class OrderJsonSpecification extends PropSpec with PropertyChecks with Matchers 
           "signature": "signature"
         } """
 
-    val jsons = Seq(""" "" """, "null", """ "WAVES" """).map { x =>
+    val jsons = Seq(""" "" """, "null", """ "TN" """).map { x =>
       x -> mkJson(x)
     }
 

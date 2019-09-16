@@ -256,7 +256,7 @@ object Explorer extends ScorexLogging {
         case "AP" =>
           val address   = Address.fromString(args(2)).explicitGet()
           val portfolio = reader.portfolio(address)
-          log.info(s"$address : ${portfolio.balance} WAVES, ${portfolio.lease}, ${portfolio.assets.size} assets")
+          log.info(s"$address : ${portfolio.balance} TN, ${portfolio.lease}, ${portfolio.assets.size} assets")
           portfolio.assets.toSeq.sortBy(_._1.toString) foreach {
             case (assetId, balance) => log.info(s"$assetId : $balance")
           }
