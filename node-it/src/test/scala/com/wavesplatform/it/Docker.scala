@@ -194,7 +194,6 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
         .map(_ => ())
   }
 
-
   private def startNodeInternal(nodeConfig: Config): DockerNode =
     try {
       val overrides = nodeConfig
@@ -336,7 +335,6 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
       log.debug("Set new config directly in the script for starting node")
       val shPath = "/opt/TN/start-TN.sh"
       val scriptCmd: Array[String] =
-
         Array("sh", "-c", s"sed -i 's|$$TN_OPTS.*-cp|$$TN_OPTS $renderedConfig -cp|' $shPath && chmod +x $shPath")
 
       val execScriptCmd = client.execCreate(node.containerId, scriptCmd).id()
@@ -513,7 +511,6 @@ object Docker {
   private val ContainerRoot = Paths.get("/opt/TN")
   private val ProfilerPort  = 10001
 
-
   private val RunId = Option(System.getenv("RUN_ID")).getOrElse(DateTimeFormatter.ofPattern("MM-dd--HH_mm_ss").format(LocalDateTime.now()))
 
   private val jsonMapper  = new ObjectMapper
@@ -561,7 +558,12 @@ object Docker {
     val hostNetworkAddress: InetSocketAddress      = new InetSocketAddress("localhost", externalPort(networkPort))
     val containerNetworkAddress: InetSocketAddress = new InetSocketAddress(wavesIpAddress, networkPort)
 
-    def externalPort(internalPort: Int): Int = ports.get(s"$internalPort/tcp").get(0).hostPort().toInt
+    def externalPort(internalPort: Int): Int =
+      ports
+        .get(s"$internalPort/tcp")
+        .get(0)
+        .hostPort()
+        .toInt
   }
 
   class DockerNode(config: Config, val containerId: String, private[Docker] var nodeInfo: NodeInfo) extends Node(config) {
