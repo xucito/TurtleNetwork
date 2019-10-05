@@ -126,7 +126,7 @@ class IssueTransactionV2Specification extends PropSpec with PropertyChecks with 
         8,
         true,
         script.toOption,
-        100000000000,
+        100000000000L,
         1526287561757L,
         Proofs(Seq(ByteStr.decodeBase58("43TCfWBa6t2o2ggsD4bU9FpvH3kmDbSBWKE1Z6B5i5Ax5wJaGT2zAvBihSbnSS3AikZLcicVWhUk1bQAMWVzTG5g").get))
       )
