@@ -213,7 +213,7 @@ object NFTBalanceSuite {
           1000,
           8,
           reissuable = true,
-          1.TN,
+          1000.TN,
           System.currentTimeMillis()
         )
         .explicitGet()

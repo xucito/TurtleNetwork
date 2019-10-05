@@ -855,7 +855,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
   def smartTradePreconditions(buyerScriptSrc: Gen[String],
                               sellerScriptSrc: Gen[String],
                               txScript: Gen[String]): Gen[(GenesisTransaction, List[TransferTransaction], List[Transaction], ExchangeTransaction)] = {
-    val enoughFee = 100000000
+    val enoughFee = 100000000000L
 
     val chainId = AddressScheme.current.chainId
 
