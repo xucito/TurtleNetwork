@@ -30,7 +30,7 @@ class TransactionAPISuite extends FreeSpec with NodesFromDocker with Matchers wi
   val TN: Long = 100000000L
 
   val AMT: Long = 1 * TN
-  val FEE: Long = (0.001 * TN).toLong
+  val FEE: Long = (0.02 * TN).toLong
 
   val transactions: List[TransferTransaction] =
     (for (i <- 0 to 30) yield {

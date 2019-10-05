@@ -22,27 +22,28 @@ object FeeValidation {
 
   case class FeeDetails(asset: Asset, requirements: Chain[String], minFeeInAsset: Long, minFeeInWaves: Long)
 
-  val ScriptExtraFee = 400000L
+  val ScriptExtraFee = 4000000L
   val FeeUnit        = 100000
-  val NFTMultiplier  = 0.001
+  val NFTMultiplier  = 0.0001
+  val wrongFeesUntil = 650000
 
   val FeeConstants: Map[Byte, Long] = Map(
-    GenesisTransaction.typeId        -> 0,
-    PaymentTransaction.typeId        -> 1,
-    IssueTransaction.typeId          -> 1000,
-    ReissueTransaction.typeId        -> 1000,
-    BurnTransaction.typeId           -> 1,
-    TransferTransaction.typeId       -> 1,
-    MassTransferTransaction.typeId   -> 1,
-    LeaseTransaction.typeId          -> 1,
-    LeaseCancelTransaction.typeId    -> 1,
-    ExchangeTransaction.typeId       -> 3,
-    CreateAliasTransaction.typeId    -> 1,
-    DataTransaction.typeId           -> 1,
-    SetScriptTransaction.typeId      -> 10,
-    SponsorFeeTransaction.typeId     -> 1000,
-    SetAssetScriptTransaction.typeId -> (1000 - 4),
-    InvokeScriptTransaction.typeId   -> 5
+    GenesisTransaction.typeId            -> 0,
+    PaymentTransaction.typeId            -> 1 * 20,
+    IssueTransaction.typeId              -> 50000 * 20,
+    ReissueTransaction.typeId            -> 50000 * 20,
+    BurnTransaction.typeId               -> 1 * 20,
+    TransferTransaction.typeId           -> 1 * 20,
+    MassTransferTransaction.typeId       -> 1 * 20,
+    LeaseTransaction.typeId              -> 1 * 20,
+    LeaseCancelTransaction.typeId        -> 1 * 20,
+    ExchangeTransaction.typeId           -> 2 * 20,
+    CreateAliasTransaction.typeId        -> 500 * 20,
+    DataTransaction.typeId               -> 1 * 20,
+    SetScriptTransaction.typeId          -> 50 * 20,
+    SponsorFeeTransaction.typeId         -> 500 * 20,
+    SetAssetScriptTransaction.typeId     -> 50 * 20,
+    InvokeScriptTransaction.typeId       -> 5 * 20
   )
 
   def apply(blockchain: Blockchain, height: Int, tx: Transaction): Either[ValidationError, Unit] = {

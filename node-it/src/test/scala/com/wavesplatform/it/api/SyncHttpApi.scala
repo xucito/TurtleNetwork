@@ -181,7 +181,7 @@ object SyncHttpApi extends Assertions {
               quantity: Long,
               decimals: Byte,
               reissuable: Boolean = true,
-              fee: Long = 100000000,
+              fee: Long = 1000000000,
               version: Byte = 2,
               script: Option[String] = None,
               waitForTx: Boolean = false): Transaction = {

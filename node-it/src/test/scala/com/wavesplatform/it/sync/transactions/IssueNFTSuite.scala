@@ -45,12 +45,12 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
       firstNode.privateKey.address,
       firstNodeIssuer.address,
       10.TN,
-      0.001.TN,
+      0.02.TN,
       waitForTx = true
     )
 
     assertBadRequest(
-      firstNode.issue(firstAddress, assetName, assetDescription, 1, 0, reissuable = false, 1.TN / 1000, waitForTx = true)
+      firstNode.issue(firstAddress, assetName, assetDescription, 1, 0, reissuable = false, 1.TN / 10, waitForTx = true)
     )
   }
 
@@ -65,7 +65,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
         quantity = 1,
         decimals = 0,
         reissuable = false,
-        fee = 0.001.TN,
+        fee = 0.01.TN,
         script = None,
         waitForTx = true)
       .id
@@ -84,7 +84,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
         quantity = 1,
         decimals = 0,
         reissuable = true,
-        fee = 0.001.TN,
+        fee = 0.01.TN,
         script = None,
         waitForTx = true),
       "does not exceed minimal value"
@@ -102,7 +102,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
         quantity = 2,
         decimals = 0,
         reissuable = false,
-        fee = 0.001.TN,
+        fee = 0.01.TN,
         script = None,
         waitForTx = true),
       "does not exceed minimal value"
@@ -120,7 +120,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
         quantity = 1,
         decimals = 1,
         reissuable = false,
-        fee = 0.001.TN,
+        fee = 0.01.TN,
         script = None,
         waitForTx = true),
       "does not exceed minimal value"
@@ -164,7 +164,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
             quantity = 1,
             decimals = 0,
             reissuable = false,
-            fee = 0.001.TN,
+            fee = 0.01.TN,
             script = None)
           .id)
   }

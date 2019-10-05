@@ -48,7 +48,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[KeyPair])
           100000000,
           2,
           reissuable = false,
-          fee = 100400000L,
+          fee = 100004000000L,
           timestamp = System.currentTimeMillis(),
           script = None
         )

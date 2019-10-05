@@ -88,7 +88,7 @@ class SetScriptTransactionDiffTest extends PropSpec with PropertyChecks with Mat
       genesis = GenesisTransaction.create(master, ENOUGH_AMT, ts).explicitGet()
       expr    = BLOCK(LET("x", CONST_LONG(3)), CONST_BOOLEAN(true))
       script  = ExprScript(V1, expr, checkSize = false).explicitGet()
-      tx      = SetScriptTransaction.selfSigned(master, Some(script), 100000, ts + 1).explicitGet()
+      tx      = SetScriptTransaction.selfSigned(master, Some(script), 2000000, ts + 1).explicitGet()
     } yield (genesis, tx)
 
     forAll(setup) {
