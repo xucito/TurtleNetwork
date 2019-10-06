@@ -65,7 +65,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
         quantity = 1,
         decimals = 0,
         reissuable = false,
-        fee = 0.01.TN,
+        fee = 0.1.TN,
         script = None,
         waitForTx = true)
       .id
