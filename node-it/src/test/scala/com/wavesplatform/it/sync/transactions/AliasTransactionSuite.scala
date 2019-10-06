@@ -116,7 +116,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
 
   private def calcAliasFee(address: String, alias: String): Long = {
     if (!sender.aliasByAddress(address).exists(_.endsWith(alias))) {
-      val aliasId = sender.createAlias(address, alias, minFee).id
+      val aliasId = sender.createAlias(address, alias, 500*minFee).id
       nodes.waitForHeightAriseAndTxPresent(aliasId)
       minFee
     } else 0
