@@ -1,4 +1,4 @@
-package com.TNplatform.it.async
+package com.wavesplatform.it.async
 
 import com.typesafe.config.Config
 import com.wavesplatform.account.KeyPair
@@ -92,7 +92,7 @@ class SmartTransactionsConstraintsSuite extends FreeSpec with Matchers with Tran
       .selfSigned(
         sender = sender,
         script = Some(ExprScript(V1, Terms.TRUE, checkSize = false).explicitGet()),
-        fee = 1000000,
+        fee = 100000000,
         timestamp = System.currentTimeMillis() - 5.minutes.toMillis
       )
       .explicitGet()
