@@ -205,7 +205,7 @@ class DataTransactionSuite extends BaseTransactionSuite {
                  "type"    -> DataTransaction.typeId,
                  "sender"  -> firstAddress,
                  "data"    -> List(IntegerDataEntry("int", 333)),
-                 "fee"     -> 100000)
+                 "fee"     -> 2000000)
       )
       Json.parse(rs.getResponseBody).as[JsObject]
     }
