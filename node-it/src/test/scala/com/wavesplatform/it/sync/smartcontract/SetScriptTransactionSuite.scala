@@ -103,7 +103,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       .create(
         sender = acc0,
         script = None,
-        fee = minFee + 0.04.TN,
+        fee = setScriptFee + 0.04.TN,
         timestamp = System.currentTimeMillis(),
         proofs = Proofs.empty
       )
