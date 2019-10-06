@@ -128,7 +128,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
   }
   test("nft assets balance should be returned by separate api endpoint") {
     secondNode
-      .issue(secondNode.address, "Common", "Common asset", quantity = 1, decimals = 1, reissuable = false, fee = 1.TN, script = None)
+      .issue(secondNode.address, "Common", "Common asset", quantity = 1, decimals = 1, reissuable = false, fee = 1000.TN, script = None)
       .id
     val issetsId = issueManyAssets(20)
     secondNode.waitForTransaction(issetsId.last)
@@ -164,7 +164,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
             quantity = 1,
             decimals = 0,
             reissuable = false,
-            fee = 0.01.TN,
+            fee = 0.1.TN,
             script = None)
           .id)
   }
