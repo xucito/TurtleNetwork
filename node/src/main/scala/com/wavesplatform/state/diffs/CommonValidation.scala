@@ -44,7 +44,7 @@ object CommonValidation {
     SetScriptTransaction.typeId          -> 50,
     SponsorFeeTransaction.typeId         -> 500,
     SetAssetScriptTransaction.typeId     -> 50,
-    smart.InvokeScriptTransaction.typeId -> 5
+    smart.InvokeScriptTransaction.typeId -> 3
   )
   val FeeConstants: Map[Byte, Long] = newFeeConstants
 

@@ -31,9 +31,9 @@ class InvokeScriptTransactionStateChangesSuite extends BaseTransactionSuite with
     simpleAsset = sender.issue(contract.address, "simple", "", 9000, 0).id
     assetSponsoredByDApp = sender.issue(contract.address, "DApp asset", "", 9000, 0).id
     assetSponsoredByRecipient = sender.issue(recipient.address, "Recipient asset", "", 9000, 0, waitForTx = true).id
-    sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.01.TN, Some(simpleAsset))
-    sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.01.TN, Some(assetSponsoredByDApp))
-    sender.massTransfer(recipient.address, List(Transfer(caller.address, 3000), Transfer(contract.address, 3000)), 0.01.TN, Some(assetSponsoredByRecipient))
+    sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.21.TN, Some(simpleAsset))
+    sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.21.TN, Some(assetSponsoredByDApp))
+    sender.massTransfer(recipient.address, List(Transfer(caller.address, 3000), Transfer(contract.address, 3000)), 0.21.TN, Some(assetSponsoredByRecipient))
     sender.sponsorAsset(contract.address, assetSponsoredByDApp, 1)
     sender.sponsorAsset(recipient.address, assetSponsoredByRecipient, 5)
 
