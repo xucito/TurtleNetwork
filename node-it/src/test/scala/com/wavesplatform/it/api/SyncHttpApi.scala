@@ -415,7 +415,7 @@ object SyncHttpApi extends Assertions {
     def connect(address: InetSocketAddress): Unit =
       sync(async(n).connect(address))
 
-    def setScript(sender: String, script: Option[String] = None, fee: Long = 1000000, waitForTx: Boolean = false): Transaction = {
+    def setScript(sender: String, script: Option[String] = None, fee: Long = 100000000, waitForTx: Boolean = false): Transaction = {
       maybeWaitForTransaction(sync(async(n).setScript(sender, script, fee)), waitForTx)
     }
 
