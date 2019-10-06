@@ -25,7 +25,7 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       val nodeAddress = i.createAddress()
       val acc         = KeyPair.fromSeed(i.seed(nodeAddress)).right.get
 
-      i.transfer(i.address, nodeAddress, 10.TN, 0.005.TN, None, waitForTx = true)
+      i.transfer(i.address, nodeAddress, 10.TN, 0.02.TN, None, waitForTx = true)
 
       val scriptText = s"""true""".stripMargin
       val script               = ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1.bytes().base64
