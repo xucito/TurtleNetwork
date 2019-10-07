@@ -118,7 +118,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
     if (!sender.aliasByAddress(address).exists(_.endsWith(alias))) {
       val aliasId = sender.createAlias(address, alias, 500*minFee).id
       nodes.waitForHeightAriseAndTxPresent(aliasId)
-      minFee
+      500*minFee
     } else 0
   }
 
