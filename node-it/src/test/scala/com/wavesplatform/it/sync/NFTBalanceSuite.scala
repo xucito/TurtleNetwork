@@ -65,7 +65,7 @@ class NFTBalanceSuite
     val fundAndIssue =
       for {
         _      <- traverse(nodes)(_.waitForHeight(2))
-        fundTx <- node.transfer(node.address, issuer.address, 1000.TN, 0.001.TN)
+        fundTx <- node.transfer(node.address, issuer.address, 1000.TN, 0.02.TN)
         _      <- node.waitForTransaction(fundTx.id)
         _ <- Future.sequence((simple ++ nft) map { tx =>
           for {
