@@ -126,7 +126,7 @@ class InvokeScriptPayAndTransferSameAssetSuite extends BaseTransactionSuite with
 
   def issued(assetId: String): Asset = IssuedAsset(ByteStr.decodeBase58(assetId).get)
 
-  def invoke(func: String, amount: Long, asset: Asset = Waves, fee: Long = 500000): String = {
+  def invoke(func: String, amount: Long, asset: Asset = Waves, fee: Long = 6000000): String = {
     sender
       .invokeScript(
         caller,
