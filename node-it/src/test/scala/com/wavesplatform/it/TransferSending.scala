@@ -80,7 +80,7 @@ trait TransferSending extends ScorexLogging {
   }
 
   def generateTransfersToRandomAddresses(n: Int, excludeSrcAddresses: Set[String]): Seq[Req] = {
-    val fee      = 100000
+    val fee      = 2000000
     val seedSize = 32
 
     val seeds = NodeConfigs.Default.collect {
