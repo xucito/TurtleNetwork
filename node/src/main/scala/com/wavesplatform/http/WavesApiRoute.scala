@@ -21,7 +21,7 @@ case class WavesApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPool
     with BroadcastRoute
     with WithSettings {
 
-  override lazy val route = pathPrefix("turtlenode") {
+  override lazy val route = pathPrefix("TN") {
     externalPayment ~ signPayment ~ broadcastSignedPayment ~ payment ~ createdSignedPayment
   }
 
