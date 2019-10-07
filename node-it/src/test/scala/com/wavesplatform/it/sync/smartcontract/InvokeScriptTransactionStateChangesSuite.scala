@@ -34,7 +34,7 @@ class InvokeScriptTransactionStateChangesSuite extends BaseTransactionSuite with
     sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.21.TN, Some(simpleAsset))
     sender.massTransfer(contract.address, List(Transfer(caller.address, 3000), Transfer(recipient.address, 3000)), 0.21.TN, Some(assetSponsoredByDApp))
     sender.massTransfer(recipient.address, List(Transfer(caller.address, 3000), Transfer(contract.address, 3000)), 0.21.TN, Some(assetSponsoredByRecipient))
-    sender.sponsorAsset(contract.address, assetSponsoredByDApp, 1)
+    sender.sponsorAsset(contract.address, assetSponsoredByDApp, 10)
     sender.sponsorAsset(recipient.address, assetSponsoredByRecipient, 5)
 
     val script = ScriptCompiler.compile(
