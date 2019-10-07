@@ -51,8 +51,8 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
   }
 
   test("_enable sponsorship") {
-    val dAppSponsor   = sender.sponsorAsset(dApp.address, dAppAsset, 1).id
-    val callerSponsor = sender.sponsorAsset(caller.address, callerAsset, 1).id
+    val dAppSponsor   = sender.sponsorAsset(dApp.address, dAppAsset, 10).id
+    val callerSponsor = sender.sponsorAsset(caller.address, callerAsset, 10).id
 
     nodes.waitForHeightAriseAndTxPresent(callerSponsor)
     sender.waitForTransaction(dAppSponsor)

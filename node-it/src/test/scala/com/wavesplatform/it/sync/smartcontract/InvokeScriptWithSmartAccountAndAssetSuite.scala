@@ -188,9 +188,9 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         smartCaller.address,
         dApp.address,
         Some("justWriteData"),
-        fee = 0.00899999.TN
+        fee = 0.09999999.TN
       ),
-      s"does not exceed minimal value of 900000 TN"
+      s"does not exceed minimal value of 10000000 TN"
     )
   }
 
