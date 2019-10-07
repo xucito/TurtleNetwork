@@ -19,7 +19,7 @@ class ScriptLogSuite extends BaseTransactionSuite with CancelAfterFailure {
 
   private val smart = pkByAddress(firstAddress)
 
-  val ENOUGH_FEE: Long = 12900000L
+  val ENOUGH_FEE: Long = 1290000000L
 
   val scriptSrc: String =
     s"""
