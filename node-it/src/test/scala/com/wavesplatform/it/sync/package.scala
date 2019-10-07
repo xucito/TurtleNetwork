@@ -15,7 +15,7 @@ package object sync {
   val issueFee                   = 1000.TN
   val burnFee                    = 10.TN
   val sponsorFee                 = 10.TN
-  val setAssetScriptFee          = 1.TN
+  val setAssetScriptFee          = 1.TN + smartFee
   val setScriptFee               = 1.TN
   val transferAmount             = 10.TN
   val leasingAmount              = transferAmount

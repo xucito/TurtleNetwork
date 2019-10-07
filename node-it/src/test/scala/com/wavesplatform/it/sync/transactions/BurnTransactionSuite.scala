@@ -149,10 +149,10 @@ class BurnTransactionSuite extends BaseTransactionSuite {
       assert(details1.quantity == transferredQuantity + issuedQuantity)
       assert(details1.minSponsoredAssetFee.isEmpty)
 
-      val burn1 = sender.burn(firstAddress, issuedAssetId, issuedQuantity, minFee, v).id
+      val burn1 = sender.burn(firstAddress, issuedAssetId, issuedQuantity, burnFee, v).id
       miner.waitForTransaction(burn1)
 
-      val burn2 = sender.burn(secondAddress, issuedAssetId, transferredQuantity, minFee, v).id
+      val burn2 = sender.burn(secondAddress, issuedAssetId, transferredQuantity, burnFee, v).id
       miner.waitForTransaction(burn2)
 
       val details2 = miner.assetsDetails(issuedAssetId)
