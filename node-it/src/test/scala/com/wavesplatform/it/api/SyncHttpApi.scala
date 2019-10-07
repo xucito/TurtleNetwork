@@ -222,7 +222,7 @@ object SyncHttpApi extends Assertions {
     def burn(sourceAddress: String, assetId: String, quantity: Long, fee: Long, version: Byte = 1, waitForTx: Boolean = false): Transaction =
       maybeWaitForTransaction(sync(async(n).burn(sourceAddress, assetId, quantity, fee, version)), waitForTx)
 
-    def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long = 100000000, waitForTx: Boolean = false): Transaction = {
+    def sponsorAsset(sourceAddress: String, assetId: String, baseFee: Long, fee: Long = 1000000000, waitForTx: Boolean = false): Transaction = {
       maybeWaitForTransaction(sync(async(n).sponsorAsset(sourceAddress, assetId, baseFee, fee)), waitForTx)
     }
 

@@ -17,8 +17,8 @@ class CustomFeeTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
   override protected def nodeConfigs: Seq[Config] = Configs
 
-  private val transferFee = 100000
-  private val assetFee    = 1.TN
+  private val transferFee = 2000000
+  private val assetFee    = 1000.TN
   private val assetToken  = 100
 
   test("make transfer with sponsored asset") {
@@ -30,11 +30,11 @@ class CustomFeeTransactionSuite extends BaseTransactionSuite with CancelAfterFai
     val issuedAssetId = notMiner.signedIssue(req).id
     nodes.waitForHeightAriseAndTxPresent(issuedAssetId)
 
-    val sponsorAssetId = notMiner.sponsorAsset(senderAddress, issuedAssetId, assetToken, assetFee).id
+    val sponsorAssetId = notMiner.sponsorAsset(senderAddress, issuedAssetId, assetToken, sponsorFee).id
     assert(!sponsorAssetId.isEmpty)
     nodes.waitForHeightAriseAndTxPresent(sponsorAssetId)
 
-    val fees = 2 * assetFee
+    val fees = sponsorFee + assetFee
     notMiner.assertBalances(senderAddress, balance1 - fees, eff1 - fees)
     notMiner.assertAssetBalance(senderAddress, issuedAssetId, defaultAssetQuantity)
 
