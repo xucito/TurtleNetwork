@@ -154,7 +154,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         fee = feeAmount - 1,
         feeAssetId = Some(dAppAsset)
       ),
-      s"does not exceed minimal value of 900000 TN or $feeAmount"
+      s"does not exceed minimal value of 10000000 TN or $feeAmount"
     )
     assertBadRequestAndMessage(
       sender.invokeScript(
