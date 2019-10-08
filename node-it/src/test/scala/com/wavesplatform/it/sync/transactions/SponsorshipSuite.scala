@@ -73,7 +73,7 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
 
     "check balance before test accounts balances" in {
       sponsor.assertAssetBalance(sponsor.address, sponsorAssetId, sponsorAssetTotal / 2)
-      sponsor.assertBalances(sponsor.address, sponsorWavesBalance - 2 * issueFee - minFee)
+      sponsor.assertBalances(sponsor.address, sponsorWavesBalance - sponsorFee - issueFee - minFee)
       alice.assertAssetBalance(alice.address, sponsorAssetId, sponsorAssetTotal / 2)
 
       val assetInfo = alice.assetsBalance(alice.address).balances.filter(_.assetId == sponsorAssetId).head
