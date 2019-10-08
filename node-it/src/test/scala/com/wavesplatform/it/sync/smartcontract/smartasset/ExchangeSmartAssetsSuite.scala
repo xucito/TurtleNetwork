@@ -120,12 +120,12 @@ class ExchangeSmartAssetsSuite extends BaseTransactionSuite with CancelAfterFail
     sender.signedBroadcast(exchangeTx(smartAssetPair, matcherFee + 2 * smartFee, matcherFee + 2 * smartFee, ntpTime, 3, 2, acc1, acc0, acc2),
                            waitForTx = true)
 
-    withClue("check fee for smart accounts and smart AssetPair - extx.fee == 0.015.TN") {
+    withClue("check fee for smart accounts and smart AssetPair - extx.fee == 0.16.TN") {
       setContracts((sc1, acc0), (sc1, acc1), (sc1, acc2))
 
       assertBadRequestAndMessage(
         sender.signedBroadcast(exchangeTx(smartAssetPair, smartMatcherFee + smartFee, smartMatcherFee + smartFee, ntpTime, 2, 2, acc1, acc0, acc2)),
-        "does not exceed minimal value of 1500000 TN"
+        "does not exceed minimal value of 16000000 TN"
       )
 
       sender.signedBroadcast(
