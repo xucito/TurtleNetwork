@@ -80,7 +80,7 @@ class InvokeScriptTransactionStateChangesSuite extends BaseTransactionSuite with
       contract.address,
       func = Some("write"),
       args = List(CONST_LONG(10)),
-      fee = 0.005.TN,
+      fee = 0.06.TN,
       waitForTx = true
     )
 
