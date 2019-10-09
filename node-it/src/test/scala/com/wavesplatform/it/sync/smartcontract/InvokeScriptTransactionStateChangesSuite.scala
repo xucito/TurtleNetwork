@@ -114,7 +114,7 @@ class InvokeScriptTransactionStateChangesSuite extends BaseTransactionSuite with
         CONST_LONG(10),
         CONST_STRING(simpleAsset).explicitGet()
       ),
-      fee = 5,
+      fee = 30,
       feeAssetId = Some(assetSponsoredByDApp),
       waitForTx = true
     )
