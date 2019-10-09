@@ -261,7 +261,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite with CancelAfter
 
   test("reporting MassTransfer transactions to aliases") {
     val aliases        = List("alias1", "alias2")
-    val createAliasTxs = aliases.map(sender.createAlias(secondAddress, _, 100000).id)
+    val createAliasTxs = aliases.map(sender.createAlias(secondAddress, _, 1000000000).id)
     createAliasTxs.foreach(sender.waitForTransaction(_))
 
     val transfers = aliases.map { alias =>
