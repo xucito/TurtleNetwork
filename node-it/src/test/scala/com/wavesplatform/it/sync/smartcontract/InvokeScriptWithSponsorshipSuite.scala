@@ -142,7 +142,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
     callerInitBalance = sender.accountBalances(caller.address)._1
 
     val paymentAmount  = 1
-    val feeAmount      = 9
+    val feeAmount      = 50
     val smartFeeAmount = 53
 
     assertBadRequestAndMessage(
