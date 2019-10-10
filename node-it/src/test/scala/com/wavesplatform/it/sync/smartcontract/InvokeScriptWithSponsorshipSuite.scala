@@ -143,7 +143,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     val paymentAmount  = 1
     val feeAmount      = 50
-    val smartFeeAmount = 53
+    val smartFeeAmount = 70
 
     assertBadRequestAndMessage(
       sender.invokeScript(
@@ -194,7 +194,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     sender.assetBalance(dApp.address, dAppAsset).balance shouldBe halfQuantity + (feeAmount - 10) + smartFeeAmount
     sender.assetBalance(dApp.address, callerAsset).balance shouldBe halfQuantity + paymentAmount
-    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.009.TN - 0.053.TN
+    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.1.TN - 0.14.TN
 
     sender.assetBalance(caller.address, dAppAsset).balance shouldBe halfQuantity + (-feeAmount + 10) - smartFeeAmount
     sender.assetBalance(caller.address, callerAsset).balance shouldBe halfQuantity - paymentAmount
