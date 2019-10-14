@@ -26,7 +26,7 @@ trait IntegrationSuiteWithThreeAddresses
   def notMiner: Node = nodes.last
 
   protected def sender: Node = miner
-
+F
   protected lazy val firstAddress: String  = sender.createAddress()
   protected lazy val secondAddress: String = sender.createAddress()
   protected lazy val thirdAddress: String  = sender.createAddress()
