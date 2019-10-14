@@ -95,8 +95,8 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
       }
     }
 
-    val minerWavesBalanceAfterFirstXferTest   = minerWavesBalance + 2.TN + minFee + CommonValidation.FeeUnit * SmallFee / minSponsorFee
-    val sponsorWavesBalanceAfterFirstXferTest = sponsorWavesBalance - 2.TN - minFee - CommonValidation.FeeUnit * SmallFee / minSponsorFee
+    val minerWavesBalanceAfterFirstXferTest   = minerWavesBalance + 1000.TN + minFee + CommonValidation.FeeUnit * SmallFee / minSponsorFee
+    val sponsorWavesBalanceAfterFirstXferTest = sponsorWavesBalance - 1000.TN - minFee - CommonValidation.FeeUnit * SmallFee / minSponsorFee
 
     "fee should be written off in issued asset" - {
 
