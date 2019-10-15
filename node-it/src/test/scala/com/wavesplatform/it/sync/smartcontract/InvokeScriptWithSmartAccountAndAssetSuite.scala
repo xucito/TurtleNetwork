@@ -194,7 +194,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
     )
   }
 
-  test("max fee is 0.14 TN (0.005 + extraFee(1 smart caller + 1 payment + 10 transfers))") {
+  test("max fee is 0.54 TN (0.005 + extraFee(1 smart caller + 1 payment + 10 transfers))") {
     val paymentAmount = 20
     assertBadRequestAndMessage(
       sender.invokeScript(
@@ -204,7 +204,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
         fee = 0.13999999.TN
       ),
-      s"does not exceed minimal value of 14000000"
+      s"does not exceed minimal value of 54000000"
     )
 
     val invokeScriptTxId = sender
@@ -213,7 +213,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         dApp.address,
         Some("spendMaxFee"),
         payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
-        fee = 14000000
+        fee = 54000000
       )
       .id
     nodes.waitForHeightAriseAndTxPresent(invokeScriptTxId)
