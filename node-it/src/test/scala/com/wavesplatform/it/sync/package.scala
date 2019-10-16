@@ -20,7 +20,7 @@ package object sync {
   val transferAmount             = 10.TN
   val leasingAmount              = transferAmount
   val issueAmount                = transferAmount
-  val massTransferFeePerTransfer = 0.005.TN
+  val massTransferFeePerTransfer = 0.01.TN
   val someAssetAmount            = 9999999999999L
   val matcherFee                 = 0.04.TN
   val orderFee                   = matcherFee
