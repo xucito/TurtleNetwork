@@ -30,7 +30,7 @@ class NotActivateFeatureTestSuite
          |  blockchain {
          |    custom {
          |      functionality {
-         |        pre-activated-features = {}
+         |        pre-activated-features = null
          |        feature-check-blocks-period = $votingInterval
          |        blocks-for-feature-activation = $blocksForActivation
          |      }
