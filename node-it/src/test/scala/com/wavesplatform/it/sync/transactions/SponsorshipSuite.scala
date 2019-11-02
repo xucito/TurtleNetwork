@@ -130,12 +130,12 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
         sponsorTx.map(_.id) should contain allElementsOf Seq(sponsorId, transferTxToAlice, sponsorAssetId)
       }
 
-      "sponsor should receive sponsored asset as fee,  should be written off" in {
+      "sponsor should receive sponsored asset as fee, TN should be written off" in {
         miner.assertAssetBalance(sponsor.address, sponsorAssetId, sponsorAssetTotal / 2 + SmallFee)
         miner.assertBalances(sponsor.address, sponsorWavesBalanceAfterFirstXferTest)
       }
 
-      "miner  balance should be changed" in {
+      "miner TN balance should be changed" in {
         miner.assertBalances(miner.address, minerWavesBalanceAfterFirstXferTest)
       }
     }
