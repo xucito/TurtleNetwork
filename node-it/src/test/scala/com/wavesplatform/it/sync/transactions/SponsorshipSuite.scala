@@ -258,7 +258,7 @@ class SponsorshipSuite extends FreeSpec with NodesFromDocker with Matchers with 
           sponsor
             .transfer(sponsor.address, alice.address, 11 * Token, fee = SmallFee, assetId = Some(sponsorAssetId), feeAssetId = Some(sponsorAssetId))
             .id,
-          s"Fee for TransferTransaction \\($SmallFee in ${Some(sponsorAssetId).get}\\) does not exceed minimal value of 100000 TN or $LargeFee ${Some(sponsorAssetId).get}"
+          s"Fee for TransferTransaction \\($SmallFee in ${Some(sponsorAssetId).get}\\) does not exceed minimal value of 2000000 TN or $LargeFee ${Some(sponsorAssetId).get}"
         )
       }
 
