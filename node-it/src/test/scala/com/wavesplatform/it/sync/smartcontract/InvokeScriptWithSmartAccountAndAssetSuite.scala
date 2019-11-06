@@ -249,7 +249,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           fee = smartMinFee
         )
         .id,
-      "does not exceed minimal value of 900000 TN"
+      "does not exceed minimal value of 10000000 TN"
     )
   }
 
