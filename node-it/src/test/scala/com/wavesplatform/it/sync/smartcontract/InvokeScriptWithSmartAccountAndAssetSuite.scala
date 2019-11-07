@@ -266,7 +266,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           fee = smartMinFee + smartFee
         )
         .id,
-      "with 2 total scripts invoked does not exceed minimal value of 1300000"
+      "with 2 total scripts invoked does not exceed minimal value of 14000000"
     )
   }
 
