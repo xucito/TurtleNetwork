@@ -21,6 +21,8 @@ class AssetDistributionSuite extends BaseTransactionSuite with CancelAfterFailur
     val addresses     = nodes.map(_.privateKey.toAddress).filter(_ != issuer.toAddress).toList
     val initialHeight = node.height
 
+    nodes.waitForHeightArise()
+
     val issueTx = node.issue(issuer.address, "TestCoin", "no description", issueAmount, 8, false, issueFee, waitForTx = true).id
 
     node.massTransfer(
