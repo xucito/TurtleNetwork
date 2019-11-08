@@ -157,7 +157,7 @@ class Ride4DAppsActivationTestSuite extends BaseTransactionSuite with CancelAfte
 }
 
 object Ride4DAppsActivationTestSuite {
-  val activationHeight = 25
+  val activationHeight = 50
 
   private val configWithRide4DAppsFeature: Seq[Config] =
     Default.map(ConfigFactory.parseString(s"""
