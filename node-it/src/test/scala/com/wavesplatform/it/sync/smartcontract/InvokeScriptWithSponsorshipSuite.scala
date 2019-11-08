@@ -142,8 +142,8 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
     callerInitBalance = sender.accountBalances(caller.address)._1
 
     val paymentAmount  = 1
-    val feeAmount      = 6
-    val smartFeeAmount = 53
+    val feeAmount      = 5
+    val smartFeeAmount = 27
 
     assertBadRequestAndMessage(
       sender.invokeScript(
@@ -162,10 +162,10 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         dApp.address,
         Some("spendMaxFee"),
         payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(smartAsset).get))),
-        fee = smartFeeAmount - 1,
+        fee =  smartFeeAmount -1,
         feeAssetId = Some(dAppAsset)
       ),
-      s"does not exceed minimal value of 14000000 TN"
+      s"does not exceed minimal value of 54000000 TN"
     )
 
     val invokeScript1TxId = sender
@@ -194,7 +194,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     sender.assetBalance(dApp.address, dAppAsset).balance shouldBe halfQuantity + (feeAmount - 10) + smartFeeAmount
     sender.assetBalance(dApp.address, callerAsset).balance shouldBe halfQuantity + paymentAmount
-    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.1.TN - 0.14.TN
+    sender.accountBalances(dApp.address)._1 shouldBe dAppInitBalance - 0.1.TN - 0.54.TN
 
     sender.assetBalance(caller.address, dAppAsset).balance shouldBe halfQuantity + (-feeAmount + 10) - smartFeeAmount
     sender.assetBalance(caller.address, callerAsset).balance shouldBe halfQuantity - paymentAmount
