@@ -65,7 +65,7 @@ class NFTBalanceSuite
     val fundAndIssue =
       for {
         _      <- traverse(nodes)(_.waitForHeight(2))
-        fundTx <- node.transfer(node.address, issuer.address, 1000.TN, 0.02.TN)
+        fundTx <- node.transfer(node.address, issuer.address, 100000.TN, 0.02.TN)
         _      <- node.waitForTransaction(fundTx.id)
         _ <- Future.sequence((simple ++ nft) map { tx =>
           for {
@@ -114,7 +114,7 @@ class NFTBalanceSuite
           1,
           System.currentTimeMillis(),
           Waves,
-          0.001.TN,
+          0.02.TN,
           Array.emptyByteArray
         )
         .explicitGet()
@@ -243,7 +243,7 @@ object NFTBalanceSuite {
     val transactions =
       Future.sequence(addrs map { addr =>
         NodeAsyncHttpApi(faucet)
-          .transfer(faucet.address, addr, 1000.TN, 0.001.TN)
+          .transfer(faucet.address, addr, 1000.TN, 0.02.TN)
           .flatMap { tx =>
             NodeAsyncHttpApi(faucet)
               .waitForTransaction(tx.id, retryInterval = 1.second)
