@@ -3,13 +3,14 @@ package com.wavesplatform.state.diffs
 import cats.implicits._
 import cats.kernel.Monoid
 import cats.syntax.either.catsSyntaxEitherId
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.block.{Block, MicroBlock}
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.lang.ValidationError
 import com.wavesplatform.mining.MiningConstraint
 import com.wavesplatform.state._
-import com.wavesplatform.state.patch.{CancelAllLeases, CancelInvalidLeaseIn, CancelLeaseOverflow}
+import com.wavesplatform.state.patch._
 import com.wavesplatform.state.reader.CompositeBlockchain
 import com.wavesplatform.transaction.Transaction
 import com.wavesplatform.transaction.TxValidationError.{ActivationError, _}
@@ -115,6 +116,7 @@ object BlockDiffer extends ScorexLogging {
     val timestamp          = blockchain.lastBlockTimestamp.get
     val lastBlock          = blockchain.lastBlock.get
     val blockGenerator     = lastBlock.sender.toAddress
+    val scheme         = AddressScheme.current
 
     val txDiffer       = TransactionDiffer(prevBlockTimestamp, timestamp, currentBlockHeight, verify) _
     val initDiff       = Diff.empty.copy(portfolios = Map(blockGenerator -> currentBlockFeeDistr.orElse(prevBlockFeeDistr).orEmpty))
@@ -189,6 +191,12 @@ object BlockDiffer extends ScorexLogging {
           Patch(
             _.featureActivationHeight(BlockchainFeatures.DataTransaction.id).contains(currentBlockHeight),
             CancelInvalidLeaseIn(_)
+          ),
+          Patch(
+            _ => currentBlockHeight == 450000  && scheme.chainId == 76, CancelInvalidTx(_)
+          ),
+          Patch(
+            _ => currentBlockHeight == 457100 && scheme.chainId == 76, CancelInvalidTx2(_)
           )
         )
         result.copy(diff = patchDiff)

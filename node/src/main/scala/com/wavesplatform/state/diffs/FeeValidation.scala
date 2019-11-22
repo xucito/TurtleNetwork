@@ -15,8 +15,8 @@ import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart._
 import com.wavesplatform.transaction.transfer._
-
 import cats.data.Chain
+import com.wavesplatform.account.AddressScheme
 
 object FeeValidation {
 
@@ -25,7 +25,9 @@ object FeeValidation {
   val ScriptExtraFee = 4000000L
   val FeeUnit        = 2000000
   val NFTMultiplier  = 0.0001
-  val wrongFeesUntil = 650000
+  val wrongFeesUntil = 675000
+  val wrongNetworkChainId = 76
+  val scheme = AddressScheme.current
 
   val FeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
@@ -54,7 +56,7 @@ object FeeValidation {
         minFee     = feeDetails.minFeeInAsset
         feeAssetId = feeDetails.asset
         _ <- Either.cond(
-          minFee <= tx.assetFee._2,
+          minFee <= tx.assetFee._2|| (height < wrongFeesUntil && scheme.chainId == wrongNetworkChainId),
           (),
           notEnoughFeeError(tx.builder.typeId, feeDetails, tx.assetFee._2)
         )

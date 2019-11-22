@@ -2,7 +2,7 @@ package com.wavesplatform.state.diffs
 
 import cats._
 import cats.implicits._
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.lang.ValidationError
@@ -27,6 +27,9 @@ object CommonValidation {
   val ScriptExtraFee = 4000000L
   val FeeUnit        = 2000000L
   val NFTMultiplier  = 0.0001
+  val scheme = AddressScheme.current
+  val wrongBLocksUntil = 837600
+  val wrongNetworkChainId = 76
 
   val newFeeConstants: Map[Byte, Long] = Map(
     GenesisTransaction.typeId            -> 0,
@@ -51,7 +54,8 @@ object CommonValidation {
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] =
-    if (blockTime >= blockchain.settings.functionalitySettings.allowTemporaryNegativeUntil) {
+    if (blockTime >= blockchain.settings.functionalitySettings.allowTemporaryNegativeUntil
+      && !( blockchain.height < wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
       def checkTransfer(sender: Address, assetId: Asset, amount: Long, feeAssetId: Asset, feeAmount: Long) = {
         val amountDiff = assetId match {
           case aid @ IssuedAsset(_) => Portfolio(0, LeaseBalance.empty, Map(aid -> -amount))

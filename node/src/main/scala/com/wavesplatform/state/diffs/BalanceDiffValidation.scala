@@ -1,7 +1,7 @@
 package com.wavesplatform.state.diffs
 
 import cats.implicits._
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.settings.FunctionalitySettings
 import com.wavesplatform.state.{Blockchain, Diff, Portfolio}
@@ -15,6 +15,9 @@ object BalanceDiffValidation extends ScorexLogging {
 
   def apply(b: Blockchain, currentHeight: Int, fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {
     val changedAccounts = d.portfolios.keySet
+    val scheme = AddressScheme.current
+    val wrongBLocksUntil = 837600
+    val wrongNetworkChainId = 76
 
     def check(acc: Address): Option[(Address, String)] = {
       val portfolioDiff = d.portfolios(acc)
@@ -23,12 +26,12 @@ object BalanceDiffValidation extends ScorexLogging {
       lazy val oldWaves = b.balance(acc, Waves)
       lazy val oldLease = b.leaseBalance(acc)
       lazy val lease    = cats.Monoid.combine(oldLease, portfolioDiff.lease)
-      (if (balance < 0) {
+      (if (balance < 0 ) {
          val newB = oldWaves + balance
 
-         if (newB < 0) {
+         if (newB < 0 && !(currentHeight< wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
            Some(acc -> s"negative TN balance: $acc, old: $oldWaves, new: $newB")
-         } else if (newB < lease.out && currentHeight > fs.allowLeasedBalanceTransferUntilHeight) {
+         } else if (newB < lease.out && currentHeight > fs.allowLeasedBalanceTransferUntilHeight&& !(currentHeight< wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
            Some(acc -> (if (newB + lease.in - lease.out < 0) {
                           s"negative effective balance: $acc, old: ${(oldWaves, oldLease)}, new: ${(newB, lease)}"
                         } else if (portfolioDiff.lease.out == 0) {

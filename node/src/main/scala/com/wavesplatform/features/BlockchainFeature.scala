@@ -15,8 +15,8 @@ object BlockchainFeatures {
   val SmartAssets                     = BlockchainFeature(9, "Smart Assets")
   val SmartAccountTrading             = BlockchainFeature(10, "Smart Account Trading")
   val Ride4DApps                      = BlockchainFeature(11, "RIDE 4 DAPPS")
-  val OrderV3                         = BlockchainFeature(12, "Order Version 3")
-  val ReduceNFTFee                    = BlockchainFeature(13, "Reduce NFT fee")
+  val OrderV3                         = BlockchainFeature(12, "Smart Orders")
+  val ReduceNFTFee                    = BlockchainFeature(13, "Non-fungible token (NFT)")
 
   // When next fork-parameter is created, you must replace all uses of the DummyFeature with the new one.
   val DummyFeature = BlockchainFeature(-1, "Non Votable!")

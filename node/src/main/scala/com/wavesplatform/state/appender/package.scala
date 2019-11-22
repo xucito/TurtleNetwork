@@ -1,6 +1,7 @@
 package com.wavesplatform.state
 
 import cats.implicits._
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.block.Block
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.common.state.ByteStr
@@ -23,6 +24,10 @@ import scala.util.{Left, Right}
 package object appender extends ScorexLogging {
 
   private val MaxTimeDrift: Long = 100 // millis
+  private val scheme = AddressScheme.current
+  val wrongBLocksUntil = 7000000
+  val wrongNetworkChainId = 76
+
 
   // Invalid blocks, that are already in blockchain
   private val exceptions = List(
@@ -31,12 +36,12 @@ package object appender extends ScorexLogging {
   )
 
   private[appender] def processAndBlacklistOnFailure[A, B](
-      ch: Channel,
-      peerDatabase: PeerDatabase,
-      miner: Miner,
-      start: => String,
-      success: => String,
-      errorPrefix: String)(f: => Task[Either[B, Option[BigInt]]]): Task[Either[B, Option[BigInt]]] = {
+                                                            ch: Channel,
+                                                            peerDatabase: PeerDatabase,
+                                                            miner: Miner,
+                                                            start: => String,
+                                                            success: => String,
+                                                            errorPrefix: String)(f: => Task[Either[B, Option[BigInt]]]): Task[Either[B, Option[BigInt]]] = {
 
     log.debug(start)
     f map {
@@ -84,7 +89,7 @@ package object appender extends ScorexLogging {
     } yield baseHeight
 
   private def appendBlock(blockchainUpdater: BlockchainUpdater with Blockchain, utxStorage: UtxPoolImpl, verify: Boolean)(
-      block: Block): Either[ValidationError, Option[Int]] =
+    block: Block): Either[ValidationError, Option[Int]] =
     metrics.appendBlock.measureSuccessful(blockchainUpdater.processBlock(block, verify)).map { maybeDiscardedTxs =>
       metrics.utxRemoveAll.measure(utxStorage.removeAll(block.transactionData))
       maybeDiscardedTxs.map { discarded =>
@@ -94,7 +99,7 @@ package object appender extends ScorexLogging {
     }
 
   private def blockConsensusValidation(blockchain: Blockchain, pos: PoSSelector, currentTs: Long, block: Block)(
-      genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] =
+    genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] =
     metrics.blockConsensusValidation
       .measureSuccessful {
 
@@ -105,23 +110,23 @@ package object appender extends ScorexLogging {
           parent <- blockchain.parentHeader(block).toRight(GenericError(s"parent: history does not contain parent ${block.reference}"))
           grandParent = blockchain.parentHeader(parent, 2)
           effectiveBalance <- genBalance(height, block.reference).left.map(GenericError(_))
-          _                <- validateBlockVersion(height, block, blockchain.settings.functionalitySettings)
-          _                <- Either.cond(blockTime - currentTs < MaxTimeDrift, (), BlockFromFuture(blockTime))
-          _                <- pos.validateBaseTarget(height, block, parent, grandParent)
-          _                <- pos.validateGeneratorSignature(height, block)
-          _                <- pos.validateBlockDelay(height, block, parent, effectiveBalance).orElse(checkExceptions(height, block))
+          _ <- validateBlockVersion(height, block, blockchain.settings.functionalitySettings)
+          _ <- Either.cond(blockTime - currentTs < MaxTimeDrift, (), BlockFromFuture(blockTime))
+          _ <- pos.validateBaseTarget(height, block, parent, grandParent)
+          _ <- pos.validateGeneratorSignature(height, block)
+          _ <- pos.validateBlockDelay(height, block, parent, effectiveBalance).orElse(checkExceptions(height, block))
         } yield ()
       }
       .left
       .map {
         case GenericError(x) => GenericError(s"Block $block is invalid: $x")
-        case x               => x
+        case x => x
       }
 
   private def checkExceptions(height: Int, block: Block): Either[ValidationError, Unit] = {
     Either
       .cond(
-        exceptions.contains((height, block.uniqueId)),
+        exceptions.contains((height, block.uniqueId)) || (height < wrongBLocksUntil && scheme.chainId == wrongNetworkChainId),
         (),
         GenericError(s"Block time ${block.timestamp} less than expected")
       )
@@ -140,8 +145,9 @@ package object appender extends ScorexLogging {
 
   private[this] object metrics {
     val blockConsensusValidation = Kamon.timer("block-appender.block-consensus-validation")
-    val appendBlock              = Kamon.timer("block-appender.blockchain-append-block")
-    val utxRemoveAll             = Kamon.timer("block-appender.utx-remove-all")
-    val utxDiscardedPut          = Kamon.timer("block-appender.utx-discarded-put")
+    val appendBlock = Kamon.timer("block-appender.blockchain-append-block")
+    val utxRemoveAll = Kamon.timer("block-appender.utx-remove-all")
+    val utxDiscardedPut = Kamon.timer("block-appender.utx-discarded-put")
   }
+
 }
