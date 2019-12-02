@@ -429,8 +429,8 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
       gen2: GenesisTransaction = GenesisTransaction.create(seller, ENOUGH_AMT, ts).explicitGet()
       issue1: IssueTransactionV1 <- issueGen(buyer)
       exchange <- Gen.oneOf(
-        exchangeV1GeneratorP(buyer, seller, Waves, IssuedAsset(issue1.id()), fixedMatcherFee = Some(300000)),
-        exchangeV2GeneratorP(buyer, seller, Waves, IssuedAsset(issue1.id()), fixedMatcherFee = Some(300000))
+        exchangeV1GeneratorP(buyer, seller, Waves, IssuedAsset(issue1.id()), fixedMatcherFee = Some(4000000)),
+        exchangeV2GeneratorP(buyer, seller, Waves, IssuedAsset(issue1.id()), fixedMatcherFee = Some(4000000))
       )
     } yield {
       (gen1, gen2, issue1, exchange)
@@ -438,7 +438,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
 
     forAll(preconditions) {
       case (gen1, gen2, issue1, exchange) =>
-        whenever(exchange.amount > 300000) {
+        whenever(exchange.amount > 4000000) {
           assertDiffAndState(Seq(TestBlock.create(Seq(gen1, gen2, issue1))), TestBlock.create(Seq(exchange)), fsWithOrderV3Feature) {
             case (blockDiff, _) =>
               val totalPortfolioDiff: Portfolio = Monoid.combineAll(blockDiff.portfolios.values)
@@ -469,7 +469,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
   }
 
   property("small fee cases") {
-    val MatcherFee = 300000L
+    val MatcherFee = 4000000L
     val Ts         = 1000L
 
     val preconditions: Gen[(KeyPair, KeyPair, KeyPair, GenesisTransaction, GenesisTransaction, IssueTransactionV1)] =
@@ -498,7 +498,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
   }
 
   property("Not enough balance") {
-    val MatcherFee = 300000L
+    val MatcherFee = 4000000L
     val Ts         = 1000L
 
     val preconditions: Gen[(KeyPair, KeyPair, KeyPair, GenesisTransaction, GenesisTransaction, IssueTransactionV1)] =
@@ -528,7 +528,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
   }
 
   property("Diff for ExchangeTransaction works as expected and doesn't use rounding inside") {
-    val MatcherFee = 300000L
+    val MatcherFee = 4000000L
     val Ts         = 1000L
 
     val preconditions: Gen[
@@ -556,7 +556,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
               amount = 425532,
               price = 238,
               buyMatcherFee = 41,
-              sellMatcherFee = 300000,
+              sellMatcherFee = 4000000,
               fee = buy.matcherFee,
               timestamp = Ts)
       .explicitGet()
@@ -566,8 +566,8 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
         case Right(diff) =>
           import diff.portfolios
           portfolios(buyer).balance shouldBe (-41L + 425532L)
-          portfolios(seller).balance shouldBe (-300000L - 425532L)
-          portfolios(matcher).balance shouldBe (+41L + 300000L - tx.fee)
+          portfolios(seller).balance shouldBe (-4000000L - 425532L)
+          portfolios(matcher).balance shouldBe (+41L + 4000000L - tx.fee)
       }
     }
   }

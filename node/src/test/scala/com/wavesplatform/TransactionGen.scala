@@ -731,7 +731,7 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
           price,
           buyOrder.matcherFee,
           sellOrder.matcherFee,
-          300000L,
+          4000000L,
           System.currentTimeMillis() - 10000L
         )
         .explicitGet()
