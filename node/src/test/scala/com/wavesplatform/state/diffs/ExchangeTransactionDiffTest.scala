@@ -486,7 +486,7 @@ class ExchangeTransactionDiffTest extends PropSpec with PropertyChecks with Matc
     forAll(preconditions, priceGen) {
       case ((buyer, seller, matcher, gen1, gen2, issue1), price) =>
         val assetPair = AssetPair(IssuedAsset(issue1.id()), Waves)
-        val buy       = Order.buy(buyer, matcher, assetPair, 1000000L, price, Ts, Ts + 1, MatcherFee)
+        val buy       = Order.buy(buyer, matcher, assetPair, 10000000L, price, Ts, Ts + 1, MatcherFee)
         val sell      = Order.sell(seller, matcher, assetPair, 1L, price, Ts, Ts + 1, MatcherFee)
         val tx        = createExTx(buy, sell, price, matcher, Ts).explicitGet()
         assertDiffAndState(Seq(TestBlock.create(Seq(gen1, gen2, issue1))), TestBlock.create(Seq(tx)), fs) {
