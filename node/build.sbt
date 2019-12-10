@@ -66,7 +66,7 @@ bashScriptExtraDefines ++= Seq(
 
 inConfig(Universal)(
   Seq(
-    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/waves.conf.sample"),
+    mappings += (baseDirectory.value / s"TN-${network.value}.conf" -> "doc/TN.conf.sample"),
     mappings := {
       val linuxScriptPattern = "bin/(.+)".r
       val batScriptPattern   = "bin/([^.]+)\\.bat".r
