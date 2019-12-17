@@ -226,11 +226,7 @@ object BlockchainSettings {
       case BlockchainType.TESTNET =>
         ('T', FunctionalitySettings.TESTNET, GenesisSettings.TESTNET, RewardsSettings.TESTNET)
       case BlockchainType.MAINNET =>
-<<<<<<< HEAD
-        ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET)
-=======
-        ('W', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
->>>>>>> b96fb0b0ed2e7df31bf3edd76fa1cc039681b2d5
+        ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
       case BlockchainType.CUSTOM =>
         val addressSchemeCharacter = config.as[String](s"custom.address-scheme-character").charAt(0)
         val functionalitySettings  = config.as[FunctionalitySettings](s"custom.functionality")

@@ -163,30 +163,7 @@ class NFTBalanceSuite extends FreeSpec with BaseTransactionSuiteLike {
 }
 
 object NFTBalanceSuite {
-<<<<<<< HEAD
-  val configs: Seq[Config] =
-    NodeConfigs.newBuilder
-      .overrideBase(_.quorum(0))
-      .withDefault(1)
-      .overrideBase(_.raw(s"""
-                          |TN.blockchain.custom.functionality.pre-activated-features = {
-                          |          2 = 0
-                          |          3 = 0
-                          |          4 = 0
-                          |          5 = 0
-                          |          6 = 0
-                          |          7 = 0
-                          |          9 = 0
-                          |          10 = 0
-                          |          11 = 0
-                          |          12 = 0
-                          |          13 = 0
-                          |}
-         """.stripMargin))
-      .buildNonConflicting()
-=======
   import scala.concurrent.ExecutionContext.Implicits.global
->>>>>>> b96fb0b0ed2e7df31bf3edd76fa1cc039681b2d5
 
   def fillPortfolio(issuer: KeyPair, nft: Int, simple: Int): (List[IssueTransaction], List[IssueTransaction]) = {
 
