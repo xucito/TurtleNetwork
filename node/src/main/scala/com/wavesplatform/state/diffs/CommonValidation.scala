@@ -24,33 +24,9 @@ import scala.util.{Left, Right, Try}
 
 object CommonValidation {
 
-  val ScriptExtraFee = 4000000L
-  val FeeUnit        = 2000000L
-  val NFTMultiplier  = 0.0001
   val scheme = AddressScheme.current
   val wrongBLocksUntil = 837600
   val wrongNetworkChainId = 76
-
-  val newFeeConstants: Map[Byte, Long] = Map(
-    GenesisTransaction.typeId            -> 0,
-    PaymentTransaction.typeId            -> 1,
-    IssueTransaction.typeId              -> 50000,
-    ReissueTransaction.typeId            -> 50000,
-    BurnTransaction.typeId               -> 1,
-    TransferTransaction.typeId           -> 1,
-    MassTransferTransaction.typeId       -> 1,
-    LeaseTransaction.typeId              -> 1,
-    LeaseCancelTransaction.typeId        -> 1,
-    ExchangeTransaction.typeId           -> 2,
-    CreateAliasTransaction.typeId        -> 500,
-    DataTransaction.typeId               -> 1,
-    SetScriptTransaction.typeId          -> 50,
-    SponsorFeeTransaction.typeId         -> 500,
-    SetAssetScriptTransaction.typeId     -> 50,
-    smart.InvokeScriptTransaction.typeId -> 3
-  )
-  val FeeConstants: Map[Byte, Long] = newFeeConstants
-
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           blockTime: Long,
                                                           tx: T): Either[ValidationError, T] =
@@ -179,11 +155,14 @@ object CommonValidation {
           case Some(sc) => scriptActivation(sc)
         }
 
-      case it: SetAssetScriptTransaction =>
-        it.script match {
-          case None     => Left(GenericError("Cannot set empty script"))
-          case Some(sc) => scriptActivation(sc)
+      case sast: SetAssetScriptTransaction =>
+        activationBarrier(BlockchainFeatures.SmartAssets).flatMap { _ =>
+          sast.script match {
+            case None     => Left(GenericError("Cannot set empty script"))
+            case Some(sc) => scriptActivation(sc)
+          }
         }
+
 
       case _: ReissueTransactionV2     => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _: BurnTransactionV2        => activationBarrier(BlockchainFeatures.SmartAccounts)

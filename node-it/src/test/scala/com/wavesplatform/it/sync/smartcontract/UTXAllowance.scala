@@ -8,6 +8,7 @@ import com.wavesplatform.it.sync._
 import com.wavesplatform.it.transactions.NodesFromDocker
 import com.wavesplatform.it.util._
 import com.wavesplatform.it.{ReportingTestName, WaitForHeight2}
+import com.wavesplatform.lang.v2.estimator.ScriptEstimatorV2
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import org.scalatest.{CancelAfterFailure, FreeSpec, Matchers}
 
@@ -28,8 +29,8 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
       i.transfer(i.address, nodeAddress, 10.TN, 0.02.TN, None, waitForTx = true)
 
       val scriptText = s"""true""".stripMargin
-      val script               = ScriptCompiler(scriptText, isAssetScript = false).explicitGet()._1.bytes().base64
-      i.setScript(acc.address, Some(script), setScriptFee, waitForTx = true)
+      val script               = ScriptCompiler(scriptText, isAssetScript = false, ScriptEstimatorV2).explicitGet()._1.bytes().base64
+      i.setScript(acc.stringRepr, Some(script), setScriptFee, waitForTx = true)
 
       acc
     })
@@ -37,8 +38,8 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
     assertBadRequestAndMessage(
       nodeA
         .transfer(
-          accounts.head.address,
-          recipient = accounts.head.address,
+          accounts.head.stringRepr,
+          recipient = accounts.head.stringRepr,
           assetId = None,
           amount = 1.TN,
           fee = minFee + 0.04.TN,
@@ -50,8 +51,8 @@ class UTXAllowance extends FreeSpec with Matchers with WaitForHeight2 with Cance
     val txBId =
       nodeB
         .transfer(
-          accounts(1).address,
-          recipient = accounts(1).address,
+          accounts(1).stringRepr,
+          recipient = accounts(1).stringRepr,
           assetId = None,
           amount = 1.01.TN,
           fee = minFee + 0.04.TN,

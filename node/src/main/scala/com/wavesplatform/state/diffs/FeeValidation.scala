@@ -1,10 +1,10 @@
 package com.wavesplatform.state.diffs
 
+import cats.data.Chain
 import cats.implicits._
-import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.features.BlockchainFeatures
+import com.wavesplatform.features.FeatureProvider._
 import com.wavesplatform.lang.ValidationError
-import com.wavesplatform.lang.directives.values._
 import com.wavesplatform.settings.Constants
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.Asset.{IssuedAsset, Waves}
@@ -15,7 +15,6 @@ import com.wavesplatform.transaction.assets.exchange._
 import com.wavesplatform.transaction.lease._
 import com.wavesplatform.transaction.smart._
 import com.wavesplatform.transaction.transfer._
-import cats.data.Chain
 import com.wavesplatform.account.AddressScheme
 
 object FeeValidation {
@@ -73,7 +72,7 @@ object FeeValidation {
 
     val errorMessage = s"Fee for $txName ($actualFee) does not exceed minimal value of $requiredFee."
 
-    GenericError((feeDetails.requirements mkString_ " ") ++ errorMessage)
+    GenericError((feeDetails.requirements mkString_ " ") ++ ". " ++ errorMessage)
   }
 
   private case class FeeInfo(assetInfo: Option[(IssuedAsset, AssetDescription)], requirements: Chain[String], wavesFee: Long)

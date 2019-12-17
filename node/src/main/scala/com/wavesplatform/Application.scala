@@ -10,20 +10,23 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import cats.instances.all._
+import cats.syntax.option._
 import com.typesafe.config._
 import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.actor.RootActorSystem
 import com.wavesplatform.api.http._
-import com.wavesplatform.api.http.alias.{AliasApiRoute, AliasBroadcastApiRoute}
-import com.wavesplatform.api.http.assets.{AssetsApiRoute, AssetsBroadcastApiRoute}
-import com.wavesplatform.api.http.leasing.{LeaseApiRoute, LeaseBroadcastApiRoute}
+import com.wavesplatform.api.http.alias.AliasApiRoute
+import com.wavesplatform.api.http.assets.AssetsApiRoute
+import com.wavesplatform.api.http.leasing.LeaseApiRoute
 import com.wavesplatform.consensus.PoSSelector
 import com.wavesplatform.consensus.nxt.api.http.NxtConsensusApiRoute
-import com.wavesplatform.db.openDB
+import com.wavesplatform.database.{DBExt, Keys, openDB}
 import com.wavesplatform.extensions.{Context, Extension}
+import com.wavesplatform.features.EstimatorProvider._
 import com.wavesplatform.features.api.ActivationApiRoute
 import com.wavesplatform.history.StorageFactory
-import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute, WavesApiRoute}
+import com.wavesplatform.http.{DebugApiRoute, NodeApiRoute}
+import com.wavesplatform.lang.ValidationError
 import com.wavesplatform.metrics.Metrics
 import com.wavesplatform.mining.{Miner, MinerImpl}
 import com.wavesplatform.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
@@ -31,25 +34,27 @@ import com.wavesplatform.network._
 import com.wavesplatform.settings.WavesSettings
 import com.wavesplatform.state.Blockchain
 import com.wavesplatform.state.appender.{BlockAppender, ExtensionAppender, MicroblockAppender}
+import com.wavesplatform.transaction.smart.script.trace.TracedResult
 import com.wavesplatform.transaction.{Asset, Transaction}
-import com.wavesplatform.utils.{LoggerFacade, NTP, ScorexLogging, SystemInformationReporter, Time, UtilApp}
+import com.wavesplatform.utils.Schedulers._
+import com.wavesplatform.utils._
 import com.wavesplatform.utx.{UtxPool, UtxPoolImpl}
 import com.wavesplatform.wallet.Wallet
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
+import io.netty.util.HashedWheelTimer
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
 import kamon.influxdb.InfluxDBReporter
 import kamon.system.SystemMetrics
 import monix.eval.{Coeval, Task}
-import monix.execution.Scheduler
-import monix.execution.Scheduler._
-import monix.execution.schedulers.SchedulerService
+import monix.execution.schedulers.{ExecutorScheduler, SchedulerService}
 import monix.reactive.Observable
 import monix.reactive.subjects.ConcurrentSubject
 import org.influxdb.dto.Point
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
@@ -59,7 +64,6 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
   app =>
 
   import monix.execution.Scheduler.Implicits.{global => scheduler}
-  private[this] val apiScheduler = Scheduler(actorSystem.dispatcher)
 
   private val db = openDB(settings.dbSettings.directory)
 
@@ -81,12 +85,19 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
 
   private val peerDatabase = new PeerDatabaseImpl(settings.networkSettings)
 
+  // This handler is needed in case Fatal exception is thrown inside the task
+  private def stopOnAppendError(cause: Throwable): Unit = {
+    log.error("Error in Appender", cause)
+    forceStopApplication(FatalDBError)
+  }
+
+  private val appenderScheduler = singleThread("appender", stopOnAppendError)
+
   private val extensionLoaderScheduler        = singleThread("rx-extension-loader", reporter = log.error("Error in Extension Loader", _))
   private val microblockSynchronizerScheduler = singleThread("microblock-synchronizer", reporter = log.error("Error in Microblock Synchronizer", _))
   private val scoreObserverScheduler          = singleThread("rx-score-observer", reporter = log.error("Error in Score Observer", _))
-  private val appenderScheduler               = singleThread("appender", reporter = log.error("Error in Appender", _))
-  private val historyRepliesScheduler         = fixedPool("history-replier", poolSize = 2, reporter = log.error("Error in History Replier", _))
-  private val minerScheduler                  = fixedPool("miner-pool", poolSize = 2, reporter = log.error("Error in Miner", _))
+  private val historyRepliesScheduler         = fixedPool(poolSize = 2, "history-replier", reporter = log.error("Error in History Replier", _))
+  private val minerScheduler                  = fixedPool(poolSize = 2, "miner-pool", reporter = log.error("Error in Miner", _))
 
   private var rxExtensionLoaderShutdown: Option[RxExtensionLoaderShutdownHook] = None
   private var maybeUtx: Option[UtxPool]                                        = None
@@ -178,23 +189,36 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       syncWithChannelClosed,
       extensionLoaderScheduler,
       timeoutSubject
-    ) { case (c, b) => processFork(c, b.blocks) }
+    ) {
+      case (c, b) =>
+        processFork(c, b.blocks).doOnFinish {
+          case None    => Task.now(())
+          case Some(e) => Task(stopOnAppendError(e))
+        }
+    }
 
     rxExtensionLoaderShutdown = Some(sh)
 
-    UtxPoolSynchronizer.start(utxStorage,
-                              settings.synchronizationSettings.utxSynchronizer,
-                              allChannels,
-                              transactions,
-                              blockchainUpdater.lastBlockInfo)
+    val timer = new HashedWheelTimer()
+    val utxSynchronizerScheduler = Schedulers.timeBoundedFixedPool(timer, 5.seconds, settings.synchronizationSettings.utxSynchronizer.maxThreads, "utx-pool-synchronizer")
+    val utxSynchronizer =
+      UtxPoolSynchronizer(utxStorage, settings.synchronizationSettings.utxSynchronizer, allChannels, blockchainUpdater.lastBlockInfo)(
+        utxSynchronizerScheduler
+      )
+
+    transactions.foreach {
+      case (channel, transaction) => utxSynchronizer.tryPublish(transaction, channel)
+    }
 
     val microBlockSink = microblockData
-      .mapTask(scala.Function.tupled(processMicroBlock))
+      .mapEval(processMicroBlock.tupled)
 
     val blockSink = newBlocks
-      .mapTask(scala.Function.tupled(processBlock))
+      .mapEval(processBlock.tupled)
 
-    Observable.merge(microBlockSink, blockSink).subscribe()
+    Observable(microBlockSink, blockSink).merge
+      .onErrorHandle(stopOnAppendError)
+      .subscribe()
 
     miner.scheduleMining()
 
@@ -206,14 +230,15 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     val extensionContext = new Context {
-      override def settings: WavesSettings                               = app.settings
-      override def blockchain: Blockchain                                = app.blockchainUpdater
-      override def time: Time                                            = app.time
-      override def wallet: Wallet                                        = app.wallet
-      override def utx: UtxPool                                          = utxStorage
-      override def broadcastTx(tx: Transaction): Unit                    = allChannels.broadcastTx(tx, None)
-      override def spendableBalanceChanged: Observable[(Address, Asset)] = app.spendableBalanceChanged
-      override def actorSystem: ActorSystem                              = app.actorSystem
+      override def settings: WavesSettings = app.settings
+      override def blockchain: Blockchain  = app.blockchainUpdater
+      override def time: Time              = app.time
+      override def wallet: Wallet          = app.wallet
+      override def utx: UtxPool            = utxStorage
+
+      override def broadcastTransaction(tx: Transaction): TracedResult[ValidationError, Boolean] = utxSynchronizer.publish(tx)
+      override def spendableBalanceChanged: Observable[(Address, Asset)]                         = app.spendableBalanceChanged
+      override def actorSystem: ActorSystem                                                      = app.actorSystem
     }
 
     extensions = settings.extensions.map { extensionClassName =>
@@ -224,16 +249,30 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
     }
 
     if (settings.restAPISettings.enable) {
+      if (settings.restAPISettings.apiKeyHash == "H6nsiifwYKYEx6YzYD7woP1XCn72RVvx6tC1zjjLXqsu") {
+        log.error(
+          "Usage of the default api key hash (H6nsiifwYKYEx6YzYD7woP1XCn72RVvx6tC1zjjLXqsu) is prohibited, please change it in the waves.conf"
+        )
+        forceStopApplication(InvalidApiKey)
+      }
+
+      def loadBalanceHistory(address: Address): Seq[(Int, Long)] = db.readOnly { rdb =>
+        rdb.get(Keys.addressId(address)).fold(Seq.empty[(Int, Long)]) { aid =>
+          rdb.get(Keys.wavesBalanceHistory(aid)).map { h =>
+            h -> rdb.get(Keys.wavesBalance(aid)(h))
+          }
+        }
+      }
+
       val apiRoutes = Seq(
         NodeApiRoute(settings.restAPISettings, blockchainUpdater, () => apiShutdown()),
-        BlocksApiRoute(settings.restAPISettings, blockchainUpdater, allChannels)(apiScheduler),
-        TransactionsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time)(apiScheduler),
+        BlocksApiRoute(settings.restAPISettings, blockchainUpdater),
+        TransactionsApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, utxSynchronizer, time),
         NxtConsensusApiRoute(settings.restAPISettings, blockchainUpdater),
         WalletApiRoute(settings.restAPISettings, wallet),
-        PaymentApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
-        UtilsApiRoute(time, settings.restAPISettings),
+        UtilsApiRoute(time, settings.restAPISettings, blockchainUpdater.estimator),
         PeersApiRoute(settings.restAPISettings, network.connect, peerDatabase, establishedConnections),
-        AddressApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time)(apiScheduler),
+        AddressApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxSynchronizer, time),
         DebugApiRoute(
           settings,
           time,
@@ -242,24 +281,32 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
           blockchainUpdater,
           peerDatabase,
           establishedConnections,
-          blockId => Task(blockchainUpdater.removeAfter(blockId)).executeOn(appenderScheduler),
-          allChannels,
+          (blockId, returnTxsToUtx) =>
+            Task(blockchainUpdater.removeAfter(blockId))
+              .executeOn(appenderScheduler)
+              .asyncBoundary
+              .map {
+                case Right(discardedBlocks) =>
+                  allChannels.broadcast(LocalScoreChanged(blockchainUpdater.score))
+                  if (returnTxsToUtx) utxStorage.addAndCleanup(discardedBlocks.view.flatMap(_.transactionData))
+                  miner.scheduleMining()
+                  Right(())
+                case Left(error) => Left(error)
+              },
           utxStorage,
           miner,
           historyReplier,
           extLoaderState,
           mbSyncCacheSizes,
           scoreStatsReporter,
-          configRoot
+          configRoot,
+          loadBalanceHistory
         ),
-        WavesApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
-        AssetsApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, blockchainUpdater, time)(apiScheduler),
+        AssetsApiRoute(settings.restAPISettings, wallet, utxSynchronizer, blockchainUpdater, time),
         ActivationApiRoute(settings.restAPISettings, settings.featuresSettings, blockchainUpdater),
-        AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-        LeaseApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxStorage, allChannels, time),
-        LeaseBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
-        AliasApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time, blockchainUpdater),
-        AliasBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels)
+        LeaseApiRoute(settings.restAPISettings, wallet, blockchainUpdater, utxSynchronizer, time),
+        AliasApiRoute(settings.restAPISettings, wallet, utxSynchronizer, time, blockchainUpdater),
+        RewardApiRoute(blockchainUpdater)
       )
 
       val apiTypes: Set[Class[_]] = Set(
@@ -275,7 +322,8 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
         classOf[AssetsApiRoute],
         classOf[ActivationApiRoute],
         classOf[LeaseApiRoute],
-        classOf[AliasApiRoute]
+        classOf[AliasApiRoute],
+        classOf[RewardApiRoute]
       )
 
       val combinedRoute = CompositeHttpService(apiTypes, apiRoutes, settings.restAPISettings)(actorSystem).loggingCompositeRoute
@@ -288,8 +336,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
 
     // on unexpected shutdown
     sys.addShutdownHook {
-      Await.ready(Kamon.stopAllReporters(), 20.seconds)
-      Metrics.shutdown()
+      timer.stop()
       shutdown(utxStorage, network)
     }
   }
@@ -308,7 +355,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       spendableBalanceChanged.onComplete()
       utx.close()
 
-      shutdownAndWait(historyRepliesScheduler, "HistoryReplier", 5.minutes)
+      shutdownAndWait(historyRepliesScheduler, "HistoryReplier", 5.minutes.some)
 
       log.info("Closing REST API")
       if (settings.restAPISettings.enable)
@@ -331,7 +378,7 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       shutdownAndWait(microblockSynchronizerScheduler, "MicroblockSynchronizer")
       shutdownAndWait(scoreObserverScheduler, "ScoreObserver")
       shutdownAndWait(extensionLoaderScheduler, "ExtensionLoader")
-      shutdownAndWait(appenderScheduler, "Appender", 5.minutes)
+      shutdownAndWait(appenderScheduler, "Appender", 5.minutes.some, tryForce = false)
 
       log.info("Closing storage")
       db.close()
@@ -340,16 +387,20 @@ class Application(val actorSystem: ActorSystem, val settings: WavesSettings, con
       log.info("Shutdown complete")
     }
 
-  private def shutdownAndWait(scheduler: SchedulerService, name: String, timeout: FiniteDuration = 1.minute): Unit = {
+  private def shutdownAndWait(scheduler: SchedulerService, name: String, timeout: Option[FiniteDuration] = none, tryForce: Boolean = true): Unit = {
     log.debug(s"Shutting down $name")
-    scheduler.shutdown()
-    val r = Await.result(scheduler.awaitTermination(timeout, global), 2 * timeout)
-    if (r)
-      log.info(s"$name was shutdown successfully")
-    else
-      log.warn(s"Failed to shutdown $name properly during timeout")
+    scheduler match {
+      case es: ExecutorScheduler if tryForce => es.executor.shutdownNow()
+      case s                                 => s.shutdown()
+    }
+    timeout.foreach { to =>
+      val r = Await.result(scheduler.awaitTermination(to, global), 2 * to)
+      if (r)
+        log.info(s"$name was shutdown successfully")
+      else
+        log.warn(s"Failed to shutdown $name properly during timeout")
+    }
   }
-
 }
 
 object Application {
@@ -360,6 +411,7 @@ object Application {
 
     // DO NOT LOG BEFORE THIS LINE, THIS PROPERTY IS USED IN logback.xml
     System.setProperty("TN.directory", config.getString("TN.directory"))
+    if (config.hasPath("TN.config.directory")) System.setProperty("TN.config.directory", config.getString("TN.config.directory"))
 
     val settings = WavesSettings.fromRootConfig(config)
 
@@ -371,6 +423,10 @@ object Application {
     // IMPORTANT: to make use of default settings for histograms and timers, it's crucial to reconfigure Kamon with
     //            our merged config BEFORE initializing any metrics, including in settings-related companion objects
     Kamon.reconfigure(config)
+    sys.addShutdownHook { () =>
+      Kamon.stopAllReporters()
+      Metrics.shutdown()
+    }
 
     if (config.getBoolean("kamon.enable")) {
       Kamon.addReporter(new InfluxDBReporter())
@@ -398,7 +454,7 @@ object Application {
       case "import"                 => Importer.main(args.tail)
       case "explore"                => Explorer.main(args.tail)
       case "util"                   => UtilApp.main(args.tail)
-      case "help" | "--help" | "-h" => println("Usage: waves <config> | export | import | explore | util")
+      case "help" | "--help" | "-h" => println("Usage: TN <config> | export | import | explore | util")
       case _                        => startNode(args.headOption)
     }
   }
@@ -416,8 +472,7 @@ object Application {
     val time             = new NTP(settings.ntpServer)
     val isMetricsStarted = Metrics.start(settings.metrics, time)
 
-    RootActorSystem.start("wavesplatform", settings.config) { actorSystem =>
-      import actorSystem.dispatcher
+    RootActorSystem.start("TN", settings.config) { actorSystem =>
       isMetricsStarted.foreach { started =>
         if (started) {
           import settings.synchronizationSettings.microBlockSynchronizer

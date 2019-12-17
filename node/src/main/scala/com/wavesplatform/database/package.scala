@@ -1,6 +1,6 @@
 package com.wavesplatform
 
-import java.io.IOException
+import java.io.File
 import java.nio.ByteBuffer
 import java.util.{Map => JMap}
 
@@ -17,16 +17,29 @@ import com.wavesplatform.crypto._
 import com.wavesplatform.lang.script.{Script, ScriptReader}
 import com.wavesplatform.state._
 import com.wavesplatform.transaction.{Transaction, TransactionParsers}
-import com.wavesplatform.utils.CloseableIterator
-import org.iq80.leveldb.{DB, ReadOptions}
+import com.wavesplatform.utils.ScorexLogging
+import org.iq80.leveldb.{DB, Options, ReadOptions}
 
-import scala.util.control.NonFatal
+package object database extends ScorexLogging {
+  def openDB(path: String, recreate: Boolean = false): DB = {
+    log.debug(s"Open DB at $path")
+    val file = new File(path)
+    val options = new Options()
+      .createIfMissing(true)
+      .paranoidChecks(true)
 
-package object database {
+    if (recreate) {
+      LevelDBFactory.factory.destroy(file, options)
+    }
+
+    file.getAbsoluteFile.getParentFile.mkdirs()
+    LevelDBFactory.factory.open(file, options)
+  }
+
   final type DBEntry = JMap.Entry[Array[Byte], Array[Byte]]
 
   implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
-    def writeByteStr(s: ByteStr) = {
+    def writeByteStr(s: ByteStr): Unit = {
       output.write(s.arr)
     }
 
@@ -181,7 +194,7 @@ package object database {
 
   def readTransactionHeight(data: Array[Byte]): Int = Ints.fromByteArray(data)
 
-  def writeTransactionInfo(txInfo: (Int, Transaction)) = {
+  def writeTransactionInfo(txInfo: (Int, Transaction)): Array[Byte] = {
     val (h, tx) = txInfo
     val txBytes = tx.bytes()
     ByteBuffer.allocate(4 + txBytes.length).putInt(h).put(txBytes).array()
@@ -272,6 +285,10 @@ package object database {
 
     ndo.writeInt(bh.featureVotes.size)
     bh.featureVotes.foreach(s => ndo.writeShort(s))
+
+    if (bh.version > 3)
+      ndo.writeLong(bh.rewardVote)
+
     ndo.write(bh.signerData.generator)
     ndo.writeByteStr(bh.signerData.signature)
 
@@ -294,6 +311,9 @@ package object database {
     }
     val featureVotesCount = ndi.readInt()
     val featureVotes      = List.fill(featureVotesCount)(ndi.readShort()).toSet
+
+    val rewardVote        = if (version > 3) ndi.readLong() else -1L
+
     val generator         = ndi.readPublicKey
     val signature         = ndi.readSignature
 
@@ -303,8 +323,8 @@ package object database {
                                  SignerData(generator, signature),
                                  NxtLikeConsensusBlockData(baseTarget, genSig),
                                  transactionCount,
-                                 featureVotes)
-
+                                 featureVotes,
+                                 rewardVote)
     (header, size)
   }
 
@@ -367,15 +387,6 @@ package object database {
   }
 
   implicit class DBExt(val db: DB) extends AnyVal {
-    def readOnlyStream[A](f: ReadOnlyDB => CloseableIterator[A]): CloseableIterator[A] = {
-      val snapshot = db.getSnapshot
-      val iterator = f(new ReadOnlyDB(db, new ReadOptions().snapshot(snapshot)))
-      CloseableIterator(iterator, { () =>
-        iterator.close()
-        snapshot.close()
-      })
-    }
-
     def readOnly[A](f: ReadOnlyDB => A): A = {
       val snapshot = db.getSnapshot
       try f(new ReadOnlyDB(db, new ReadOptions().snapshot(snapshot)))
@@ -412,31 +423,6 @@ package object database {
         iterator.seek(prefix)
         while (iterator.hasNext && iterator.peekNext().getKey.startsWith(prefix)) f(iterator.next())
       } finally iterator.close()
-    }
-
-    def iterateOverStream(): CloseableIterator[DBEntry] = {
-      import scala.collection.JavaConverters._
-      val dbIter = db.iterator()
-      CloseableIterator(
-        dbIter.asScala,
-        () => dbIter.close()
-      )
-    }
-
-    def iterateOverStream(prefix: Array[Byte]): CloseableIterator[DBEntry] = {
-      import scala.collection.JavaConverters._
-      val dbIter = db.iterator()
-      try {
-        dbIter.seek(prefix)
-        CloseableIterator(
-          dbIter.asScala.takeWhile(_.getKey.startsWith(prefix)),
-          () => dbIter.close()
-        )
-      } catch {
-        case NonFatal(err) =>
-          dbIter.close()
-          throw new IOException("Couldn't create DB iterator", err)
-      }
     }
   }
 }

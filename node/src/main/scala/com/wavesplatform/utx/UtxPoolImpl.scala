@@ -21,31 +21,38 @@ import com.wavesplatform.transaction._
 import com.wavesplatform.transaction.assets.ReissueTransaction
 import com.wavesplatform.transaction.smart.script.trace.TracedResult
 import com.wavesplatform.transaction.transfer._
-import com.wavesplatform.utils.{ScorexLogging, Time}
+import com.wavesplatform.utils.{Schedulers, ScorexLogging, Time}
 import kamon.Kamon
 import kamon.metric.MeasurementUnit
-import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
+import monix.execution.{AsyncQueue, CancelableFuture}
 import monix.reactive.Observer
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration => ScalaDuration}
 import scala.util.{Left, Right}
 
-class UtxPoolImpl(time: Time,
-                  blockchain: Blockchain,
-                  spendableBalanceChanged: Observer[(Address, Asset)],
-                  utxSettings: UtxSettings,
-                  nanoTimeSource: () => Long = () => System.nanoTime())
-    extends ScorexLogging
+class UtxPoolImpl(
+    time: Time,
+    blockchain: Blockchain,
+    spendableBalanceChanged: Observer[(Address, Asset)],
+    utxSettings: UtxSettings,
+    nanoTimeSource: () => Long = () => System.nanoTime()
+) extends ScorexLogging
     with AutoCloseable
     with UtxPool {
 
   import com.wavesplatform.utx.UtxPoolImpl._
 
+  // Context
+  private[this] val cleanupScheduler: SchedulerService = Schedulers.singleThread("utx-pool-cleanup")
+
   // State
   private[this] val transactions          = new ConcurrentHashMap[ByteStr, Transaction]()
   private[this] val pessimisticPortfolios = new PessimisticPortfolios(spendableBalanceChanged)
+
+  // Init consume loop
+  TxQueue.consume()
 
   override def putIfNew(tx: Transaction, verify: Boolean): TracedResult[ValidationError, Boolean] = {
     if (transactions.containsKey(tx.id())) TracedResult.wrapValue(false)
@@ -73,14 +80,18 @@ class UtxPoolImpl(time: Time,
           PoolMetrics.checkScripted.measure(tx match {
             case scripted if TxCheck.isScripted(scripted) =>
               for {
-                _ <- Either.cond(utxSettings.allowTransactionsFromSmartAccounts,
-                                 (),
-                                 GenericError("transactions from scripted accounts are denied from UTX pool"))
+                _ <- Either.cond(
+                  utxSettings.allowTransactionsFromSmartAccounts,
+                  (),
+                  GenericError("transactions from scripted accounts are denied from UTX pool")
+                )
 
                 scriptedCount = transactions.values().asScala.count(TxCheck.isScripted)
-                _ <- Either.cond(skipSizeCheck || scriptedCount < utxSettings.maxScriptedSize,
-                                 (),
-                                 GenericError("Transaction pool scripted txs size limit is reached"))
+                _ <- Either.cond(
+                  skipSizeCheck || scriptedCount < utxSettings.maxScriptedSize,
+                  (),
+                  GenericError("Transaction pool scripted txs size limit is reached")
+                )
               } yield tx
 
             case _ =>
@@ -92,7 +103,7 @@ class UtxPoolImpl(time: Time,
             Right(())
           } else {
             val sender: Option[String] = tx match {
-              case x: Authorized => Some(x.sender.address)
+              case x: Authorized => Some(x.sender.stringRepr)
               case _             => None
             }
 
@@ -127,9 +138,11 @@ class UtxPoolImpl(time: Time,
 
       for {
         _ <- Either.cond(transactions.size < utxSettings.maxSize || skipSizeCheck, (), GenericError("Transaction pool size limit is reached"))
-        _ <- Either.cond(skipSizeCheck || (transactionsBytes + tx.bytes().length) <= utxSettings.maxBytesSize,
-                         (),
-                         GenericError("Transaction pool bytes size limit is reached"))
+        _ <- Either.cond(
+          skipSizeCheck || (transactionsBytes + tx.bytes().length) <= utxSettings.maxBytesSize,
+          (),
+          GenericError("Transaction pool bytes size limit is reached")
+        )
 
         _ <- LimitChecks.checkScripted(tx, skipSizeCheck)
         _ <- LimitChecks.checkNotBlacklisted(tx)
@@ -185,21 +198,24 @@ class UtxPoolImpl(time: Time,
 
   override def transactionById(transactionId: ByteStr): Option[Transaction] = Option(transactions.get(transactionId))
 
-  override def packUnconfirmed(initialConstraint: MultiDimensionalMiningConstraint,
-                               maxPackTime: ScalaDuration): (Seq[Transaction], MultiDimensionalMiningConstraint) = {
+  override def packUnconfirmed(
+      initialConstraint: MultiDimensionalMiningConstraint,
+      maxPackTime: ScalaDuration
+  ): (Option[Seq[Transaction]], MultiDimensionalMiningConstraint) = {
     val differ = TransactionDiffer(blockchain.lastBlockTimestamp, time.correctedTime(), blockchain.height) _
     val (reversedValidTxs, _, finalConstraint, totalIterations) = PoolMetrics.packTimeStats.measure {
       val startTime                   = nanoTimeSource()
       def isTimeLimitReached: Boolean = maxPackTime.isFinite() && (nanoTimeSource() - startTime) >= maxPackTime.toNanos
-      type R = (Seq[Transaction], Diff, MultiDimensionalMiningConstraint, Int)
+      type R = (Option[Seq[Transaction]], Diff, MultiDimensionalMiningConstraint, Int)
       @inline def bumpIterations(r: R): R = r.copy(_4 = r._4 + 1)
 
       transactions.values.asScala.toSeq
         .sorted(TransactionsOrdering.InUTXPool)
         .iterator
-        .foldLeft((Seq.empty[Transaction], Monoid[Diff].empty, initialConstraint, 0)) {
+        .foldLeft[R]((None, Monoid[Diff].empty, initialConstraint, 0)) {
           case (r @ (packedTransactions, diff, currentConstraint, iterationCount), tx) =>
-            if (currentConstraint.isFull || (packedTransactions.nonEmpty && isTimeLimitReached)) r // don't run any checks here to speed up mining
+            if (currentConstraint.isFull || (packedTransactions.exists(_.nonEmpty) && isTimeLimitReached))
+              r // don't run any checks here to speed up mining
             else if (TxCheck.isExpired(tx)) {
               log.debug(s"Transaction ${tx.id()} expired")
               remove(tx.id())
@@ -212,11 +228,12 @@ class UtxPoolImpl(time: Time,
                   if (updatedConstraint.isOverfilled) {
                     log.trace(
                       s"Transaction ${tx.id()} does not fit into the block: " +
-                        s"${MultiDimensionalMiningConstraint.formatOverfilledConstraints(currentConstraint, updatedConstraint).mkString(", ")}")
-                    bumpIterations(r)
+                        s"${MultiDimensionalMiningConstraint.formatOverfilledConstraints(currentConstraint, updatedConstraint).mkString(", ")}"
+                    )
+                    (packedTransactions.orElse(Some(Seq.empty[Transaction])), diff, currentConstraint, iterationCount + 1)
                   } else {
                     log.trace(s"Packing transaction ${tx.id()}")
-                    (tx +: packedTransactions, Monoid.combine(diff, newDiff), updatedConstraint, iterationCount + 1)
+                    (Some(packedTransactions.fold(Seq(tx))(tx +: _)), Monoid.combine(diff, newDiff), updatedConstraint, iterationCount + 1)
                   }
                 case Left(error) =>
                   log.debug(s"Transaction ${tx.id()} removed due to $error")
@@ -227,9 +244,14 @@ class UtxPoolImpl(time: Time,
         }
     }
 
-    val txs = reversedValidTxs.reverse
-    if (txs.nonEmpty) log.trace(s"Packed ${txs.length} transactions of $totalIterations checked, final constraint: $finalConstraint")
-    (txs, finalConstraint)
+    reversedValidTxs match {
+      case None =>
+        log.trace(s"After checking $totalIterations transactions UTX is empty")
+        (None, finalConstraint)
+      case Some(txs) =>
+        if (txs.nonEmpty) log.trace(s"Packed ${txs.length} transactions of $totalIterations checked, final constraint: $finalConstraint")
+        (Some(txs.reverse), finalConstraint)
+    }
   }
 
   //noinspection ScalaStyle
@@ -254,23 +276,40 @@ class UtxPoolImpl(time: Time,
       blockchain.assetDescription(asset).forall(_.reissuable)
   }
 
-  private[this] val scheduler: SchedulerService = Scheduler.singleThread("utx-pool-cleanup")
+  private[this] object TxQueue {
+    private[this] val queue = AsyncQueue.unbounded[Seq[Transaction]]()(cleanupScheduler)
 
-  def addAndCleanup(transactions: Seq[Transaction], verify: Boolean = true): Unit = scheduler.executeAsync { () =>
-    transactions.foreach(putIfNew(_, verify))
-    packUnconfirmed(MultiDimensionalMiningConstraint.unlimited, ScalaDuration.Inf)
+    def offer(transactions: Seq[Transaction]): Unit =
+      queue.offer(transactions)
+
+    def consume(): CancelableFuture[Unit] =
+      queue
+        .drain(1, Int.MaxValue)
+        .flatMap { transactionSeq =>
+          for (ts <- transactionSeq; transaction <- ts) addTransaction(transaction, verify = false)
+          packUnconfirmed(MultiDimensionalMiningConstraint.unlimited, ScalaDuration.Inf)
+          consume()
+        }(cleanupScheduler)
   }
+
+  /** DOES NOT verify transactions */
+  def addAndCleanup(transactions: Seq[Transaction]): Unit =
+    TxQueue.offer(transactions)
 
   override def close(): Unit = {
-    scheduler.shutdown()
+    cleanupScheduler.shutdown()
   }
 
+  //noinspection TypeAnnotation
   private[this] object PoolMetrics {
-    private[this] val sizeStats  = Kamon.rangeSampler("utx.pool-size", MeasurementUnit.none, Duration.of(500, ChronoUnit.MILLIS))
-    private[this] val bytesStats = Kamon.rangeSampler("utx.pool-bytes", MeasurementUnit.information.bytes, Duration.of(500, ChronoUnit.MILLIS))
-    val putTimeStats             = Kamon.timer("utx.put-if-new")
-    val putRequestStats          = Kamon.counter("utx.put-if-new.requests")
-    val packTimeStats            = Kamon.timer("utx.pack-unconfirmed")
+    private[this] val SampleInterval: Duration = Duration.of(500, ChronoUnit.MILLIS)
+
+    private[this] val sizeStats  = Kamon.rangeSampler("utx.pool-size", MeasurementUnit.none, SampleInterval)
+    private[this] val bytesStats = Kamon.rangeSampler("utx.pool-bytes", MeasurementUnit.information.bytes, SampleInterval)
+
+    val putTimeStats    = Kamon.timer("utx.put-if-new")
+    val putRequestStats = Kamon.counter("utx.put-if-new.requests")
+    val packTimeStats   = Kamon.timer("utx.pack-unconfirmed")
 
     val checkIsMostProfitable = Kamon.timer("utx.check.is-most-profitable")
     val checkAlias            = Kamon.timer("utx.check.alias")
@@ -288,7 +327,6 @@ class UtxPoolImpl(time: Time,
       bytesStats.decrement(tx.bytes().length)
     }
   }
-
 }
 
 object UtxPoolImpl {

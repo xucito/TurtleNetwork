@@ -1,5 +1,6 @@
 package com.wavesplatform.state.diffs
 
+import cats.implicits._
 import com.wavesplatform.lang.ValidationError
 import com.wavesplatform.metrics._
 import com.wavesplatform.state._
@@ -60,15 +61,34 @@ object TransactionDiffer extends ScorexLogging {
     } yield positiveDiff
   }.leftMap(TransactionValidationError(_, tx))
 
-  def unverified(
+  private def unverified(
       currentBlockTimestamp: Long,
       currentBlockHeight: Int
-  )(blockchain: Blockchain, tx: Transaction): TracedResult[ValidationError, Diff] = {
+  )(blockchain: Blockchain, tx: Transaction): TracedResult[ValidationError, Diff] =
     stats.transactionDiffValidation.measureForType(tx.builder.typeId) {
       tx match {
         case gtx: GenesisTransaction => GenesisTransactionDiff(currentBlockHeight)(gtx)
         case ptx: PaymentTransaction =>
           PaymentTransactionDiff(blockchain.settings.functionalitySettings, currentBlockHeight, currentBlockTimestamp)(ptx)
+        case ci: InvokeScriptTransaction => InvokeScriptTransactionDiff(blockchain, currentBlockHeight)(ci)
+        case etx: ExchangeTransaction    => ExchangeTransactionDiff(blockchain, currentBlockHeight)(etx)
+        case otherTx: ProvenTransaction  =>
+          unverifiedWithEstimate(currentBlockTimestamp, currentBlockHeight)(blockchain, otherTx)
+            .map(complexityDiff(currentBlockHeight, blockchain, otherTx) |+| _)
+        case _  => Left(UnsupportedTransactionType)
+      }
+    }
+
+  private def complexityDiff(height: Int, blockchain: Blockchain, tx: ProvenTransaction): Diff = {
+    val complexity = DiffsCommon.getScriptsComplexity(blockchain, tx)
+    Diff(height, tx, scriptsComplexity = complexity)
+  }
+
+  private def unverifiedWithEstimate(
+    currentBlockTimestamp: Long,
+    currentBlockHeight:    Int
+  )(blockchain: Blockchain, tx: ProvenTransaction): TracedResult[ValidationError, Diff] =
+      tx match {
         case itx: IssueTransaction           => AssetTransactionsDiff.issue(blockchain, currentBlockHeight)(itx)
         case rtx: ReissueTransaction         => AssetTransactionsDiff.reissue(blockchain, currentBlockHeight, currentBlockTimestamp)(rtx)
         case btx: BurnTransaction            => AssetTransactionsDiff.burn(blockchain, currentBlockHeight)(btx)
@@ -76,15 +96,11 @@ object TransactionDiffer extends ScorexLogging {
         case mtx: MassTransferTransaction    => MassTransferTransactionDiff(blockchain, currentBlockTimestamp, currentBlockHeight)(mtx)
         case ltx: LeaseTransaction           => LeaseTransactionsDiff.lease(blockchain, currentBlockHeight)(ltx)
         case ltx: LeaseCancelTransaction     => LeaseTransactionsDiff.leaseCancel(blockchain, currentBlockTimestamp, currentBlockHeight)(ltx)
-        case etx: ExchangeTransaction        => ExchangeTransactionDiff(blockchain, currentBlockHeight)(etx)
         case atx: CreateAliasTransaction     => CreateAliasTransactionDiff(blockchain, currentBlockHeight)(atx)
         case dtx: DataTransaction            => DataTransactionDiff(blockchain, currentBlockHeight)(dtx)
         case sstx: SetScriptTransaction      => SetScriptTransactionDiff(blockchain, currentBlockHeight)(sstx)
         case sstx: SetAssetScriptTransaction => AssetTransactionsDiff.setAssetScript(blockchain, currentBlockHeight, currentBlockTimestamp)(sstx)
         case stx: SponsorFeeTransaction      => AssetTransactionsDiff.sponsor(blockchain, currentBlockHeight, currentBlockTimestamp)(stx)
-        case ci: InvokeScriptTransaction     => InvokeScriptTransactionDiff.apply(blockchain, currentBlockHeight)(ci)
         case _                               => Left(UnsupportedTransactionType)
       }
-    }
-  }
 }

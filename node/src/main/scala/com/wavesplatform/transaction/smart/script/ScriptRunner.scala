@@ -1,5 +1,6 @@
 package com.wavesplatform.transaction.smart.script
 
+import cats.Id
 import cats.implicits._
 import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.common.state.ByteStr
@@ -23,7 +24,7 @@ object ScriptRunner {
             blockchain: Blockchain,
             script: Script,
             isAssetScript: Boolean,
-            scriptContainerAddress: ByteStr): (Log, Either[ExecutionError, EVALUATED]) = {
+            scriptContainerAddress: ByteStr): (Log[Id], Either[ExecutionError, EVALUATED]) = {
     script match {
       case s: ExprScript =>
         val ctx = BlockchainContext.build(
@@ -36,8 +37,8 @@ object ScriptRunner {
           false,
           Coeval(scriptContainerAddress)
         )
-        EvaluatorV1.applyWithLogging[EVALUATED](ctx, s.expr)
-      case ContractScript.ContractScriptImpl(_, DApp(_, decls, _, Some(vf)), _) =>
+        EvaluatorV1().applyWithLogging[EVALUATED](ctx, s.expr)
+      case ContractScript.ContractScriptImpl(_, DApp(_, decls, _, Some(vf))) =>
         val ctx = BlockchainContext.build(
           script.stdLibVersion,
           AddressScheme.current.chainId,
@@ -52,9 +53,9 @@ object ScriptRunner {
           t => ContractEvaluator.verify(decls, vf, RealTransactionWrapper.apply(t)),
           _.eliminate(t => ContractEvaluator.verify(decls, vf, RealTransactionWrapper.ord(t)), _ => ???)
         )
-        EvaluatorV1.evalWithLogging(ctx, evalContract)
+        EvaluatorV1().evalWithLogging(ctx, evalContract)
 
-      case ContractScript.ContractScriptImpl(_, DApp(_, _, _, None), _) =>
+      case ContractScript.ContractScriptImpl(_, DApp(_, _, _, None)) =>
         val t: Proven with Authorized =
           in.eliminate(_.asInstanceOf[Proven with Authorized], _.eliminate(_.asInstanceOf[Proven with Authorized], _ => ???))
         (List.empty, Verifier.verifyAsEllipticCurveSignature[Proven with Authorized](t) match {

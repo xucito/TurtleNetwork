@@ -16,19 +16,19 @@ import com.wavesplatform.lang.v1.compiler.{ExpressionCompiler, Terms}
 import com.wavesplatform.lang.v1.evaluator.ctx.impl.waves.WavesContext
 import com.wavesplatform.lang.v1.evaluator.ctx.impl.{CryptoContext, PureContext}
 import com.wavesplatform.lang.v1.parser.Parser
+import com.wavesplatform.lang.v1.traits.Environment
 import com.wavesplatform.lang.v1.{FunctionHeader, compiler}
+import com.wavesplatform.lang.v2.estimator.ScriptEstimatorV2
 import com.wavesplatform.lang.{Global, utils}
 import com.wavesplatform.state._
 import com.wavesplatform.state.diffs.smart.smartEnabledFS
-import com.wavesplatform.state.diffs.{CommonValidation, ENOUGH_AMT, assertDiffAndState}
+import com.wavesplatform.state.diffs.{ENOUGH_AMT, FeeValidation, assertDiffAndState}
 import com.wavesplatform.transaction.Asset.Waves
-import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 import com.wavesplatform.transaction.assets.IssueTransactionV2
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
-import com.wavesplatform.transaction.smart.{InvokeScriptTransaction, SetScriptTransaction, WavesEnvironment}
-import com.wavesplatform.utils.EmptyBlockchain
+import com.wavesplatform.transaction.smart.{InvokeScriptTransaction, SetScriptTransaction}
+import com.wavesplatform.transaction.{DataTransaction, GenesisTransaction}
 import com.wavesplatform.{NoShrink, TransactionGen}
-import monix.eval.Coeval
 import org.scalacheck.Gen
 import org.scalatest.{Matchers, PropSpec}
 import org.scalatestplus.scalacheck.{ScalaCheckPropertyChecks => PropertyChecks}
@@ -71,6 +71,8 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
     setScriptTransaction: SetScriptTransaction = SetScriptTransaction.selfSigned(recipient, Some(typedScript), 100000000L, ts).explicitGet()
 
   } yield (master, Seq(genesis1, genesis2), setScriptTransaction, dataTransaction, transfer, transfer2)
+
+  private val estimator = ScriptEstimatorV2
 
   property("validation of all functions from contexts") {
     forAll(preconditionsAndPayments) {
@@ -302,7 +304,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
 
           append(Seq(transferTx, issueTx)).explicitGet()
 
-          val assetId = issueTx.assetId.value
+          val assetId = issueTx.assetId
           val script = ScriptCompiler
             .compile(
               s"""
@@ -331,7 +333,8 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
               | reissuable      &&
               | sponsored
               |
-            """.stripMargin
+            """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1
@@ -368,7 +371,8 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
                  | lastBlockBaseTarget && lastBlockGenerationSignature && lastBlockGenerator && lastBlockGeneratorPublicKey
                  |
                  |
-              """.stripMargin
+              """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1
@@ -411,7 +415,8 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
                  |
                  | nonExistedBlockNeg && nonExistedBlockZero && nonExistedBlockNextPlus && checkHeight && checkBaseTarget && checkGenSignature && checkGenerator && checkGeneratorPublicKey
                  |
-              """.stripMargin
+              """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1
@@ -457,18 +462,17 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
             Monoid
               .combineAll(
                 Seq(
-                  PureContext.build(Global, V3),
-                  CryptoContext.build(Global, V3),
+                  PureContext.build(Global, V3).withEnvironment[Environment],
+                  CryptoContext.build(Global, V3).withEnvironment[Environment],
                   WavesContext.build(
-                    DirectiveSet(V3, Account, Expression).explicitGet(),
-                    new WavesEnvironment('T'.toByte, Coeval(???), Coeval(???), EmptyBlockchain, Coeval(???))
+                    DirectiveSet(V3, Account, Expression).explicitGet()
                   )
                 ))
           }
 
           val compiledScript = ContractScript(V3, compiler.ContractCompiler(ctx.compilerContext, expr).explicitGet()).explicitGet()
-          val setScriptTx = SetScriptTransaction.selfSigned(masterAcc, Some(compiledScript), 1000000L, transferTx.timestamp + 5).explicitGet()
-          val fc = Terms.FUNCTION_CALL(FunctionHeader.User("compareBlocks"), List.empty)
+          val setScriptTx    = SetScriptTransaction.selfSigned(masterAcc, Some(compiledScript), 1000000L, transferTx.timestamp + 5).explicitGet()
+          val fc             = Terms.FUNCTION_CALL(FunctionHeader.User("compareBlocks"), List.empty)
 
           val ci = InvokeScriptTransaction
             .selfSigned(
@@ -476,7 +480,7 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
               masterAcc,
               Some(fc),
               Seq.empty,
-              CommonValidation.FeeUnit * (CommonValidation.FeeConstants(InvokeScriptTransaction.typeId) + CommonValidation.ScriptExtraFee),
+              FeeValidation.FeeUnit * (FeeValidation.FeeConstants(InvokeScriptTransaction.typeId) + FeeValidation.ScriptExtraFee),
               Waves,
               System.currentTimeMillis()
             )
@@ -543,7 +547,8 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
                  | checkFeeAssetId     &&
                  | checkAnotherTxType
                  |
-              """.stripMargin
+              """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1
@@ -578,9 +583,10 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
                  | {-# CONTENT_TYPE EXPRESSION #-}
                  | {-# SCRIPT_TYPE ACCOUNT #-}
                  |
-                 | this.bytes == base58'${masterAcc.address}'
+                 | this.bytes == base58'${masterAcc.stringRepr}'
                  |
-              """.stripMargin
+              """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1
@@ -608,12 +614,13 @@ class ContextFunctionsTest extends PropSpec with PropertyChecks with Matchers wi
                  | {-# CONTENT_TYPE EXPRESSION #-}
                  | {-# SCRIPT_TYPE ACCOUNT #-}
                  |
-                 | let checkAddressToStrRight = this.toString() == "${masterAcc.address}"
+                 | let checkAddressToStrRight = this.toString() == "${masterAcc.stringRepr}"
                  | let checkAddressToStr = this.bytes.toBase58String() == this.toString()
                  |
                  | checkAddressToStrRight && checkAddressToStr
                  |
-              """.stripMargin
+              """.stripMargin,
+              estimator
             )
             .explicitGet()
             ._1

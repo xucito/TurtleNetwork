@@ -3,6 +3,7 @@ package com.wavesplatform.state.diffs.smart.scenarios
 import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.lagonaki.mocks.TestBlock
+import com.wavesplatform.lang.v2.estimator.ScriptEstimatorV2
 import com.wavesplatform.settings.TestFunctionalitySettings
 import com.wavesplatform.transaction.Asset.{IssuedAsset, Waves}
 import com.wavesplatform.transaction.assets.{IssueTransactionV1, SponsorFeeTransaction}
@@ -39,6 +40,8 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with Matchers wit
       blocksForFeatureActivation = 1
     )
 
+  private val estimator = ScriptEstimatorV2
+
   property("sponsorship works when used by scripted accounts") {
     forAll(separateContractAndSponsor) {
       case (setupTxs, transfer) =>
@@ -49,7 +52,7 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with Matchers wit
         val contract             = transfer.sender
 
         val contractSpent: Long = ENOUGH_FEE + 1
-        val sponsorSpent: Long  = ENOUGH_FEE * 3 - 1 + ENOUGH_FEE * CommonValidation.FeeUnit
+        val sponsorSpent: Long  = ENOUGH_FEE * 3 - 1 + ENOUGH_FEE * FeeValidation.FeeUnit
 
         val sponsor = setupTxs.flatten.collectFirst { case t: SponsorFeeTransaction => t.sender }.get
 
@@ -73,7 +76,7 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with Matchers wit
         val contract             = setupTxs.flatten.collectFirst { case t: SponsorFeeTransaction => t.sender }.get
         val recipient            = transfer.sender
 
-        val contractSpent: Long  = ENOUGH_FEE * 4 + ENOUGH_FEE * CommonValidation.FeeUnit
+        val contractSpent: Long  = ENOUGH_FEE * 4 + ENOUGH_FEE * FeeValidation.FeeUnit
         val recipientSpent: Long = 1
 
         assertDiffAndState(setupBlocks :+ TestBlock.create(Nil), transferBlock, fs) { (diff, blck) =>
@@ -97,7 +100,7 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with Matchers wit
       gen2 = GenesisTransaction
         .create(recipient, ENOUGH_AMT, timestamp)
         .explicitGet()
-      (script, _) = ScriptCompiler(s"false", isAssetScript = false).explicitGet()
+      (script, _) = ScriptCompiler(s"false", isAssetScript = false, estimator).explicitGet()
       issueTx = IssueTransactionV1
         .selfSigned(
           sender = contract,
@@ -165,7 +168,7 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with Matchers wit
       gen2 = GenesisTransaction
         .create(sponsor, ENOUGH_AMT, timestamp)
         .explicitGet()
-      (script, _) = ScriptCompiler(s"true", isAssetScript = false).explicitGet()
+      (script, _) = ScriptCompiler(s"true", isAssetScript = false, estimator).explicitGet()
       issueTx = IssueTransactionV1
         .selfSigned(
           sender = sponsor,

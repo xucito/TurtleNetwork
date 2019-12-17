@@ -4,6 +4,7 @@ import cats.implicits._
 import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.settings.FunctionalitySettings
+import com.wavesplatform.state.extensions.Distributions
 import com.wavesplatform.state.{Blockchain, Diff, Portfolio}
 import com.wavesplatform.transaction.Asset.Waves
 import com.wavesplatform.transaction.TxValidationError.AccountBalanceError
@@ -51,7 +52,7 @@ object BalanceDiffValidation extends ScorexLogging {
           val newB = oldB + c
           newB < 0
       } map { _ =>
-        acc -> s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(b.portfolio(acc).combine(portfolioDiff))}"
+        acc -> s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(Distributions(b).portfolio(acc).combine(portfolioDiff))}"
       })
     }
 

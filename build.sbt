@@ -9,84 +9,74 @@
 import sbt.Keys._
 import sbt._
 import sbt.internal.inc.ReflectUtilities
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val common = crossProject(JSPlatform, JVMPlatform)
-  .withoutSuffixFor(JVMPlatform)
-  .disablePlugins(ProtocPlugin)
-  .settings(
-    libraryDependencies ++= Dependencies.common.value,
-    coverageExcludedPackages := ""
+val langPublishSettings = Seq(
+  coverageExcludedPackages := "",
+  publishMavenStyle := true,
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+  publishTo := Some("Sonatype Nexus" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
+  homepage := Some(url("https://docs.wavesplatform.com/en/technical-details/waves-contracts-language-description/maven-compiler-package.html")),
+  developers := List(
+    Developer("petermz", "Peter Zhelezniakov", "peterz@rambler.ru", url("https://wavesplatform.com"))
   )
-
-lazy val commonJS  = common.js
-lazy val commonJVM = common.jvm
-
-lazy val versionSourceTask = (path: String) =>
-  Def.task {
-    // WARNING!!!
-    // Please, update the fallback version every major and minor releases.
-    // This version is used then building from sources without Git repository
-    // In case of not updating the version nodes build from headless sources will fail to connect to newer versions
-    val FallbackVersion = (1, 0, 2)
-
-    val versionFile      = sourceManaged.value / "com" / "wavesplatform" / "Version.scala"
-    val versionExtractor = """(\d+)\.(\d+)\.(\d+).*""".r
-    val (major, minor, patch) = version.value match {
-      case versionExtractor(ma, mi, pa) => (ma.toInt, mi.toInt, pa.toInt)
-      case _                            => FallbackVersion
-    }
-    IO.write(
-      versionFile,
-      s"""package $path
-       |
-       |object Version {
-       |  val VersionString = "${version.value}"
-       |  val VersionTuple = ($major, $minor, $patch)
-       |}
-       |""".stripMargin
-    )
-    Seq(versionFile)
-}
-
-lazy val versionSourceSetting = (path: String) => inConfig(Compile)(Seq(sourceGenerators += versionSourceTask(path)))
+)
 
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
     .withoutSuffixFor(JVMPlatform)
-    .disablePlugins(ProtocPlugin)
-    .dependsOn(common % "compile;test->test")
+    .crossType(CrossType.Full)
     .settings(
       coverageExcludedPackages := ".*",
       test in assembly := {},
       libraryDependencies ++= Dependencies.lang.value ++ Dependencies.test,
-      resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins"),
-      resolvers += Resolver.sbtPluginRepo("releases")
-      // Compile / scalafmt / sourceDirectories += file("shared").getAbsoluteFile / "src" / "main" / "scala" // This doesn't work too
+      inConfig(Compile)(
+        Seq(
+          sourceGenerators += Tasks.docSource,
+          PB.targets += scalapb.gen(flatPackage = true) -> (sourceManaged in Compile).value,
+          PB.protoSources := Seq(baseDirectory.value.getParentFile / "shared" / "src" / "main" / "protobuf"),
+          PB.deleteTargetDirectory := false
+        )
+      )
     )
 
-lazy val langJS  = lang.js.settings(versionSourceSetting("com.wavesplatform.lang"))
 lazy val langJVM = lang.jvm
-
-lazy val node = project
-  .dependsOn(
-    commonJVM % "compile;test->test",
-    langJVM   % "compile;test->test"
+  .settings(langPublishSettings)
+  .settings(
+    name := "RIDE Compiler",
+    normalizedName := "lang",
+    description := "The RIDE smart contract language compiler",
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % Provided
   )
-  .settings(versionSourceSetting("com.wavesplatform"))
 
-lazy val `grpc-server` = project
-  .dependsOn(node % "compile;test->test;runtime->provided")
+lazy val langJS = lang.js
+  .enablePlugins(VersionObject)
+  .settings(
+    libraryDependencies += Dependencies.circeJsInterop.value
+  )
 
-lazy val `node-it` = project.dependsOn(node)
+lazy val `lang-testkit` = project
+  .dependsOn(langJVM)
+  .in(file("lang/testkit"))
+  .settings(langPublishSettings)
+  .settings(
+    libraryDependencies ++= Dependencies.test.map(_.withConfigurations(Some("compile")))
+  )
 
+lazy val langTests = project.in(file("lang/tests")).dependsOn(`lang-testkit`)
+
+lazy val langDoc = project
+  .in(file("lang/doc"))
+  .dependsOn(langJVM)
+  .settings(
+    libraryDependencies ++= Seq("com.github.spullara.mustache.java" % "compiler" % "0.9.5") ++ Dependencies.test
+  )
+
+lazy val node             = project.dependsOn(langJVM, `lang-testkit` % "test")
+lazy val `grpc-server`    = project.dependsOn(node % "compile;test->test;runtime->provided")
+lazy val `node-it`        = project.dependsOn(node, `grpc-server`)
 lazy val `node-generator` = project.dependsOn(node, `node-it` % "compile->test")
-
-lazy val benchmark = project
-  .dependsOn(
-    node    % "compile;test->test",
-    langJVM % "compile;test->test"
-  )
+lazy val benchmark        = project.dependsOn(node % "compile;test->test")
 
 lazy val it = project
   .settings(
@@ -102,8 +92,6 @@ lazy val it = project
 
 lazy val root = (project in file("."))
   .aggregate(
-    commonJS,
-    commonJVM,
     langJS,
     langJVM,
     node,
@@ -114,9 +102,10 @@ lazy val root = (project in file("."))
 
 inScope(Global)(
   Seq(
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.12.9",
     organization := "com.wavesplatform",
     organizationName := "Waves Platform",
+    V.fallback := (1, 1, 5),
     organizationHomepage := Some(url("https://wavesplatform.com")),
     scmInfo := Some(ScmInfo(url("https://github.com/BlackTurtle123/TurtleNetwork"), "git@github.com:BlackTurtle123/TurtleNetwork.git", None)),
     licenses := Seq(("MIT", url("https://github.com/wavesplatform/Waves/blob/master/LICENSE"))),
@@ -156,7 +145,8 @@ inScope(Global)(
       Seq(Tags.limit(Tags.ForkedTestGroup, threadNumber))
     },
     network := Network(sys.props.get("network"))
-  ))
+  )
+)
 
 // ThisBuild options
 git.useGitDescribe := true
@@ -189,10 +179,9 @@ checkPRRaw := {
   try {
     cleanAll.value // Hack to run clean before all tasks
   } finally {
-    test.all(ScopeFilter(inProjects(commonJVM, langJVM, node), inConfigurations(Test))).value
-    (commonJS / Compile / fastOptJS).value
+    test.all(ScopeFilter(inProjects(langTests, node), inConfigurations(Test))).value
     (langJS / Compile / fastOptJS).value
-    compile.all(ScopeFilter(inProjects(`node-generator`, benchmark), inConfigurations(Test))).value
+    compile.all(ScopeFilter(inProjects(`node-generator`, benchmark, `node-it`), inConfigurations(Test))).value
   }
 }
 

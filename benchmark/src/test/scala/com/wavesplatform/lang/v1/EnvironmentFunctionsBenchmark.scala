@@ -2,6 +2,7 @@ package com.wavesplatform.lang.v1
 
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 
+import cats.Id
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.lang.v1.EnvironmentFunctionsBenchmark._
@@ -12,7 +13,7 @@ import com.wavesplatform.lang.{Common, Global}
 import org.openjdk.jmh.annotations._
 import scorex.crypto.signatures.{Curve25519, PrivateKey, PublicKey, Signature}
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
 @Threads(4)
 @Fork(1)
@@ -32,6 +33,9 @@ class EnvironmentFunctionsBenchmark {
 
   @Benchmark
   def base58_26_encode_test(): String = hashTest(26, Global.base58Encode(_).explicitGet()) // for addressFromString_full_test
+
+  @Benchmark
+  def base16_decode_test(): Array[Byte] = Global.base16Decode(longHexStr).explicitGet()
 
   @Benchmark
   def sha256_test(): Array[Byte] = hashTest(Global.sha256)
@@ -74,7 +78,7 @@ object EnvironmentFunctionsBenchmark {
   val DataBytesLength   = 512
   val SeedBytesLength   = 128
 
-  private val defaultEnvironment: Environment = new Environment {
+  private val defaultEnvironment: Environment[Id] = new Environment[Id] {
     override def height: Long                                                                                    = 1
     override def chainId: Byte                                                                                   = ChainId
     override def inputEntity: Environment.InputEntity                                                            = ???
@@ -91,6 +95,8 @@ object EnvironmentFunctionsBenchmark {
   }
 
   val environmentFunctions = new EnvironmentFunctions(defaultEnvironment)
+
+  val longHexStr: String = "FEDCBA9876543210" * (150 * 1024 / 16)
 
   def randomBytes(length: Int): Array[Byte] = {
     val bytes = Array.fill[Byte](length)(0)

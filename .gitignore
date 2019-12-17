@@ -35,11 +35,7 @@ waves_logback.xml
 # standalone docker
 Dockerfile
 
-# logs
-*.log
-
 package
 !src/package
 native
 
-genesis.conf
