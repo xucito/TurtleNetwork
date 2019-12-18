@@ -18,8 +18,8 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
   protected override def beforeAll(): Unit = {
     super.beforeAll()
 
-    sender.transfer(sender.address, recipient = contract.stringRepr, assetId = None, amount = 5.waves, fee = minFee, waitForTx = true).id
-    sender.transfer(sender.address, recipient = contract.stringRepr, assetId = None, amount = 5.waves, fee = minFee, waitForTx = true).id
+    sender.transfer(sender.address, recipient = contract.stringRepr, assetId = None, amount = 5.TN, fee = minFee, waitForTx = true).id
+    sender.transfer(sender.address, recipient = contract.stringRepr, assetId = None, amount = 5.TN, fee = minFee, waitForTx = true).id
 
     val scriptText =
       """
