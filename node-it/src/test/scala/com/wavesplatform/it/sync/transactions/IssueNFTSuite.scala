@@ -25,14 +25,15 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
           |}""".stripMargin))
       .withDefault(1)
       .withSpecial(_.nonMiner)
+      .buildNonConflicting()
 
   test("Can't issue NFT before activation") {
     val assetName        = "NFTAsset"
     val assetDescription = "my asset description"
 
     firstNode.transfer(
-      firstNode.privateKey.address,
-      firstNodeIssuer.address,
+      firstNode.privateKey.stringRepr,
+      firstNodeIssuer.stringRepr,
       10.TN,
       0.02.TN,
       waitForTx = true

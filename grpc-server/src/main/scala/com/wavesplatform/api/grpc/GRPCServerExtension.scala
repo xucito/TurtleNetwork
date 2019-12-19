@@ -18,7 +18,7 @@ class GRPCServerExtension(context: ExtensionContext) extends Extension with Scor
   var server: Server = _
 
   override def start(): Unit = {
-    val settings = context.settings.config.as[GRPCSettings]("waves.grpc")
+    val settings = context.settings.config.as[GRPCSettings]("TN.grpc")
     this.server = startServer(settings)
   }
 

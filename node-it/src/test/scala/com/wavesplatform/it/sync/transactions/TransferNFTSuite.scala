@@ -144,7 +144,7 @@ class TransferNFTSuite extends BaseTransactionSuite with NTPTime {
     val buyer = KeyPair("buyer".getBytes("UTF-8"))
     val seller  = KeyPair("seller".getBytes("UTF-8"))
     val matcher = KeyPair("matcher".getBytes("UTF-8"))
-    val transfers = List(Transfer(buyer.stringRepr, 10.waves), Transfer(seller.stringRepr, 10.waves), Transfer(matcher.stringRepr, 10.waves))
+    val transfers = List(Transfer(buyer.stringRepr, 10.TN), Transfer(seller.stringRepr, 10.TN), Transfer(matcher.stringRepr, 10.TN))
     sender.massTransfer(firstAddress, transfers, calcMassTransferFee(transfers.size), waitForTx = true)
 
     val nftAsset = sender.broadcastIssue(seller, assetName, assetDescription, 1, 0, reissuable = false, 1.TN / 1000, waitForTx = true, script = None).id
