@@ -205,7 +205,7 @@ class InvokeScriptTransactionStateChangesSuite extends BaseTransactionSuite with
       caller.stringRepr,
       recipient.stringRepr,
       100000000,
-      1000000,
+      2000000,
       None,
       None,
       1,
