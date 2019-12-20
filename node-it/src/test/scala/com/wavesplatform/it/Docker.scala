@@ -197,14 +197,14 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 
   private def startNodeInternal(nodeConfig: Config, autoConnect: Boolean = true): DockerNode =
     try {
-      val nodeName = nodeConfig.getString("waves.network.node-name")
+      val nodeName = nodeConfig.getString("TN.network.node-name")
       val peersOverrides = if (autoConnect) {
         import scala.collection.JavaConverters._
         val otherAddrs = peersFor(nodeName)
 
         ConfigFactory
           .parseMap(Map("known-peers" -> otherAddrs.map(addr => s"${addr.getHostString}:${addr.getPort}").asJava).asJava)
-          .atPath("waves.network")
+          .atPath("TN.network")
       } else ConfigFactory.empty()
 
       val overrides = peersOverrides
