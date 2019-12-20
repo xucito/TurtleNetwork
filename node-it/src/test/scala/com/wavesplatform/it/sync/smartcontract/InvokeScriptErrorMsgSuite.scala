@@ -56,7 +56,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         someAssetAmount,
         0,
         reissuable = true,
-        issueFee + 400000,
+        issueFee + 4000000,
         2,
         Some(scriptBase64),
         waitForTx = true
@@ -74,7 +74,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         fee = 1000
       ),
       "State check failed. Reason: Transaction sent from smart account. Requires 400000 extra fee. Transaction involves 1 scripted assets." +
-        " Requires 400000 extra fee. Fee for InvokeScriptTransaction (1000 in WAVES) does not exceed minimal value of 1300000 WAVES."
+        " Requires 4000000 extra fee. Fee for InvokeScriptTransaction (1000 in TN) does not exceed minimal value of 6000000 WAVES."
     )
 
     assertBadRequestAndMessage(
@@ -87,7 +87,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         ),
         fee = 1300000
       ),
-      "State check failed. Reason: Fee in WAVES for InvokeScriptTransaction (1300000 in WAVES) with 12 total scripts invoked does not exceed minimal value of 5300000 WAVES."
+      "State check failed. Reason: Fee in TN for InvokeScriptTransaction (1300000 in TN) with 12 total scripts invoked does not exceed minimal value of 5300000 WAVES."
     )
   }
 }
