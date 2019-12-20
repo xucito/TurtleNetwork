@@ -116,7 +116,7 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
       }
   }
 
-  val MinIssueFee = 100000000
+  val MinIssueFee = 100000000000L
 
   val issueParamGen = for {
     sender      <- accountGen
