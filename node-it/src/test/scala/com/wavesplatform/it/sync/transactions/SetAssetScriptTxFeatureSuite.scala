@@ -19,7 +19,7 @@ class SetAssetScriptTxFeatureSuite extends BaseTransactionSuite {
   override def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
-      .overrideBase(_.raw(s"""waves {
+      .overrideBase(_.raw(s"""TN {
                              |  blockchain.custom.functionality {
                              |    pre-activated-features = {
                              |      ${BlockchainFeatures.SmartAssets.id} = $featureActivationHeight

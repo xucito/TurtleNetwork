@@ -23,7 +23,7 @@ class BlockHeadersTestSuite extends FunSuite with CancelAfterFailure with Transf
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.raw(
-        s"""waves {
+        s"""TN {
            |  blockchain.custom.functionality {
            |    pre-activated-features = {
            |      ${BlockchainFeatures.BlockReward.id} = $activationHeight

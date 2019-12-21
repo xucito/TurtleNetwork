@@ -90,7 +90,7 @@ trait BlocksTransactionsHelpers { self: TransactionGen =>
     ): Gen[InvokeScriptTransaction] =
       for {
         timestamp <- timestamp
-      } yield InvokeScriptTransaction.selfSigned(from, dapp, Some(call), payments, FeeAmount * 2, Waves, timestamp).explicitGet()
+      } yield InvokeScriptTransaction.selfSigned(from, dapp, Some(call), payments, 6000000, Waves, timestamp).explicitGet()
   }
 
   object UnsafeBlocks {

@@ -185,7 +185,7 @@ object RewardsTestSuite {
   private val votingInterval   = 4
 
   val configWithIncreasedDesired: Config = ConfigFactory.parseString(
-    s"""waves {
+    s"""TN {
        |  blockchain.custom.functionality {
        |    pre-activated-features = {
        |      ${BlockchainFeatures.BlockReward.id} = $activationHeight
@@ -203,7 +203,7 @@ object RewardsTestSuite {
   )
 
   val configWithDecreasedDesired: Config = ConfigFactory.parseString(
-    s"""waves {
+    s"""TN {
        |  blockchain.custom.functionality {
        |    pre-activated-features = {
        |      ${BlockchainFeatures.BlockReward.id} = $activationHeight
