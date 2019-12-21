@@ -73,7 +73,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         ),
         fee = 1000
       ),
-      "State check failed. Reason: Transaction sent from smart account. Requires 400000 extra fee. Transaction involves 1 scripted assets." +
+      "State check failed. Reason: Transaction sent from smart account. Requires 4000000 extra fee. Transaction involves 1 scripted assets." +
         " Requires 4000000 extra fee. Fee for InvokeScriptTransaction (1000 in TN) does not exceed minimal value of 14000000 TN."
     )
 
