@@ -91,7 +91,7 @@ object CustomFeeTransactionSuite {
   val assetId = assetTx.id()
 
   private val minerConfig = ConfigFactory.parseString(s"""
-                                                         | TN.fees.transfer.$assetId = 100000
+                                                         | TN.fees.transfer.$assetId = 2000000
                                                          | TN.blockchain.custom.functionality {
                                                          |   feature-check-blocks-period = $featureCheckBlocksPeriod
                                                          |   blocks-for-feature-activation = $featureCheckBlocksPeriod
