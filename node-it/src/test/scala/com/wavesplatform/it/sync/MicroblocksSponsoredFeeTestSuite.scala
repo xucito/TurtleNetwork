@@ -15,7 +15,7 @@ class MicroblocksSponsoredFeeTestSuite extends FreeSpec with Matchers with Cance
 
   val sponsor           = nodes(1)
   val Token             = 100L
-  val sponsorAssetTotal = 100000 * Token
+  val sponsorAssetTotal = 2000000 * Token
   val minSponsorFee     = Token
   val SmallFee          = Token + Token / 2
 

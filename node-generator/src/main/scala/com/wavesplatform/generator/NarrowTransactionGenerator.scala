@@ -91,7 +91,7 @@ class NarrowTransactionGenerator(settings: Settings, val accounts: Seq[KeyPair],
       )
     ) {
       case ((allTxsWithValid, validIssueTxs, reissuableIssueTxs, activeLeaseTransactions, aliases), i) =>
-        val moreThanStandardFee = 100000L + 800000
+        val moreThanStandardFee = 2000000L + 8000000
 
         val ts = now + i
 

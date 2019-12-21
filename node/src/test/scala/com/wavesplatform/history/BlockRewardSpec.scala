@@ -57,7 +57,7 @@ class BlockRewardSpec extends FreeSpec with ScalaCheckPropertyChecks with WithDo
     TestBlock.create(ntpNow, ref, Seq.empty, signer, rewardVote = InitialReward - 1 * Constants.UnitsInWave, version = Block.RewardBlockVersion)
 
   private val InitialMinerBalance = 10000 * Constants.UnitsInWave
-  private val OneTotalFee         = 100000
+  private val OneTotalFee         = 2000000
   private val OneCarryFee         = (OneTotalFee * 0.6).toLong
   private val OneFee              = (OneTotalFee * 0.4).toLong
 
