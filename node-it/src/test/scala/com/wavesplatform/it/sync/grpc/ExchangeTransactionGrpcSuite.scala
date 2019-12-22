@@ -27,7 +27,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
   val versions = transactionV1versions +: transactionV2versions
 
   test("exchange tx with orders v1,v2") {
-    val exchAsset = sender.grpc.broadcastIssue(buyer, "exchAsset", someAssetAmount, 8, true, 1.waves, waitForTx = true)
+    val exchAsset = sender.grpc.broadcastIssue(buyer, "exchAsset", someAssetAmount, 8, true, 1.TN, waitForTx = true)
     val exchAssetId = PBTransactions.vanilla(exchAsset).explicitGet().id().base58
     val price               = 500000L
     val amount              = 40000000L
@@ -53,7 +53,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
   }
 
   test("exchange tx with orders v3") {
-    val feeAsset = sender.grpc.broadcastIssue(buyer, "feeAsset", someAssetAmount, 8, true, 1.waves, waitForTx = true)
+    val feeAsset = sender.grpc.broadcastIssue(buyer, "feeAsset", someAssetAmount, 8, true, 1.TN, waitForTx = true)
     val feeAssetId = PBTransactions.vanilla(feeAsset).explicitGet().id()
     val price = 500000L
     val amount = 40000000L

@@ -51,7 +51,7 @@ class ReissueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime 
     for (v <- supportedVersions) {
       val reissuerBalance = sender.grpc.wavesBalance(reissuerAddress).available
       val reissuerEffBalance = sender.grpc.wavesBalance(reissuerAddress).effective
-      val hugeReissueFee = reissuerEffBalance + 1.waves
+      val hugeReissueFee = reissuerEffBalance + 1.TN
 
       val issuedAssetTx = sender.grpc.broadcastIssue(reissuer, "assetname", someAssetAmount, decimals = 2, reissuable = true, issueFee, waitForTx = true)
       val issuedAssetId = PBTransactions.vanilla(issuedAssetTx).explicitGet().id().base58
