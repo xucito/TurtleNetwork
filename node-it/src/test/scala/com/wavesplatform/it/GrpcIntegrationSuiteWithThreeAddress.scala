@@ -39,7 +39,7 @@ trait GrpcIntegrationSuiteWithThreeAddress
   abstract protected override def beforeAll(): Unit = {
     super.beforeAll()
 
-    val defaultBalance: Long = 100.waves
+    val defaultBalance: Long = 20000.TN
 
     def dumpBalances(node: Node, accounts: Seq[ByteString], label: String): Unit = {
       accounts.foreach(acc => {
