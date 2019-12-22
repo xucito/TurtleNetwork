@@ -120,7 +120,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
             sender.address,
             recipient = r,
             assetId = None,
-            amount = 5.waves,
+            amount = 5.TN,
             fee = minFee,
             waitForTx = true
           )
@@ -145,7 +145,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
         )
       )
     )
-    sender.putData(smartAcc.stringRepr, data, 0.3.waves, waitForTx = true)
+    sender.putData(smartAcc.stringRepr, data, 0.3.TN, waitForTx = true)
   }
 
   test("can issue scripted asset and set script fro asset before precheck activation") {
