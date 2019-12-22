@@ -219,7 +219,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
         fee = 54000000
       )
-      .id
+      ._1.id
     nodes.waitForHeightAriseAndTxPresent(invokeScriptTxId)
   }
 
@@ -235,7 +235,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountLessThanVerifierLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
           fee = smartMinFee + smartFee
         )
-        .id,
+        ._1.id,
       "Transaction is not allowed by account-script"
     )
   }
@@ -252,8 +252,13 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountGreaterThanAccountScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
           fee = smartMinFee
         )
+<<<<<<< HEAD
         .id,
       "does not exceed minimal value of 10000000 TN"
+=======
+        ._1.id,
+      "does not exceed minimal value of 900000 WAVES"
+>>>>>>> a2fbf65f2b35265e413d0ef2c9c9badbf0cc18af
     )
   }
 
@@ -269,8 +274,8 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountGreaterThanAccountScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
           fee = smartMinFee + smartFee
         )
-        .id,
-      "with 2 total scripts invoked does not exceed minimal value of 14000000"
+        ._1.id,
+    "with 2 total scripts invoked does not exceed minimal value of 14000000"
     )
   }
 
@@ -285,7 +290,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
         payment = Seq(Payment(amountGreaterThanAccountScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
         fee = smartMinFee + smartFee + smartFee
       )
-      .id
+      ._1.id
 
     nodes.waitForHeightAriseAndTxPresent(invokeScriptId)
   }
@@ -302,7 +307,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountLessThanDAppScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset1).get))),
           fee = smartMinFee + smartFee + smartFee
         )
-        .id,
+        ._1.id,
       "Transaction is not allowed by token-script"
     )
   }
@@ -319,7 +324,7 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountLessThanDAppScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
           fee = smartMinFee + smartFee + smartFee
         )
-        .id,
+        ._1.id,
       s"need payment in 15+ tokens of asset2 $asset2"
     )
   }

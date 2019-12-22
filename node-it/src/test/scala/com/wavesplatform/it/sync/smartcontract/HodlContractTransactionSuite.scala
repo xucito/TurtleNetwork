@@ -109,7 +109,7 @@ class HodlContractTransactionSuite extends BaseTransactionSuite with CancelAfter
         fee = 1.TN,
         waitForTx = true
       )
-      .id
+      ._1.id
 
     sender.waitForTransaction(invokeScriptId)
     sender.getDataByKey(contract.stringRepr, caller.stringRepr) shouldBe IntegerDataEntry(caller.stringRepr, 1.5.TN)
@@ -144,7 +144,7 @@ class HodlContractTransactionSuite extends BaseTransactionSuite with CancelAfter
         fee = 1.TN,
         waitForTx = true
       )
-      .id
+      ._1.id
 
     val balanceAfter = sender.accountBalances(contract.stringRepr)._1
     sender.getDataByKey(contract.stringRepr, caller.stringRepr) shouldBe IntegerDataEntry(caller.stringRepr, 0.01.TN)
