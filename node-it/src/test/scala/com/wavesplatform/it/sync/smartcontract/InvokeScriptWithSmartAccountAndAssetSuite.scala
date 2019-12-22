@@ -252,13 +252,8 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           payment = Seq(Payment(amountGreaterThanAccountScriptLimit, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
           fee = smartMinFee
         )
-<<<<<<< HEAD
-        .id,
-      "does not exceed minimal value of 10000000 TN"
-=======
         ._1.id,
-      "does not exceed minimal value of 900000 WAVES"
->>>>>>> a2fbf65f2b35265e413d0ef2c9c9badbf0cc18af
+      "does not exceed minimal value of 10000000 TN"
     )
   }
 
