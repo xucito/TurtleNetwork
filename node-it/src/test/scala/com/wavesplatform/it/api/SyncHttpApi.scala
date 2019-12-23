@@ -645,7 +645,7 @@ object SyncHttpApi extends Assertions {
                  fee: Long,
                  timestamp: Long,
                  version: Byte,
-                 matcherFeeAssetId: String = "WAVES",
+                 matcherFeeAssetId: String = "TN",
                  waitForTx: Boolean = false): PBSignedTransaction = {
       maybeWaitForTransaction(sync(async(n).grpc.exchange(matcher, buyOrder, sellOrder, amount, price, buyMatcherFee, sellMatcherFee, fee, timestamp, version, matcherFeeAssetId)), waitForTx)
     }
@@ -669,8 +669,8 @@ object SyncHttpApi extends Assertions {
                           amount: Long,
                           fee: Long,
                           version: Int = 2,
-                          assetId: String = "WAVES",
-                          feeAssetId: String = "WAVES",
+                          assetId: String = "TN",
+                          feeAssetId: String = "TN",
                           attachment: ByteString = ByteString.EMPTY,
                           timestamp: Long = System.currentTimeMillis(),
                           waitForTx: Boolean = false

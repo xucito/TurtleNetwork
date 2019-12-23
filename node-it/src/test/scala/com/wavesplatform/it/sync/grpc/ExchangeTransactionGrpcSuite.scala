@@ -32,7 +32,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
     val price               = 500000L
     val amount              = 40000000L
     val priceAssetSpending = amount * price / 100000000L
-    val pair = AssetPair.createAssetPair("WAVES", exchAssetId).get
+    val pair = AssetPair.createAssetPair("TN", exchAssetId).get
     for ((o1ver, o2ver, tver) <- versions) {
       val ts                  = ntpTime.correctedTime()
       val expirationTimestamp = ts + Order.MaxLiveTime
@@ -78,7 +78,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
 
       val ts                       = ntpTime.correctedTime()
       val expirationTimestamp      = ts + Order.MaxLiveTime
-      val assetPair  = AssetPair.createAssetPair("WAVES", feeAssetId.base58).get
+      val assetPair  = AssetPair.createAssetPair("TN", feeAssetId.base58).get
       val buy        = Order.buy(buyer, matcher, assetPair, amount, price, ts, expirationTimestamp, matcherFee, o1ver, matcherFeeOrder1)
       val sell       = Order.sell(seller, matcher, assetPair, amount, price, ts, expirationTimestamp, matcherFee, o2ver, matcherFeeOrder2)
 
@@ -112,7 +112,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
       val expirationTimestamp = ts + Order.MaxLiveTime
       val price               = 2 * Order.PriceConstant
       val amount              = 1
-      val pair = AssetPair.createAssetPair("WAVES", assetId).get
+      val pair = AssetPair.createAssetPair("TN", assetId).get
       val buy  = Order.buy(buyer, matcher, pair, amount, price, ts, expirationTimestamp, matcherFee, o1ver)
       val sell = Order.sell(seller, matcher, pair, amount, price, ts, expirationTimestamp, matcherFee, o2ver)
 
