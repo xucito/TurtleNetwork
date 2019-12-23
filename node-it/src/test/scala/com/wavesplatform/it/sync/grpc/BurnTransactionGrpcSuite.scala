@@ -10,7 +10,7 @@ class BurnTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
   private val decimals: Byte = 2
 
-  test("burning assets changes issuer's asset balance; issuer's waves balance is decreased by fee") {
+  test("burning assets changes issuer's asset balance; issuer's TN balance is decreased by fee") {
     for (v <- supportedVersions) {
       val issuedAssetId = PBTransactions.vanilla(
         sender.grpc.broadcastIssue(firstAcc, s"name+$v", issueAmount, decimals, reissuable = false, fee = issueFee, waitForTx = true)

@@ -20,7 +20,7 @@ class TransferTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
     issuedAssetId = PBTransactions.vanilla(issuedAsset).explicitGet().id().base58
   }
 
-  test("asset transfer changes sender's and recipient's asset balance by transfer amount and waves by fee") {
+  test("asset transfer changes sender's and recipient's asset balance by transfer amount and TN by fee") {
     for (v <- supportedVersions) {
       val issuedAsset      = sender.grpc.broadcastIssue(firstAcc, "name", someAssetAmount, 8, true, issueFee, waitForTx = true)
       val issuedAssetId    = PBTransactions.vanilla(issuedAsset).explicitGet().id().base58
@@ -49,7 +49,7 @@ class TransferTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
     }
   }
 
-  test("waves transfer changes waves balances and eff.b. by transfer amount and fee") {
+  test("TN transfer changes TN balances and eff.b. by transfer amount and fee") {
     for (v <- supportedVersions) {
       val firstBalance     = sender.grpc.wavesBalance(firstAddress).available
       val firstEffBalance  = sender.grpc.wavesBalance(firstAddress).effective
@@ -65,7 +65,7 @@ class TransferTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
     }
   }
 
-  test("invalid signed waves transfer should not be in UTX or blockchain") {
+  test("invalid signed TN transfer should not be in UTX or blockchain") {
     val invalidTimestampFromFuture = ntpTime.correctedTime() + 91.minutes.toMillis
     val invalidTimestampFromPast   = ntpTime.correctedTime() - 121.minutes.toMillis
     for (v <- supportedVersions) {
@@ -113,7 +113,7 @@ class TransferTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
     }
   }
 
-  test("can not make transfer without having enough waves balance") {
+  test("can not make transfer without having enough TN balance") {
     for (v <- supportedVersions) {
       val firstBalance     = sender.grpc.wavesBalance(firstAddress).available
       val firstEffBalance  = sender.grpc.wavesBalance(firstAddress).effective

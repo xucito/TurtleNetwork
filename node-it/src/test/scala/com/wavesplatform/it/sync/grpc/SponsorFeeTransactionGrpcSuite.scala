@@ -106,7 +106,7 @@ class SponsorFeeTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     assertGrpcError(
       sender.grpc.broadcastTransfer(alice, Recipient().withAddress(bobAddress), 10 * token, smallFee, assetId = sponsoredAssetId, feeAssetId = sponsoredAssetId, waitForTx = true),
-      s"does not exceed minimal value of $minFee WAVES or $largeFee $sponsoredAssetId",
+      s"does not exceed minimal value of $minFee TN or $largeFee $sponsoredAssetId",
       Code.INVALID_ARGUMENT
     )
     val aliceWavesBalance = sender.grpc.wavesBalance(aliceAddress)

@@ -99,7 +99,7 @@ class SetAssetScriptGrpcSuite extends GrpcBaseTransactionSuite {
     )
   }
 
-  test("sender's waves balance is decreased by fee") {
+  test("sender's TN balance is decreased by fee") {
     val script2 = ScriptCompiler(
       s"""
          |match tx {
@@ -120,12 +120,12 @@ class SetAssetScriptGrpcSuite extends GrpcBaseTransactionSuite {
     sender.grpc.wavesBalance(firstAddress).effective shouldBe firstEffBalance - setAssetScriptFee
   }
 
-  test("not able set script without having enough waves") {
+  test("not able set script without having enough TN") {
     val firstBalance     = sender.grpc.wavesBalance(firstAddress).available
     val firstEffBalance  = sender.grpc.wavesBalance(firstAddress).effective
     assertGrpcError(
       sender.grpc.setAssetScript(firstAcc, assetWScript, Some(scriptBase64), fee = firstBalance + 1),
-      "negative waves balance",
+      "negative TN balance",
       Code.INVALID_ARGUMENT)
 
     sender.grpc.wavesBalance(firstAddress).available shouldBe firstBalance

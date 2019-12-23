@@ -12,7 +12,7 @@ import io.grpc.Status.Code
 
 class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
-  test("asset mass transfer changes asset balances and sender's.waves balance is decreased by fee.") {
+  test("asset mass transfer changes asset balances and sender's.TN balance is decreased by fee.") {
     val firstBalance = sender.grpc.wavesBalance(firstAddress)
     val secondBalance = sender.grpc.wavesBalance(secondAddress)
     val attachment = ByteString.copyFrom("mass transfer description".getBytes("UTF-8"))
@@ -37,7 +37,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     sender.grpc.assetsBalance(secondAddress, Seq(assetId)).getOrElse(assetId, 0L) shouldBe transferAmount
   }
 
-  test("waves mass transfer changes waves balances") {
+  test("TN mass transfer changes TN balances") {
     val firstBalance = sender.grpc.wavesBalance(firstAddress)
     val secondBalance = sender.grpc.wavesBalance(secondAddress)
     val thirdBalance = sender.grpc.wavesBalance(thirdAddress)
@@ -58,14 +58,14 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     thirdBalanceAfter.effective shouldBe thirdBalance.effective + 2 * transferAmount
   }
 
-  test("can not make mass transfer without having enough waves") {
+  test("can not make mass transfer without having enough TN") {
     val firstBalance = sender.grpc.wavesBalance(firstAddress)
     val secondBalance = sender.grpc.wavesBalance(secondAddress)
     val transfers        = List(Transfer(Some(Recipient().withAddress(secondAddress)), firstBalance.regular / 2), Transfer(Some(Recipient().withAddress(thirdAddress)), firstBalance.regular / 2))
 
     assertGrpcError(
       sender.grpc.broadcastMassTransfer(firstAcc, transfers = transfers, fee = calcMassTransferFee(transfers.size)),
-      "negative waves balance",
+      "negative TN balance",
       Code.INVALID_ARGUMENT
     )
 
@@ -82,7 +82,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     assertGrpcError(
       sender.grpc.broadcastMassTransfer(firstAcc, transfers = transfers, fee = massTransferTransactionFee - 1),
-      s"does not exceed minimal value of $massTransferTransactionFee WAVES",
+      s"does not exceed minimal value of $massTransferTransactionFee TN",
       Code.INVALID_ARGUMENT
     )
 

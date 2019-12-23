@@ -10,7 +10,7 @@ import io.grpc.Status.Code
 class LeasingTransactionsGrpcSuite extends GrpcBaseTransactionSuite {
   private val errorMessage = "Reason: Cannot lease more than own"
 
-  test("leasing waves decreases lessor's eff.b. and increases lessee's eff.b.; lessor pays fee") {
+  test("leasing TN decreases lessor's eff.b. and increases lessee's eff.b.; lessor pays fee") {
     for (v <- supportedVersions) {
       val firstBalance     = sender.grpc.wavesBalance(firstAddress)
       val secondBalance    = sender.grpc.wavesBalance(secondAddress)
@@ -30,7 +30,7 @@ class LeasingTransactionsGrpcSuite extends GrpcBaseTransactionSuite {
     }
   }
 
-  test("cannot lease non-own waves") {
+  test("cannot lease non-own TN") {
     for (v <- supportedVersions) {
       val leaseTx = sender.grpc.broadcastLease(firstAcc, PBRecipients.create(secondAcc.toAddress), leasingAmount, minFee, version = v, waitForTx = true)
       val leaseTxId = PBTransactions.vanilla(leaseTx).explicitGet().id().base58

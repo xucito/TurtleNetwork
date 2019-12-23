@@ -16,7 +16,7 @@ import io.grpc.Status.Code
 import scala.concurrent.duration._
 
 class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
-  test("sender's waves balance is decreased by fee.") {
+  test("sender's TN balance is decreased by fee.") {
     val firstBalance = sender.grpc.wavesBalance(firstAddress).available
     val firstEffBalance = sender.grpc.wavesBalance(firstAddress).effective
     val entry            = DataEntry("int", DataEntry.Value.IntValue(0xcafebabe))
@@ -27,7 +27,7 @@ class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     sender.grpc.wavesBalance(firstAddress).effective shouldBe firstEffBalance - fee
   }
 
-  test("cannot put data without having enough waves") {
+  test("cannot put data without having enough TN") {
     val firstBalance = sender.grpc.wavesBalance(firstAddress).available
     val firstEffBalance = sender.grpc.wavesBalance(firstAddress).effective
     val entry = DataEntry("bool", DataEntry.Value.BoolValue(false))
@@ -35,7 +35,7 @@ class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     assertGrpcError(
       sender.grpc.putData(firstAcc, data, firstBalance + 1),
-    "negative waves balance",
+    "negative TN balance",
       Code.INVALID_ARGUMENT)
 
     nodes.foreach(n => n.grpc.waitForHeight(n.height + 1))

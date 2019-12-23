@@ -110,7 +110,7 @@ class CreateAliasTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPT
   test("Not able to create alias when insufficient funds") {
     val balance = sender.grpc.wavesBalance(aliasCreatorAddr).available
     val alias   = randomAlias()
-    assertGrpcError(sender.grpc.broadcastCreateAlias(aliasCreator, alias, balance + minFee), "negative waves balance", Code.INVALID_ARGUMENT)
+    assertGrpcError(sender.grpc.broadcastCreateAlias(aliasCreator, alias, balance + minFee), "negative TN balance", Code.INVALID_ARGUMENT)
   }
 
   private def randomAlias(): String = {

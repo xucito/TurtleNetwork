@@ -96,7 +96,7 @@ class IssueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime wi
 
     assertGrpcError(
       sender.grpc.broadcastIssue(issuer, assetName, someAssetAmount, 8, reissuable = false, bigAssetFee),
-      "negative waves balance",
+      "negative TN balance",
       Code.INVALID_ARGUMENT)
 
   }

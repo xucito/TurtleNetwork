@@ -13,7 +13,7 @@ class ReissueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime 
 
   val (reissuer, reissuerAddress) = (firstAcc, firstAddress)
 
-  test("asset reissue changes issuer's asset balance; issuer's waves balance is decreased by fee") {
+  test("asset reissue changes issuer's asset balance; issuer's TN balance is decreased by fee") {
     for (v <- supportedVersions) {
       val reissuerBalance = sender.grpc.wavesBalance(reissuerAddress).available
       val reissuerEffBalance = sender.grpc.wavesBalance(reissuerAddress).effective
@@ -57,7 +57,7 @@ class ReissueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime 
       val issuedAssetId = PBTransactions.vanilla(issuedAssetTx).explicitGet().id().base58
 
       assertGrpcError(sender.grpc.broadcastReissue(reissuer, hugeReissueFee, issuedAssetId, someAssetAmount, reissuable = true, version = v, waitForTx = true),
-        "negative waves balance",
+        "negative TN balance",
         Code.INVALID_ARGUMENT)
 
       sender.grpc.wavesBalance(reissuerAddress).available shouldBe reissuerBalance - issueFee
