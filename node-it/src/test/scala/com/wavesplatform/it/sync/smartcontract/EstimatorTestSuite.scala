@@ -27,7 +27,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
       .Builder(Default, 1, Seq.empty)
       .overrideBase(_.quorum(0))
       .overrideBase(_.raw(s"""
-                              | waves.blockchain.custom.functionality {
+                              | TN.blockchain.custom.functionality {
                               |   estimator-pre-check-height =  $featureHeight
                               |   pre-activated-features = {14 = 0}
                               |}""".stripMargin))
@@ -111,7 +111,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
 
   var issuedAssetId = ""
 
-  test("send waves to accounts") {
+  test("send TN to accounts") {
 
     Seq(smartAcc.stringRepr, callerAcc.stringRepr).foreach(
       r =>
@@ -145,7 +145,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
         )
       )
     )
-    sender.putData(smartAcc.stringRepr, data, 0.3.TN, waitForTx = true)
+    sender.putData(smartAcc.stringRepr, data, 0.66.TN, waitForTx = true)
   }
 
   test("can issue scripted asset and set script fro asset before precheck activation") {
