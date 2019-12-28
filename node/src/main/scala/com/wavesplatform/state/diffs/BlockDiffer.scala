@@ -192,7 +192,7 @@ object BlockDiffer extends ScorexLogging {
             CancelLeaseOverflow(_)
           ),
           Patch(
-            _.featureActivationHeight(BlockchainFeatures.DataTransaction.id).contains(currentBlockHeight),
+            _.featureActivationHeight(BlockchainFeatures.DataTransaction.id).contains(currentBlockHeight) && scheme.chainId == 76,
             CancelInvalidLeaseIn(_)
           ),
           Patch(
@@ -200,6 +200,19 @@ object BlockDiffer extends ScorexLogging {
           ),
           Patch(
             _ => currentBlockHeight == 457100 && scheme.chainId == 76, CancelInvalidTx2(_)
+          ),
+          Patch(
+            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight) && scheme.chainId == 76,
+            CancelInvalidTx3(_)
+          ),
+          Patch(
+            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight),
+            CancelLeaseOverflow(_)
+          ),
+
+          Patch(
+            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight),
+            CancelInvalidLeaseIn(_)
           )
         )
         result.copy(diff = patchDiff)

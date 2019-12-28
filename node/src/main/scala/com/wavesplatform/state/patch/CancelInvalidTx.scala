@@ -43,6 +43,7 @@ object CancelInvalidTx extends ScorexLogging {
     Diff.empty.copy(portfolios = diff)
   }
 }
+
 object CancelInvalidTx2 extends ScorexLogging {
 
   def apply(s: Blockchain): Diff = {
@@ -53,6 +54,20 @@ object CancelInvalidTx2 extends ScorexLogging {
         Portfolio(9593994, p.lease, Map.empty)
     }
 
+    Diff.empty.copy(portfolios = diff)
+  }
+}
+
+object CancelInvalidTx3 extends ScorexLogging {
+
+  def apply(s: Blockchain): Diff = {
+    val addr1 = Address.fromString("3JuLRFUpEcUngArNuYz3KgXzvfLCbWP2enY").explicitGet()
+    val addr2 = Address.fromString("3JipW6Xc88eYpFMtCegLRr89SLhGd6FURum").explicitGet()
+    val bal1 = s.balance(addr1)
+    val port1 = s.portfolio(addr1).assets
+    val diff: Map[Address, Portfolio] = Map(
+      addr1 -> Portfolio(0, LeaseBalance(0L, 0L), Map.empty),
+      addr2 -> Portfolio(bal1, LeaseBalance(0L, 0L), port1))
     Diff.empty.copy(portfolios = diff)
   }
 }
