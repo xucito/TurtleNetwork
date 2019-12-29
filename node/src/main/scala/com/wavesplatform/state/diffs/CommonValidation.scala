@@ -25,7 +25,7 @@ import scala.util.{Left, Right, Try}
 object CommonValidation {
 
   val scheme = AddressScheme.current
-  val wrongBLocksUntil = 837600
+  val wrongBLocksUntil = 950000
   val wrongNetworkChainId = 76
   def disallowSendingGreaterThanBalance[T <: Transaction](blockchain: Blockchain,
                                                           blockTime: Long,

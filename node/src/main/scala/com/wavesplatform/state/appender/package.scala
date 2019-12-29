@@ -25,7 +25,7 @@ package object appender extends ScorexLogging {
 
   private val MaxTimeDrift: Long = 100 // millis
   private val scheme = AddressScheme.current
-  val wrongBLocksUntil = 7000000
+  val wrongBLocksUntil = 700000
   val wrongNetworkChainId = 76
 
 

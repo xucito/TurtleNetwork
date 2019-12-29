@@ -17,7 +17,7 @@ object BalanceDiffValidation extends ScorexLogging {
   def apply(b: Blockchain, currentHeight: Int, fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {
     val changedAccounts = d.portfolios.keySet
     val scheme = AddressScheme.current
-    val wrongBLocksUntil = 837600
+    val wrongBLocksUntil = 950000
     val wrongNetworkChainId = 76
 
     def check(acc: Address): Option[(Address, String)] = {
