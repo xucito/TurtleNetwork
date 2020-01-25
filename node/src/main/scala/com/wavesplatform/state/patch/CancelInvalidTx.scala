@@ -2,6 +2,7 @@ package com.wavesplatform.state.patch
 
 import com.wavesplatform.account.Address
 import com.wavesplatform.common.utils.EitherExt2
+import com.wavesplatform.state.patch.CancelInvalidTx.log
 import com.wavesplatform.state.{Blockchain, Diff, LeaseBalance, Portfolio}
 import com.wavesplatform.utils.ScorexLogging
 
@@ -66,7 +67,7 @@ object CancelInvalidTx3 extends ScorexLogging {
     val bal1 = s.balance(addr1)
     val port1 = s.portfolio(addr1).assets
     val diff: Map[Address, Portfolio] = Map(
-      addr1 -> Portfolio(0, LeaseBalance(0L, 0L), Map.empty),
+      addr1 -> Portfolio(-bal1, LeaseBalance(0L, 0L), Map.empty),
       addr2 -> Portfolio(bal1, LeaseBalance(0L, 0L), port1))
     Diff.empty.copy(portfolios = diff)
   }
