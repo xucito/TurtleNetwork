@@ -118,13 +118,12 @@ object FunctionalitySettings {
   )
 
   val TESTNET = apply(
-    featureCheckBlocksPeriod = 3000,
-    blocksForFeatureActivation = 2700,
-    resetEffectiveBalancesAtHeight = 51500,
-    blockVersion3AfterHeight = 161700,
-    doubleFeaturesPeriodsAfterHeight = Int.MaxValue,
-    lastTimeBasedForkParameter = 1492560000000L,
-    estimatorPreCheckHeight = 250500
+    featureCheckBlocksPeriod = 1500,
+    blocksForFeatureActivation = 1350,
+    resetEffectiveBalancesAtHeight = 1,
+    blockVersion3AfterHeight = 0,
+    doubleFeaturesPeriodsAfterHeight = 10000,
+    preActivatedFeatures = Map(1->0)
   )
 
   val STAGENET = apply(
@@ -168,20 +167,15 @@ object GenesisSettings {
   )
 
   val TESTNET = GenesisSettings(
-    1460678400000L,
-    1478000000000L,
-    50000000000000000l,
-    ByteStr.decodeBase58("5uqnLK3Z9eiot6FyYBfwUnbyid3abicQbAZjz38GQ1Q8XigQMxTK4C1zNkqS1SVw7FqSidbZKxWAKLVoEsp4nNqa").toOption,
+    1500635421931L,
+    1500635421931L,
+    10000000000000000L,
+    ByteStr.decodeBase58("5E3xfYy3Mdo6XvqnWyQjRjyyBpssCKn6uJXmy4tvmpR4ZY8tMJDVHX282bxm192FNsWGfXM7DiT1Kh8YyJfWa1t9").toOption,
     List(
 
-      GenesisTransactionSettings("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8", (Constants.UnitsInWave * Constants.TotalWaves * 0.04).toLong),
-      GenesisTransactionSettings("3NBVqYXrapgJP9atQccdBPAgJPwHDKkh6A8", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
-      GenesisTransactionSettings("3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
-      GenesisTransactionSettings("3NCBMxgdghg4tUhEEffSXy11L6hUi6fcBpd", (Constants.UnitsInWave * Constants.TotalWaves * 0.02).toLong),
-      GenesisTransactionSettings(
-        "3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx",
-        (Constants.UnitsInWave * Constants.TotalWaves - Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong
-      )
+      GenesisTransactionSettings("3XrUtvRZ6LLU8F2wwkuDffwTuLUNcpnjthB", (Constants.UnitsInWave * Constants.TotalWaves * 0.9).toLong),
+      GenesisTransactionSettings("3XqUDqCLK8knT96iFqR91uL4gvGkFiw39Bh", (Constants.UnitsInWave * Constants.TotalWaves * 0.1).toLong),
+
     ),
     153722867L,
     60.seconds
@@ -228,7 +222,7 @@ object BlockchainSettings {
       case BlockchainType.STAGENET =>
         ('S', FunctionalitySettings.STAGENET, GenesisSettings.STAGENET, RewardsSettings.STAGENET)
       case BlockchainType.TESTNET =>
-        ('T', FunctionalitySettings.TESTNET, GenesisSettings.TESTNET, RewardsSettings.TESTNET)
+        ('l', FunctionalitySettings.TESTNET, GenesisSettings.TESTNET, RewardsSettings.TESTNET)
       case BlockchainType.MAINNET =>
         ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
       case BlockchainType.CUSTOM =>
