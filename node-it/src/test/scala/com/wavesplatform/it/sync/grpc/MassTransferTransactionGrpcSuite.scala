@@ -37,17 +37,10 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     sender.assetsBalance(secondAddress, Seq(assetId)).getOrElse(assetId, 0L) shouldBe transferAmount
   }
 
-<<<<<<< HEAD
-  test("TN mass transfer changes TN balances") {
-    val firstBalance = sender.grpc.wavesBalance(firstAddress)
-    val secondBalance = sender.grpc.wavesBalance(secondAddress)
-    val thirdBalance = sender.grpc.wavesBalance(thirdAddress)
-=======
-  test("waves mass transfer changes waves balances") {
+  test("TN mass transfer changes waves balances") {
     val firstBalance = sender.wavesBalance(firstAddress)
     val secondBalance = sender.wavesBalance(secondAddress)
     val thirdBalance = sender.wavesBalance(thirdAddress)
->>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
     val transfers = List(Transfer(Some(Recipient().withAddress(secondAddress)), transferAmount), Transfer(Some(Recipient().withAddress(thirdAddress)), 2 * transferAmount))
 
     val massTransferTransactionFee = calcMassTransferFee(transfers.size)
@@ -65,16 +58,6 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     thirdBalanceAfter.effective shouldBe thirdBalance.effective + 2 * transferAmount
   }
 
-<<<<<<< HEAD
-  test("can not make mass transfer without having enough TN") {
-    val firstBalance = sender.grpc.wavesBalance(firstAddress)
-    val secondBalance = sender.grpc.wavesBalance(secondAddress)
-    val transfers        = List(Transfer(Some(Recipient().withAddress(secondAddress)), firstBalance.regular / 2), Transfer(Some(Recipient().withAddress(thirdAddress)), firstBalance.regular / 2))
-
-    assertGrpcError(
-      sender.grpc.broadcastMassTransfer(firstAcc, transfers = transfers, fee = calcMassTransferFee(transfers.size)),
-      "negative TN balance",
-=======
   test("can not make mass transfer without having enough waves") {
     val firstBalance = sender.wavesBalance(firstAddress)
     val secondBalance = sender.wavesBalance(secondAddress)
@@ -82,8 +65,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     assertGrpcError(
       sender.broadcastMassTransfer(firstAcc, transfers = transfers, fee = calcMassTransferFee(transfers.size)),
-      "negative waves balance",
->>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
+      "negative TN balance",
       Code.INVALID_ARGUMENT
     )
 
@@ -99,13 +81,8 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     val massTransferTransactionFee = calcMassTransferFee(transfers.size)
 
     assertGrpcError(
-<<<<<<< HEAD
-      sender.grpc.broadcastMassTransfer(firstAcc, transfers = transfers, fee = massTransferTransactionFee - 1),
-      s"does not exceed minimal value of $massTransferTransactionFee TN",
-=======
       sender.broadcastMassTransfer(firstAcc, transfers = transfers, fee = massTransferTransactionFee - 1),
-      s"does not exceed minimal value of $massTransferTransactionFee WAVES",
->>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
+      s"does not exceed minimal value of $massTransferTransactionFee TN",
       Code.INVALID_ARGUMENT
     )
 

@@ -94,12 +94,8 @@ package object appender extends ScorexLogging {
     } yield baseHeight
 
   private def appendBlock(blockchainUpdater: BlockchainUpdater with Blockchain, utxStorage: UtxPoolImpl, verify: Boolean)(
-<<<<<<< HEAD
-    block: Block): Either[ValidationError, Option[Int]] =
-=======
       block: Block
   ): Either[ValidationError, Option[Int]] =
->>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
     metrics.appendBlock.measureSuccessful(blockchainUpdater.processBlock(block, verify)).map { maybeDiscardedTxs =>
       metrics.utxRemoveAll.measure(utxStorage.removeAll(block.transactionData))
       maybeDiscardedTxs.map { discarded =>
@@ -109,12 +105,8 @@ package object appender extends ScorexLogging {
     }
 
   private def blockConsensusValidation(blockchain: Blockchain, pos: PoSSelector, currentTs: Long, block: Block)(
-<<<<<<< HEAD
-    genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] =
-=======
       genBalance: (Int, BlockId) => Either[String, Long]
   ): Either[ValidationError, Unit] =
->>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
     metrics.blockConsensusValidation
       .measureSuccessful {
 
