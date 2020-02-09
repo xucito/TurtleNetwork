@@ -92,7 +92,7 @@ class IssueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime wi
   test("Not able to create asset when insufficient funds") {
     val assetName        = "myasset"
     val issuerEffBalance = sender.wavesBalance(issuerAddress).effective
-    val bigAssetFee      = issuerEffBalance + 1.waves
+    val bigAssetFee      = issuerEffBalance + 1.TN
 
     assertGrpcError(
       sender.broadcastIssue(issuer, assetName, someAssetAmount, 8, reissuable = false, bigAssetFee),

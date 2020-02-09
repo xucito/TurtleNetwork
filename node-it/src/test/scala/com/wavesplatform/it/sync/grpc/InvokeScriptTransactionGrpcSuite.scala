@@ -59,7 +59,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
       caller,
       Recipient().withAddress(dAppAddress),
       Some(FUNCTION_CALL(FunctionHeader.User("foo"), List(CONST_BYTESTR(arg).explicitGet()))),
-      fee = 1.waves,
+      fee = 1.TN,
       waitForTx = true
     )
 
@@ -72,7 +72,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
       caller,
       Recipient().withAddress(dAppAddress),
       functionCall = None,
-      fee = 1.waves,
+      fee = 1.TN,
       waitForTx = true
     )
     sender.getDataByKey(dAppAddress, "a") shouldBe List(DataEntry("a", DataEntry.Value.StringValue("b")))
