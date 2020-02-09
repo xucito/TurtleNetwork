@@ -123,7 +123,7 @@ object FunctionalitySettings {
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     doubleFeaturesPeriodsAfterHeight = 10000,
-    preActivatedFeatures = Map(1->0)
+    preActivatedFeatures = Map(1.toShort->0)
   )
 
   val STAGENET = apply(
