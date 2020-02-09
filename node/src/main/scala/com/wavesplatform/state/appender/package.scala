@@ -36,12 +36,13 @@ package object appender extends ScorexLogging {
   )
 
   private[appender] def processAndBlacklistOnFailure[A, B](
-                                                            ch: Channel,
-                                                            peerDatabase: PeerDatabase,
-                                                            miner: Miner,
-                                                            start: => String,
-                                                            success: => String,
-                                                            errorPrefix: String)(f: => Task[Either[B, Option[BigInt]]]): Task[Either[B, Option[BigInt]]] = {
+      ch: Channel,
+      peerDatabase: PeerDatabase,
+      miner: Miner,
+      start: => String,
+      success: => String,
+      errorPrefix: String
+  )(f: => Task[Either[B, Option[BigInt]]]): Task[Either[B, Option[BigInt]]] = {
 
     log.debug(start)
     f map {
@@ -56,21 +57,25 @@ package object appender extends ScorexLogging {
     }
   }
 
-  private[appender] def appendBlock(blockchainUpdater: BlockchainUpdater with Blockchain,
-                                    utxStorage: UtxPoolImpl,
-                                    pos: PoSSelector,
-                                    time: Time,
-                                    verify: Boolean)(block: Block): Either[ValidationError, Option[Int]] = {
+  private[appender] def appendBlock(
+      blockchainUpdater: BlockchainUpdater with Blockchain,
+      utxStorage: UtxPoolImpl,
+      pos: PoSSelector,
+      time: Time,
+      verify: Boolean
+  )(block: Block): Either[ValidationError, Option[Int]] = {
     val append: Block => Either[ValidationError, Option[Int]] =
       if (verify) validateAndAppendBlock(blockchainUpdater, utxStorage, pos, time)
       else appendBlock(blockchainUpdater, utxStorage, verify = false)
     append(block)
   }
 
-  private[appender] def validateAndAppendBlock(blockchainUpdater: BlockchainUpdater with Blockchain,
-                                               utxStorage: UtxPoolImpl,
-                                               pos: PoSSelector,
-                                               time: Time)(block: Block): Either[ValidationError, Option[Int]] =
+  private[appender] def validateAndAppendBlock(
+      blockchainUpdater: BlockchainUpdater with Blockchain,
+      utxStorage: UtxPoolImpl,
+      pos: PoSSelector,
+      time: Time
+  )(block: Block): Either[ValidationError, Option[Int]] =
     for {
       _ <- Either.cond(
         !blockchainUpdater.hasScript(block.sender),
@@ -89,7 +94,12 @@ package object appender extends ScorexLogging {
     } yield baseHeight
 
   private def appendBlock(blockchainUpdater: BlockchainUpdater with Blockchain, utxStorage: UtxPoolImpl, verify: Boolean)(
+<<<<<<< HEAD
     block: Block): Either[ValidationError, Option[Int]] =
+=======
+      block: Block
+  ): Either[ValidationError, Option[Int]] =
+>>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
     metrics.appendBlock.measureSuccessful(blockchainUpdater.processBlock(block, verify)).map { maybeDiscardedTxs =>
       metrics.utxRemoveAll.measure(utxStorage.removeAll(block.transactionData))
       maybeDiscardedTxs.map { discarded =>
@@ -99,7 +109,12 @@ package object appender extends ScorexLogging {
     }
 
   private def blockConsensusValidation(blockchain: Blockchain, pos: PoSSelector, currentTs: Long, block: Block)(
+<<<<<<< HEAD
     genBalance: (Int, BlockId) => Either[String, Long]): Either[ValidationError, Unit] =
+=======
+      genBalance: (Int, BlockId) => Either[String, Long]
+  ): Either[ValidationError, Unit] =
+>>>>>>> d1f0230aa355768b58cb3d04cd79b50022bfdc90
     metrics.blockConsensusValidation
       .measureSuccessful {
 
