@@ -88,29 +88,27 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
         |}""".stripMargin))
     val settings = BlockchainSettings.fromRootConfig(config)
 
-    settings.addressSchemeCharacter should be('T')
+    settings.addressSchemeCharacter should be('l')
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(51500)
-    settings.functionalitySettings.blockVersion3AfterHeight should be(161700)
+    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(1)
+    settings.functionalitySettings.blockVersion3AfterHeight should be(0)
     settings.functionalitySettings.maxTransactionTimeBackOffset should be(120.minutes)
     settings.functionalitySettings.maxTransactionTimeForwardOffset should be(90.minutes)
     settings.rewardsSettings.initial should be(600000000)
     settings.rewardsSettings.minIncrement should be(50000000)
     settings.rewardsSettings.term should be(100000)
     settings.rewardsSettings.votingInterval should be(10000)
-    settings.genesisSettings.blockTimestamp should be(1460678400000L)
-    settings.genesisSettings.timestamp should be(1478000000000L)
+    settings.genesisSettings.blockTimestamp should be(1500635421931L)
+    settings.genesisSettings.timestamp should be(1500635421931L)
     settings.genesisSettings.signature should be(
-      ByteStr.decodeBase58("5uqnLK3Z9eiot6FyYBfwUnbyid3abicQbAZjz38GQ1Q8XigQMxTK4C1zNkqS1SVw7FqSidbZKxWAKLVoEsp4nNqa").toOption)
-    settings.genesisSettings.initialBalance should be(50000000000000000L)
+      ByteStr.decodeBase58("5E3xfYy3Mdo6XvqnWyQjRjyyBpssCKn6uJXmy4tvmpR4ZY8tMJDVHX282bxm192FNsWGfXM7DiT1Kh8YyJfWa1t9").toOption)
+    settings.genesisSettings.initialBalance should be(10000000000000000L)
 
     settings.genesisSettings.transactions should be(
       Seq(
-        GenesisTransactionSettings("3My3KZgFQ3CrVHgz6vGRt8687sH4oAA1qp8", 400000000000000L),
-        GenesisTransactionSettings("3NBVqYXrapgJP9atQccdBPAgJPwHDKkh6A8", 200000000000000L),
-        GenesisTransactionSettings("3N5GRqzDBhjVXnCn44baHcz2GoZy5qLxtTh", 200000000000000L),
-        GenesisTransactionSettings("3NCBMxgdghg4tUhEEffSXy11L6hUi6fcBpd", 200000000000000L),
-        GenesisTransactionSettings("3N18z4B8kyyQ96PhN5eyhCAbg4j49CgwZJx", 9000000000000000L)
+        GenesisTransactionSettings("3XrUtvRZ6LLU8F2wwkuDffwTuLUNcpnjthB", 9000000000000000L),
+        GenesisTransactionSettings("3XqUDqCLK8knT96iFqR91uL4gvGkFiw39Bh", 1000000000000000L),
+
       ))
   }
 
