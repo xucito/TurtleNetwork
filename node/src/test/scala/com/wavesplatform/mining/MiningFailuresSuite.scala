@@ -31,7 +31,7 @@ class MiningFailuresSuite extends FlatSpec with Matchers with PrivateMethodTeste
 
     val wavesSettings = {
       val config = ConfigFactory.parseString("""
-          |waves.miner {
+          |TN.miner {
           |  quorum = 0
           |  interval-after-last-block-then-generation-is-allowed = 0
           |}""".stripMargin).withFallback(ConfigFactory.load())
