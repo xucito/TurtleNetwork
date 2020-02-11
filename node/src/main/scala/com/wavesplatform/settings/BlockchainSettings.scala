@@ -10,11 +10,11 @@ import net.ceedubs.ficus.readers.ValueReader
 import scala.concurrent.duration._
 
 case class RewardsSettings(
-    term: Int,
-    initial: Long,
-    minIncrement: Long,
-    votingInterval: Int
-) {
+                            term: Int,
+                            initial: Long,
+                            minIncrement: Long,
+                            votingInterval: Int
+                          ) {
   require(initial >= 0, "initial must be greater than or equal to 0")
   require(minIncrement > 0, "minIncrement must be greater than 0")
   require(term > 0, "term must be greater than 0")
@@ -24,12 +24,12 @@ case class RewardsSettings(
   def nearestTermEnd(activatedAt: Int, height: Int): Int = {
     require(height >= activatedAt)
     val diff = height - activatedAt + 1
-    val mul  = math.ceil(diff.toDouble / term).toInt
+    val mul = math.ceil(diff.toDouble / term).toInt
     activatedAt + mul * term - 1
   }
 
   def votingWindow(activatedAt: Int, height: Int): Range = {
-    val end   = nearestTermEnd(activatedAt, height)
+    val end = nearestTermEnd(activatedAt, height)
     val start = end - votingInterval + 1
     if (height >= start) Range.inclusive(start, height)
     else Range(0, 0)
@@ -60,25 +60,25 @@ object RewardsSettings {
 }
 
 case class FunctionalitySettings(
-    featureCheckBlocksPeriod: Int,
-    blocksForFeatureActivation: Int,
-    generationBalanceDepthFrom50To1000AfterHeight: Int = 0,
-    resetEffectiveBalancesAtHeight: Int = 0,
-    blockVersion3AfterHeight: Int = 0,
-    preActivatedFeatures: Map[Short, Int] = Map.empty,
-    doubleFeaturesPeriodsAfterHeight: Int,
-    maxTransactionTimeBackOffset: FiniteDuration = 120.minutes,
-    maxTransactionTimeForwardOffset: FiniteDuration = 90.minutes,
-    lastTimeBasedForkParameter: Long = 0L,
-    leaseExpiration: Int = 1000000,
-    estimatorPreCheckHeight: Int = 0
-) {
-  val allowLeasedBalanceTransferUntilHeight: Int        = blockVersion3AfterHeight
-  val allowTemporaryNegativeUntil                       = lastTimeBasedForkParameter
-  val minimalGeneratingBalanceAfter                     = lastTimeBasedForkParameter
-  val allowTransactionsFromFutureUntil                  = lastTimeBasedForkParameter
-  val allowUnissuedAssetsUntil                          = lastTimeBasedForkParameter
-  val allowInvalidReissueInSameBlockUntilTimestamp      = lastTimeBasedForkParameter
+                                  featureCheckBlocksPeriod: Int,
+                                  blocksForFeatureActivation: Int,
+                                  generationBalanceDepthFrom50To1000AfterHeight: Int = 0,
+                                  resetEffectiveBalancesAtHeight: Int = 0,
+                                  blockVersion3AfterHeight: Int = 0,
+                                  preActivatedFeatures: Map[Short, Int] = Map.empty,
+                                  doubleFeaturesPeriodsAfterHeight: Int,
+                                  maxTransactionTimeBackOffset: FiniteDuration = 120.minutes,
+                                  maxTransactionTimeForwardOffset: FiniteDuration = 90.minutes,
+                                  lastTimeBasedForkParameter: Long = 0L,
+                                  leaseExpiration: Int = 1000000,
+                                  estimatorPreCheckHeight: Int = 0
+                                ) {
+  val allowLeasedBalanceTransferUntilHeight: Int = blockVersion3AfterHeight
+  val allowTemporaryNegativeUntil = lastTimeBasedForkParameter
+  val minimalGeneratingBalanceAfter = lastTimeBasedForkParameter
+  val allowTransactionsFromFutureUntil = lastTimeBasedForkParameter
+  val allowUnissuedAssetsUntil = lastTimeBasedForkParameter
+  val allowInvalidReissueInSameBlockUntilTimestamp = lastTimeBasedForkParameter
   val allowMultipleLeaseCancelTransactionUntilTimestamp = lastTimeBasedForkParameter
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
@@ -106,14 +106,19 @@ case class FunctionalitySettings(
 
 object FunctionalitySettings {
   val MAINNET = apply(
-    featureCheckBlocksPeriod = 2000,
-    blocksForFeatureActivation = 1000,
+    featureCheckBlocksPeriod = 5000,
+    blocksForFeatureActivation = 4000,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     lastTimeBasedForkParameter = 1530161445559L,
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     doubleFeaturesPeriodsAfterHeight = 0,
-    estimatorPreCheckHeight = 9000000
+    estimatorPreCheckHeight = 9000000,
+    preActivatedFeatures = Map(1.toShort -> 0,
+                                2.toShort -> 0,
+                                3.toShort -> 0,
+                                5.toShort -> 0,
+                                6.toShort -> 0)
 
   )
 
@@ -123,7 +128,7 @@ object FunctionalitySettings {
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     doubleFeaturesPeriodsAfterHeight = 10000,
-    preActivatedFeatures = Map(1.toShort->0)
+    preActivatedFeatures = Map(1.toShort -> 0)
   )
 
   val STAGENET = apply(
@@ -139,14 +144,14 @@ object FunctionalitySettings {
 case class GenesisTransactionSettings(recipient: String, amount: Long)
 
 case class GenesisSettings(
-    blockTimestamp: Long,
-    timestamp: Long,
-    initialBalance: Long,
-    signature: Option[ByteStr],
-    transactions: Seq[GenesisTransactionSettings],
-    initialBaseTarget: Long,
-    averageBlockDelay: FiniteDuration
-)
+                            blockTimestamp: Long,
+                            timestamp: Long,
+                            initialBalance: Long,
+                            signature: Option[ByteStr],
+                            transactions: Seq[GenesisTransactionSettings],
+                            initialBaseTarget: Long,
+                            averageBlockDelay: FiniteDuration
+                          )
 
 object GenesisSettings {
   val MAINNET = GenesisSettings(
@@ -195,17 +200,17 @@ object GenesisSettings {
 }
 
 case class BlockchainSettings(
-    addressSchemeCharacter: Char,
-    functionalitySettings: FunctionalitySettings,
-    genesisSettings: GenesisSettings,
-    rewardsSettings: RewardsSettings
-)
+                               addressSchemeCharacter: Char,
+                               functionalitySettings: FunctionalitySettings,
+                               genesisSettings: GenesisSettings,
+                               rewardsSettings: RewardsSettings
+                             )
 
 object BlockchainType extends Enumeration {
   val STAGENET = Value("STAGENET")
-  val TESTNET  = Value("TESTNET")
-  val MAINNET  = Value("MAINNET")
-  val CUSTOM   = Value("CUSTOM")
+  val TESTNET = Value("TESTNET")
+  val MAINNET = Value("MAINNET")
+  val CUSTOM = Value("CUSTOM")
 }
 
 object BlockchainSettings {
@@ -227,9 +232,9 @@ object BlockchainSettings {
         ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
       case BlockchainType.CUSTOM =>
         val addressSchemeCharacter = config.as[String](s"custom.address-scheme-character").charAt(0)
-        val functionalitySettings  = config.as[FunctionalitySettings](s"custom.functionality")
-        val genesisSettings        = config.as[GenesisSettings](s"custom.genesis")
-        val rewardsSettings        = config.as[RewardsSettings](s"custom.rewards")
+        val functionalitySettings = config.as[FunctionalitySettings](s"custom.functionality")
+        val genesisSettings = config.as[GenesisSettings](s"custom.genesis")
+        val rewardsSettings = config.as[RewardsSettings](s"custom.rewards")
         (addressSchemeCharacter, functionalitySettings, genesisSettings, rewardsSettings)
     }
 
