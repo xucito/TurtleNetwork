@@ -110,31 +110,31 @@ class UtxPoolSpecification
 
   private def transfer(sender: KeyPair, maxAmount: Long, time: Time) =
     (for {
-      amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
+      amount    <- chooseNum(1, (maxAmount * 0.5).toLong)
       recipient <- accountGen
-      fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
+      fee       <- chooseNum(extraFee, (maxAmount * 0.5).toLong)
     } yield TransferTransactionV1.selfSigned(Waves, sender, recipient, amount, time.getTimestamp(), Waves, fee, Array.empty[Byte]).explicitGet())
       .label("transferTransaction")
 
   private def transferV2(sender: KeyPair, maxAmount: Long, time: Time) =
     (for {
-      amount    <- chooseNum(1, (maxAmount * 0.9).toLong)
+      amount    <- chooseNum(1, (maxAmount * 0.5).toLong)
       recipient <- accountGen
-      fee       <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
+      fee       <- chooseNum(extraFee, (maxAmount * 0.5).toLong)
     } yield TransferTransactionV2.selfSigned(Waves, sender, recipient, amount, time.getTimestamp(), Waves, fee, Array.empty[Byte]).explicitGet())
       .label("transferTransactionV2")
 
   private def transferWithRecipient(sender: KeyPair, recipient: PublicKey, maxAmount: Long, time: Time) =
     (for {
-      amount <- chooseNum(1, (maxAmount * 0.9).toLong)
-      fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
+      amount <- chooseNum(1, (maxAmount * 0.5).toLong)
+      fee    <- chooseNum(extraFee, (maxAmount * 0.5).toLong)
     } yield TransferTransactionV1.selfSigned(Waves, sender, recipient, amount, time.getTimestamp(), Waves, fee, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
   private def transferV2WithRecipient(sender: KeyPair, recipient: PublicKey, maxAmount: Long, time: Time) =
     (for {
-      amount <- chooseNum(1, (maxAmount * 0.9).toLong)
-      fee    <- chooseNum(extraFee, (maxAmount * 0.1).toLong)
+      amount <- chooseNum(1, (maxAmount * 0.5).toLong)
+      fee    <- chooseNum(extraFee, (maxAmount * 0.5).toLong)
     } yield TransferTransactionV2.selfSigned(Waves, sender, recipient, amount, time.getTimestamp(), Waves, fee, Array.empty[Byte]).explicitGet())
       .label("transferWithRecipient")
 
