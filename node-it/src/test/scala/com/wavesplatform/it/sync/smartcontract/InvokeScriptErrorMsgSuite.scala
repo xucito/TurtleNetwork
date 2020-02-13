@@ -76,7 +76,6 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
       "State check failed. Reason: Transaction sent from smart account. Requires 4000000 extra fee. Transaction involves 1 scripted assets." +
         " Requires 4000000 extra fee. Fee for InvokeScriptTransaction (1000 in TN) does not exceed minimal value of 14000000 TN."
     )
-
     assertBadRequestAndMessage(
       sender.invokeScript(
         caller.stringRepr,
@@ -85,9 +84,9 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         payment = Seq(
           InvokeScriptTransaction.Payment(10, Asset.fromString(Some(asset1)))
         ),
-        fee = 1300000
+        fee = 17000000
       ),
-      "State check failed. Reason: Fee in TN for InvokeScriptTransaction (1300000 in TN) with 12 total scripts invoked does not exceed minimal value of 14000000 TN."
+      "State check failed. Reason: Fee in TN for InvokeScriptTransaction (17000000 in TN) with 12 total scripts invoked does not exceed minimal value of 54000000 TN."
     )
   }
 }
