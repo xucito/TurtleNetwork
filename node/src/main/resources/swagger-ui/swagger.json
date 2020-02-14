@@ -1,13 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "The Web Interface to the Waves Full Node API",
+    "description": "The Web Interface to the Turtle Network Full Node API",
     "version": "???",
-    "title": "Waves Full Node (???)",
+    "title": "TN Full Node (???)",
     "termsOfService": "",
     "license": {
       "name": "MIT License",
-      "url": "https://github.com/wavesplatform/Waves/blob/master/LICENSE"
+      "url": "https://github.com/BlackTurtle123/TurtleNetwork/blob/master/LICENSE"
     }
   },
   "basePath": "/",
@@ -3798,14 +3798,14 @@
         "tags": [
           "debug"
         ],
-        "summary": "Waves balance history",
-        "description": "Waves balance history",
+        "summary": "TN balance history",
+        "description": "TN balance history",
         "operationId": "balanceHistory_1",
         "parameters": [
           {
             "name": "address",
             "in": "path",
-            "description": "An address to load waves balance history for",
+            "description": "An address to load TN balance history for",
             "required": true,
             "type": "string"
           }
@@ -3837,7 +3837,7 @@
         }
       }
     },
-    "/debug/stateWaves/{height}": {
+    "/debug/stateTN/{height}": {
       "get": {
         "tags": [
           "debug"

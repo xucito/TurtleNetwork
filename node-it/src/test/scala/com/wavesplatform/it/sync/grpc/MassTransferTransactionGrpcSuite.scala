@@ -37,7 +37,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     sender.assetsBalance(secondAddress, Seq(assetId)).getOrElse(assetId, 0L) shouldBe transferAmount
   }
 
-  test("TN mass transfer changes waves balances") {
+  test("TN mass transfer changes TN balances") {
     val firstBalance = sender.wavesBalance(firstAddress)
     val secondBalance = sender.wavesBalance(secondAddress)
     val thirdBalance = sender.wavesBalance(thirdAddress)

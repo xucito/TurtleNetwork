@@ -91,7 +91,7 @@ class CustomJsonMarshallerSpec
     checkRoute(Get("/blockchain/rewards/1000"), rewardRoute, "totalWavesAmount", "currentReward", "minIncrement")
   }
 
-  property("/debug/stateWaves") {
+  property("/debug/stateTN") {
     pending // todo: fix when distributions/portfolio become testable
   }
 

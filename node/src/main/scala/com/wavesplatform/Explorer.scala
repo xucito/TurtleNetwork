@@ -145,10 +145,10 @@ object Explorer extends ScorexLogging {
           val byKeyTotalBalance = reader.wavesAmount(blockchainHeight)
 
           if (actualTotalBalance != expectedTotalBalance || expectedTotalBalance != byKeyTotalBalance)
-            log.error(s"Something wrong, actual total waves balance: $actualTotalBalance," +
-              s" expected total waves balance: $expectedTotalBalance, total waves balance by key: $byKeyTotalBalance")
+            log.error(s"Something wrong, actual total TN balance: $actualTotalBalance," +
+              s" expected total TN balance: $expectedTotalBalance, total TN balance by key: $byKeyTotalBalance")
           else
-            log.info(s"Correct total waves balance: $actualTotalBalance WAVELETS")
+            log.info(s"Correct total TN balance: $actualTotalBalance WAVELETS")
 
         case "DA" =>
           val addressIds = mutable.Seq[(BigInt, Address)]()
