@@ -209,18 +209,6 @@ object BlockDiffer extends ScorexLogging {
             _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight),
             CancelLeaseOverflow(_)
           ),
-          Patch(
-            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight) && scheme.chainId == 76,
-            CancelInvalidTx3(_)
-          ),
-          /*          Patch(
-                      _.featureActivationHeight(BlockchainFeatures.BlockReward.id).contains(currentBlockHeight),
-                      CancelInvalidLeaseIn(_)
-                    ),
-                    Patch(
-                      _.featureActivationHeight(BlockchainFeatures.BlockReward.id).contains(currentBlockHeight),
-                      CancelLeaseOverflow(_)
-                    ),*/
         )
         result.copy(diff = patchDiff)
       }
