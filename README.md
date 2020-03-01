@@ -10,7 +10,8 @@ In the master branch there is a code with functions that is under development. T
 Please read [repo wiki article](https://github.com/BlackTurtle123/TurtleNetwork/wiki/Setting-up-a-$TN-node).
 
 
-DISCLAIMER
+## DISCLAIMER ##
+
 User may never use this product if his activity related to:
 
 - Drugs, and tools specifically intended for the production of drugs, Drug paraphernalia Illegal Drugs, substances designed to mimic illegal drugs, and/or other psycho active products (e.g.,K2, salvia divinorum, nitrate inhalers, bath salts, synthetic cannabis, herbal smoking blends, herbal incense, and HCG/HGH-like substances)
