@@ -60,25 +60,26 @@ object RewardsSettings {
 }
 
 case class FunctionalitySettings(
-                                  featureCheckBlocksPeriod: Int,
-                                  blocksForFeatureActivation: Int,
-                                  generationBalanceDepthFrom50To1000AfterHeight: Int = 0,
-                                  resetEffectiveBalancesAtHeight: Int = 0,
-                                  blockVersion3AfterHeight: Int = 0,
-                                  preActivatedFeatures: Map[Short, Int] = Map.empty,
-                                  doubleFeaturesPeriodsAfterHeight: Int,
-                                  maxTransactionTimeBackOffset: FiniteDuration = 120.minutes,
-                                  maxTransactionTimeForwardOffset: FiniteDuration = 90.minutes,
-                                  lastTimeBasedForkParameter: Long = 0L,
-                                  leaseExpiration: Int = 1000000,
-                                  estimatorPreCheckHeight: Int = 0
-                                ) {
-  val allowLeasedBalanceTransferUntilHeight: Int = blockVersion3AfterHeight
-  val allowTemporaryNegativeUntil = lastTimeBasedForkParameter
-  val minimalGeneratingBalanceAfter = lastTimeBasedForkParameter
-  val allowTransactionsFromFutureUntil = lastTimeBasedForkParameter
-  val allowUnissuedAssetsUntil = lastTimeBasedForkParameter
-  val allowInvalidReissueInSameBlockUntilTimestamp = lastTimeBasedForkParameter
+    featureCheckBlocksPeriod: Int,
+    blocksForFeatureActivation: Int,
+    generationBalanceDepthFrom50To1000AfterHeight: Int = 0,
+    resetEffectiveBalancesAtHeight: Int = 0,
+    blockVersion3AfterHeight: Int = 0,
+    preActivatedFeatures: Map[Short, Int] = Map.empty,
+    doubleFeaturesPeriodsAfterHeight: Int,
+    maxTransactionTimeBackOffset: FiniteDuration = 120.minutes,
+    maxTransactionTimeForwardOffset: FiniteDuration = 90.minutes,
+    lastTimeBasedForkParameter: Long = 0L,
+    leaseExpiration: Int = 1000000,
+    estimatorPreCheckHeight: Int = 0,
+    resetInvalidInvokeSponsoredFeeHeight: Int = 0
+) {
+  val allowLeasedBalanceTransferUntilHeight: Int        = blockVersion3AfterHeight
+  val allowTemporaryNegativeUntil                       = lastTimeBasedForkParameter
+  val minimalGeneratingBalanceAfter                     = lastTimeBasedForkParameter
+  val allowTransactionsFromFutureUntil                  = lastTimeBasedForkParameter
+  val allowUnissuedAssetsUntil                          = lastTimeBasedForkParameter
+  val allowInvalidReissueInSameBlockUntilTimestamp      = lastTimeBasedForkParameter
   val allowMultipleLeaseCancelTransactionUntilTimestamp = lastTimeBasedForkParameter
 
   require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
@@ -118,8 +119,9 @@ object FunctionalitySettings {
                                 2.toShort -> 0,
                                 3.toShort -> 0,
                                 5.toShort -> 0,
-                                6.toShort -> 0)
+                                6.toShort -> 0),
 
+    resetInvalidInvokeSponsoredFeeHeight = 1100000
   )
 
   val TESTNET = apply(
