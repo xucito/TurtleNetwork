@@ -376,7 +376,7 @@ class InvokeScriptTransactionDiffTest extends PropSpec with PropertyChecks with 
       script      = ContractScript(V3, contract)
       setContract = SetScriptTransaction.selfSigned(master, script.toOption, fee, ts + 2).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
-      sponsoredFee = Sponsorship.fromWaves(900000L, sponsorTx.minSponsoredAssetFee.get)
+      sponsoredFee = Sponsorship.fromWaves(10000000L, sponsorTx.minSponsoredAssetFee.get)
       fc = if (!isCIDefaultFunc)
         Some(Terms.FUNCTION_CALL(FunctionHeader.User(funcBinding), List(CONST_BYTESTR(ByteStr(arg)).explicitGet())))
       else
