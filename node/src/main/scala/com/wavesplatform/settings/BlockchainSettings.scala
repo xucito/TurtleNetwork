@@ -121,7 +121,7 @@ object FunctionalitySettings {
                                 5.toShort -> 0,
                                 6.toShort -> 0),
 
-    resetInvalidInvokeSponsoredFeeHeight = 1100000
+    resetInvalidInvokeSponsoredFeeHeight = 1050000
   )
 
   val TESTNET = apply(
