@@ -2,7 +2,6 @@ package com.wavesplatform.state.patch
 
 import com.wavesplatform.account.Address
 import com.wavesplatform.common.utils.EitherExt2
-import com.wavesplatform.state.patch.CancelInvalidTx.log
 import com.wavesplatform.state.{Blockchain, Diff, LeaseBalance, Portfolio}
 import com.wavesplatform.utils.ScorexLogging
 
