@@ -17,4 +17,6 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
     buildContext: '**'
-    tags: 'latest'
+    tags: |
+      'latest'
+      $(curl -fsSL https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases/latest | tac | grep -m 1 'tag_name.:' | tr -cd '[0-9\.]')
