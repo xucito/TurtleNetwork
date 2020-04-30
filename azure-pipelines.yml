@@ -4,7 +4,14 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- none
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
 
 variables:
   tag: '$(curl -fsSL https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases/latest | tac | grep -m 1 ''tag_name.:'' | tr -cd ''[0-9\.]'')'
