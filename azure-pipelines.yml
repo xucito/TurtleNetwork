@@ -14,7 +14,7 @@ schedules:
     - master
 
 variables:
-  tag: $(curl -fsSL https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases/latest | tac | grep -m 1 ''tag_name.:'' | tr -cd ''[0-9\.]'')
+  tag: curl -fsSL https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases/latest | tac | grep -m 1 ''tag_name.:'' | tr -cd ''[0-9\.]''
   
 pool:
   vmImage: 'ubuntu-latest'
