@@ -26,3 +26,4 @@ steps:
     buildContext: '**'
     tags: |
       latest
+      $(tag)
