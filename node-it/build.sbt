@@ -10,7 +10,7 @@ def stageFiles(ref: ProjectReference): TaskKey[File] =
 
 inTask(docker)(
   Seq(
-    imageNames := Seq(ImageName("com.wavesplatform/node-it")),
+    imageNames := Seq(ImageName("turtlenetwork/node-it")),
     exposedPorts := Set(6860, 6861, 6870), // NetworkApi, RestApi
     additionalFiles ++= Seq(
       stageFiles(LocalProject("node")).value,

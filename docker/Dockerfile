@@ -9,45 +9,40 @@ RUN                                                                             
     WAVES_VERSION=$WAVES_VERSION                                            &&  \
     test $WAVES_VERSION = "latest"                                          &&  \
     WAVES_VERSION=$(curl -fsSL                                                  \
-        https://api.github.com/repos/wavesplatform/Waves/releases/latest        \
+        https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases/latest        \
         | tac | grep -m 1 'tag_name.:' | tr -cd '[0-9\.]')                  &&  \
     echo "Using latest version '${WAVES_VERSION}'"                              \
 ;} ;                                                                            \
 {                                                                               \
-    curl -fsSL https://api.github.com/repos/wavesplatform/Waves/releases        \
+    curl -fsSL https://api.github.com/repos/BlackTurtle123/TurtleNetwork/releases        \
         | tac | grep -q "tag_name.*${WAVES_VERSION}"                        &&  \
     echo "GitHub release '${WAVES_VERSION}' found"                              \
 ;} &&                                                                           \
 {                                                                               \
     echo "Downloading Waves '${WAVES_VERSION}' from GitHub"                 &&  \
-    mkdir -p /waves/node/target                                             &&  \
-    releaseUrl="https://github.com/wavesplatform/Waves/releases/download"   &&  \
-    rawContentUrl="https://raw.githubusercontent.com/wavesplatform/Waves"   &&  \
+    mkdir -p /TN/node/target                                             &&  \
+    releaseUrl="https://github.com/BlackTurtle123/TurtleNetwork/releases/download"   &&  \
+    rawContentUrl="https://raw.githubusercontent.com/BlackTurtle123/TurtleNetwork"   &&  \
                                                                                 \
     echo "Downloading jar file"                                             &&  \
-    curl -fL ${releaseUrl}/v${WAVES_VERSION}/waves-all-${WAVES_VERSION}.jar     \
-        -o /waves/node/target/waves-all-${WAVES_VERSION}.jar                &&  \
+    curl -fL ${releaseUrl}/v${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
+        -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                &&  \
                                                                                 \
     echo "Downloading mainnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/waves-mainnet.conf         \
-        -o /waves/node/waves-mainnet.conf                                   &&  \
+    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-mainnet.conf         \
+        -o /TN/node/TN-mainnet.conf                                   &&  \
                                                                                 \
     echo "Downloading testnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/waves-testnet.conf         \
-        -o /waves/node/waves-testnet.conf                                   &&  \
-    echo "Downloading stagenet config"                                      &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/waves-stagenet.conf        \
-        -o /waves/node/waves-stagenet.conf                                  ||  \
-            curl -fL ${rawContentUrl}/master/node/waves-stagenet.conf           \
-            -o /waves/node/waves-stagenet.conf                                  \
+    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-testnet.conf         \
+        -o /TN/node/TN-testnet.conf                                     \
 ;} ||                                                                           \
 {                                                                               \
     echo "Downloading sbt '${SBT_VERSION}'"                                 &&  \
     curl -fL -o sbt-$SBT_VERSION.deb                                            \
         https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb              &&  \
     dpkg -i sbt-$SBT_VERSION.deb && rm sbt-$SBT_VERSION.deb                 &&  \
-    git clone https://github.com/wavesplatform/Waves.git                        \
-        --branch $BRANCH waves && cd waves                                  &&  \
+    git clone https://github.com/BlackTurtle123/TurtleNetwork.git                        \
+        --branch $BRANCH TN && cd TN                                  &&  \
     git config --global user.name "Sbt Builder"                             &&  \
     git config --global user.email "sbt@builder.docker"                     &&  \
     git tag -a "v${WAVES_VERSION}" -m "Docker build"                        &&  \
@@ -58,8 +53,8 @@ RUN                                                                             
         SBT_OPTS="-XX:ReservedCodeCacheSize=128m                                \
             -Xmx2g -Dnetwork=${network}" sbt 'packageAll'                   &&  \
         mkdir -p /out/${network}                                            &&  \
-        mv node/target/waves*.deb /out/${network}/                          &&  \
-        cp node/target/waves-all*.jar /out/${network}/                      &&  \
+        mv node/target/TN*.deb /out/${network}/                          &&  \
+        cp node/target/TN-all*.jar /out/${network}/                      &&  \
         mv grpc-server/target/universal/grpc-server*.tgz /out/${network}/   &&  \
         mv grpc-server/target/grpc-server*.deb /out/${network}/             ;   \
     done                                                                        \
@@ -76,20 +71,20 @@ ENV WAVES_LOG_LEVEL=$WAVES_LOG_LEVEL
 ENV WAVES_HEAP_SIZE=$WAVES_HEAP_SIZE
 ENV WAVES_NETWORK=$WAVES_NETWORK
 
-COPY --from=builder /waves/node/target/waves-all-*.jar /usr/share/waves/lib/
-COPY --from=builder /waves/node/waves-*.conf /usr/share/waves/conf/
-COPY entrypoint.sh /usr/share/waves/bin/
+COPY --from=builder /TN/node/target/TN-all-*.jar /usr/share/TN/lib/
+COPY --from=builder /TN/node/TN-*.conf /usr/share/TN/conf/
+COPY entrypoint.sh /usr/share/TN/bin/
 
-RUN groupadd -g 143 waves                                                   &&  \
-    useradd -d /var/lib/waves -g 143 -u 143 -s /bin/bash -M waves           &&  \
-    mkdir -p /var/lib/waves /etc/waves                                      &&  \
-    chown -R 143:143 /var/lib/waves /usr/share/waves /etc/waves             &&  \
-    chmod -R 755 /var/lib/waves /usr/share/waves /etc/waves                 &&  \
-    ln -fs /var/lib/waves/log /var/log/waves
+RUN groupadd -g 143 TN                                                   &&  \
+    useradd -d /var/lib/TN -g 143 -u 143 -s /bin/bash -M TN           &&  \
+    mkdir -p /var/lib/TN /etc/TN                                      &&  \
+    chown -R 143:143 /var/lib/TN /usr/share/TN /etc/TN             &&  \
+    chmod -R 755 /var/lib/TN /usr/share/TN /etc/TN                 &&  \
+    ln -fs /var/lib/TN/log /var/log/TN
 
-WORKDIR /var/lib/waves
-EXPOSE 6869 6868 6863 6862
+WORKDIR /var/lib/TN
+EXPOSE 6861 6860 6560 6862
 
-USER waves
-VOLUME /var/lib/waves
-ENTRYPOINT ["/usr/share/waves/bin/entrypoint.sh"]
+USER TN
+VOLUME /var/lib/TN
+ENTRYPOINT ["/usr/share/TN/bin/entrypoint.sh"]

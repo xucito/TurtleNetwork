@@ -517,7 +517,7 @@ class Docker(suiteConfig: Config = empty, tag: String = "", enableProfiling: Boo
 }
 
 object Docker {
-  val NodeImageName: String = "com.wavesplatform/node-it:latest"
+  val NodeImageName: String = "turtlenetwork/node-it:latest"
 
   private val ContainerRoot = Paths.get("/opt/TN")
   private val ProfilerPort  = 10001
