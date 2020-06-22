@@ -206,7 +206,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
       ._1.id
 
     sender.assetBalance(dApp.stringRepr, dAppAsset).balance shouldBe dAppAssetBalance
-    sender.accountBalances(dApp.stringRepr)._1  shouldBe dAppWavesBalance - 0.009.TN
+    sender.accountBalances(dApp.stringRepr)._1  shouldBe dAppWavesBalance - 0.18.TN
   }
 
 }
