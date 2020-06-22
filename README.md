@@ -34,8 +34,8 @@ Please follow the SBT installation instructions depending on your platform ([Lin
 *2. Clone this repo*
 
 ```bash
-git clone https://github.com/wavesplatform/Waves.git
-cd Waves
+git clone https://github.com/TurtleNetwork/TurtleNetwork.git
+cd TurtleNetwork
 ```
 
 *3. Compile and run tests*
