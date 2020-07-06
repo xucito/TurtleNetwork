@@ -25,15 +25,15 @@ RUN                                                                             
     rawContentUrl="https://raw.githubusercontent.com/BlackTurtle123/TurtleNetwork"   &&  \
                                                                                 \
     echo "Downloading jar file"                                             &&  \
-    curl -fL ${releaseUrl}/v${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
+    curl -fL ${releaseUrl}/${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
         -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                &&  \
                                                                                 \
     echo "Downloading mainnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-mainnet.conf         \
+    curl -fL ${rawContentUrl}/${WAVES_VERSION}/node/TN-mainnet.conf         \
         -o /TN/node/TN-mainnet.conf                                   &&  \
                                                                                 \
     echo "Downloading testnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-testnet.conf         \
+    curl -fL ${rawContentUrl}/${WAVES_VERSION}/node/TN-testnet.conf         \
         -o /TN/node/TN-testnet.conf                                     \
 ;} ||                                                                           \
 {                                                                               \
@@ -45,7 +45,7 @@ RUN                                                                             
         --branch $BRANCH TN && cd TN                                  &&  \
     git config --global user.name "Sbt Builder"                             &&  \
     git config --global user.email "sbt@builder.docker"                     &&  \
-    git tag -a "v${WAVES_VERSION}" -m "Docker build"                        &&  \
+    git tag -a "${WAVES_VERSION}" -m "Docker build"                        &&  \
     SBT_OPTS="-Xmx2g -XX:MaxPermSize=256m -XX:ReservedCodeCacheSize=128m"       \
     sbt "node/assembly"                                                     &&  \
     for network in $DEB_PACKAGE_NETWORKS ; do                                   \
