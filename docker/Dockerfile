@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk-stretch as builder
 ARG SBT_VERSION=1.2.8
 ARG WAVES_VERSION="latest"
-ARG BRANCH="version-0.17.x"
+ARG BRANCH="version-1.1.x"
 ARG DEB_PACKAGE_NETWORKS
 
 RUN                                                                             \
@@ -62,7 +62,7 @@ RUN                                                                             
 
 FROM openjdk:11-jre-slim
 ARG WAVES_VERSION="latest"
-ARG WAVES_LOG_LEVEL="DEBUG"
+ARG WAVES_LOG_LEVEL="INFO"
 ARG WAVES_HEAP_SIZE="2g"
 ARG WAVES_NETWORK="mainnet"
 
@@ -77,7 +77,7 @@ COPY entrypoint.sh /usr/share/TN/bin/
 
 RUN groupadd -g 143 TN                                                   &&  \
     useradd -d /var/lib/TN -g 143 -u 143 -s /bin/bash -M TN           &&  \
-    mkdir -p /var/lib/TN /etc/TN                                      &&  \
+    mkdir -p /var/lib/TN /etc/TN /usr/share/TN/lib/plugins         &&  \
     chown -R 143:143 /var/lib/TN /usr/share/TN /etc/TN             &&  \
     chmod -R 755 /var/lib/TN /usr/share/TN /etc/TN                 &&  \
     ln -fs /var/lib/TN/log /var/log/TN
@@ -87,4 +87,5 @@ EXPOSE 6861 6860 6560 6862
 
 USER TN
 VOLUME /var/lib/TN
+VOLUME /usr/share/TN/lib/plugins
 ENTRYPOINT ["/usr/share/TN/bin/entrypoint.sh"]

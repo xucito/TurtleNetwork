@@ -63,7 +63,6 @@ case class FunctionalitySettings(
     featureCheckBlocksPeriod: Int,
     blocksForFeatureActivation: Int,
     generationBalanceDepthFrom50To1000AfterHeight: Int = 0,
-    resetEffectiveBalancesAtHeight: Int = 0,
     blockVersion3AfterHeight: Int = 0,
     preActivatedFeatures: Map[Short, Int] = Map.empty,
     doubleFeaturesPeriodsAfterHeight: Int,
@@ -72,8 +71,9 @@ case class FunctionalitySettings(
     lastTimeBasedForkParameter: Long = 0L,
     leaseExpiration: Int = 1000000,
     estimatorPreCheckHeight: Int = 0,
-    resetInvalidInvokeSponsoredFeeHeight: Int = 0,
-    disableAliasInThisHeight: Int = 0
+    minAssetInfoUpdateInterval: Int = 100000,
+    minBlockTime: FiniteDuration = 15.seconds,
+    delayDelta: Int = 8
 ) {
   val allowLeasedBalanceTransferUntilHeight: Int        = blockVersion3AfterHeight
   val allowTemporaryNegativeUntil                       = lastTimeBasedForkParameter
@@ -88,6 +88,7 @@ case class FunctionalitySettings(
     (blocksForFeatureActivation > 0) && (blocksForFeatureActivation <= featureCheckBlocksPeriod),
     s"blocksForFeatureActivation must be in range 1 to $featureCheckBlocksPeriod"
   )
+  require(minAssetInfoUpdateInterval >= 0, "minAssetInfoUpdateInterval must be greater than or equal to 0")
 
   def activationWindowSize(height: Int): Int =
     featureCheckBlocksPeriod * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
@@ -112,7 +113,6 @@ object FunctionalitySettings {
     blocksForFeatureActivation = 4000,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     lastTimeBasedForkParameter = 1530161445559L,
-    resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     doubleFeaturesPeriodsAfterHeight = 0,
     estimatorPreCheckHeight = 9000000,
@@ -121,27 +121,25 @@ object FunctionalitySettings {
       3.toShort -> 0,
       5.toShort -> 0,
       6.toShort -> 0),
-    resetInvalidInvokeSponsoredFeeHeight = 1050000,
-    disableAliasInThisHeight = 0
+
   )
 
   val TESTNET = apply(
     featureCheckBlocksPeriod = 1500,
     blocksForFeatureActivation = 1350,
-    resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
     doubleFeaturesPeriodsAfterHeight = 10000,
     preActivatedFeatures = Map(1.toShort -> 0),
     lastTimeBasedForkParameter = 1492560000000L,
     estimatorPreCheckHeight = 817380,
-    disableAliasInThisHeight = 1018400
   )
 
   val STAGENET = apply(
     featureCheckBlocksPeriod = 100,
     blocksForFeatureActivation = 40,
     doubleFeaturesPeriodsAfterHeight = 1000000000,
-    preActivatedFeatures = (1 to 13).map(_.toShort -> 0).toMap
+    preActivatedFeatures = (1 to 13).map(_.toShort -> 0).toMap,
+    minAssetInfoUpdateInterval = 10
   )
 
   val configPath = "TN.blockchain.custom.functionality"
@@ -237,11 +235,12 @@ object BlockchainSettings {
       case BlockchainType.MAINNET =>
         ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
       case BlockchainType.CUSTOM =>
-        val addressSchemeCharacter = config.as[String](s"custom.address-scheme-character").charAt(0)
-        val functionalitySettings = config.as[FunctionalitySettings](s"custom.functionality")
-        val genesisSettings = config.as[GenesisSettings](s"custom.genesis")
-        val rewardsSettings = config.as[RewardsSettings](s"custom.rewards")
-        (addressSchemeCharacter, functionalitySettings, genesisSettings, rewardsSettings)
+        val networkId     = config.as[String](s"custom.address-scheme-character").charAt(0)
+        val functionality = config.as[FunctionalitySettings](s"custom.functionality")
+        val genesis       = config.as[GenesisSettings](s"custom.genesis")
+        val rewards       = config.as[RewardsSettings](s"custom.rewards")
+        require(functionality.minBlockTime <= genesis.averageBlockDelay, "minBlockTime should be <= averageBlockDelay")
+        (networkId, functionality, genesis, rewards)
     }
 
     BlockchainSettings(
