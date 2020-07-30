@@ -1307,43 +1307,12 @@ class ExchangeTransactionDiffTest
     if (full) contract else expr
   }
 
-<<<<<<< HEAD
-  def changeOrderSignature(signWith: Array[Byte], o: Order): Order = {
-    lazy val newProofs = Proofs(Seq(ByteStr(crypto.sign(PrivateKey(signWith), o.bodyBytes()))))
-
-    o match {
-      case o1 @ OrderV1(_, _, _, _, _, _, _, _, _, _) =>
-        o1.copy(proofs = newProofs)
-      case o2 @ OrderV2(_, _, _, _, _, _, _, _, _, _) =>
-        o2.copy(proofs = newProofs)
-    }
-  }
-
-  def changeTxSignature(signWith: Array[Byte], et: ExchangeTransaction): ExchangeTransaction = {
-    lazy val newSignature = ByteStr(crypto.sign(PrivateKey(signWith), et.bodyBytes()))
-    lazy val newProofs    = Proofs(Seq(newSignature))
-
-    et match {
-      case e1 @ ExchangeTransactionV1(_, _, _, _, _, _, _, _, _) =>
-        e1.copy(signature = newSignature)
-
-      case e2 @ ExchangeTransactionV2(_, _, _, _, _, _, _, _, _) =>
-        e2.copy(proofs = newProofs)
-    }
-  }
-
-  def smartTradePreconditions(buyerScriptSrc: Gen[String],
-                              sellerScriptSrc: Gen[String],
-                              txScript: Gen[String]): Gen[(GenesisTransaction, List[TransferTransaction], List[Transaction], ExchangeTransaction)] = {
-    val enoughFee = 100000000000L
-=======
   def smartTradePreconditions(
       buyerScriptSrc: Gen[String],
       sellerScriptSrc: Gen[String],
       txScript: Gen[String]
   ): Gen[(GenesisTransaction, List[TransferTransaction], List[Transaction], ExchangeTransaction)] = {
     val enoughFee = 100000000
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
 
     for {
       txScript <- txScript

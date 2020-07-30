@@ -9,6 +9,7 @@ import com.wavesplatform.state.{Diff, Portfolio}
 case object CancelLeaseOverflow extends DiffPatchFactory {
   val height: Int = AddressScheme.current.chainId.toChar match {
     case 'W' => 795000
+    case 'L' => 930000
     case _   => 0
   }
 

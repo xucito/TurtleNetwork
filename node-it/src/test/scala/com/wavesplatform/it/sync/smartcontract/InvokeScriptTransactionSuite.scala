@@ -25,20 +25,6 @@ import scala.concurrent.duration._
 
 class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFailure {
 
-<<<<<<< HEAD
-  private val contract = pkByAddress(firstAddress)
-  private val caller   = pkByAddress(secondAddress)
-
-  test("setup contract account with TN") {
-    sender
-      .transfer(
-        sender.address,
-        recipient = contract.stringRepr,
-        assetId = None,
-        amount = 5.TN,
-        fee = minFee,
-        waitForTx = true
-=======
   val activationHeight = 8
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs
@@ -49,26 +35,10 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
           (BlockchainFeatures.Ride4DApps.id, 0),
           (BlockchainFeatures.BlockV5.id, activationHeight)
         )
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
       )
       .withDefault(1)
       .buildNonConflicting()
 
-<<<<<<< HEAD
-  test("setup caller account with TN") {
-    sender
-      .transfer(
-        sender.address,
-        recipient = contract.stringRepr,
-        assetId = None,
-        amount = 6.TN,
-        fee = minFee,
-        waitForTx = true
-      )
-      .id
-    sender.createAlias(contract.stringRepr, "alias", fee = 10.  TN)
-  }
-=======
   private def firstContract      = firstKeyPair
   private def secondContract     = secondKeyPair
   private lazy val thirdContract = sender.createKeyPair()
@@ -76,7 +46,6 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
 
   private lazy val firstContractAddress: String  = firstContract.toAddress.toString
   private lazy val secondContractAddress: String = secondContract.toAddress.toString
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
 
   protected override def beforeAll(): Unit = {
     super.beforeAll()
@@ -224,67 +193,12 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
     sender.getDataByKey(firstContractAddress, "sender") shouldBe BinaryDataEntry("sender", ByteStr(caller.toAddress.bytes))
   }
 
-<<<<<<< HEAD
-  test("contract caller invokes a function on a contract by alias") {
-    val arg               = ByteStr(Array(43: Byte))
-
-    val _ = sender.invokeScript(
-      caller.stringRepr,
-      "alias:I:alias",
-      func = Some("foo"),
-      args = List(CONST_BYTESTR(arg).explicitGet()),
-      payment = Seq(),
-      fee = 1.TN,
-      waitForTx = true
-    )
-
-    sender.getDataByKey(contract.stringRepr, "a") shouldBe BinaryDataEntry("a", arg)
-    sender.getDataByKey(contract.stringRepr, "sender") shouldBe BinaryDataEntry("sender", caller.toAddress.bytes)
-  }
-
-  test("disable use this with alias") {
-    assertApiErrorRaised(
-     sender.invokeScript(
-      caller.stringRepr,
-      "alias:I:alias",
-      func = Some("baz"),
-      args = List(),
-      payment = Seq(),
-      fee = 1.TN,
-      waitForTx = true
-     )
-    )
-  }
-
-  test("enable use this with address") {
-    sender.invokeScript(
-      caller.stringRepr,
-      contract.stringRepr,
-      func = Some("baz"),
-      args = List(),
-      payment = Seq(),
-      fee = 1.TN,
-      waitForTx = true
-     )
-    sender.getDataByKey(contract.stringRepr, "test") shouldBe BinaryDataEntry("test", contract.toAddress.bytes)
-  }
-
-
-  test("contract caller invokes a default function on a contract") {
-
-
-    val _ = sender.invokeScript(
-      caller.stringRepr,
-      contract.stringRepr,
-      func = None,
-=======
   test("translate alias to the address") {
     sender.invokeScript(
       caller,
       "alias:I:alias",
       func = Some("baz"),
       args = List(),
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
       payment = Seq(),
       fee = 1.TN,
       waitForTx = true
@@ -314,20 +228,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
       val contract = if (v < 2) firstContract else secondContract
       val dataTxId = sender.putData(contract, data = List(StringDataEntry("a", "OOO")), fee = 1.waves, waitForTx = true).id
 
-<<<<<<< HEAD
-    val tx =
-      DataTransaction
-        .create(
-          sender = contract,
-          data = List(StringDataEntry("a", "OOO")),
-          feeAmount = 1.TN,
-          timestamp = System.currentTimeMillis(),
-          proofs = Proofs.empty
-        )
-        .explicitGet()
-=======
       nodes.waitForHeightAriseAndTxPresent(dataTxId)
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
 
       sender.getDataByKey(contract.toAddress.toString, "a") shouldBe StringDataEntry("a", "OOO")
     }

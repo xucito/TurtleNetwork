@@ -197,40 +197,9 @@ object BlockDiffer extends ScorexLogging {
             } else prevResult
         }
 
-<<<<<<< HEAD
-        val patchDiff = applyAll(
-          Patch(
-            _ => currentBlockHeight == blockchain.settings.functionalitySettings.resetEffectiveBalancesAtHeight,
-            CancelAllLeases(_)
-          ),
-          Patch(
-            _ => currentBlockHeight == blockchain.settings.functionalitySettings.blockVersion3AfterHeight,
-            CancelLeaseOverflow(_)
-          ),
-          Patch(
-            _.featureActivationHeight(BlockchainFeatures.DataTransaction.id).contains(currentBlockHeight) && scheme.chainId == 76,
-            CancelInvalidLeaseIn(_)
-          ),
-          Patch(
-            _ => currentBlockHeight == 450000  && scheme.chainId == 76, CancelInvalidTx(_)
-          ),
-          Patch(
-            _ => currentBlockHeight == 457100 && scheme.chainId == 76, CancelInvalidTx2(_)
-          ),
-          Patch(
-            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight),
-            CancelInvalidLeaseIn(_)
-          ),
-          Patch(
-            _.featureActivationHeight(BlockchainFeatures.ReduceNFTFee.id).contains(currentBlockHeight),
-            CancelLeaseOverflow(_)
-          ),
-        )
-        result.copy(diff = patchDiff)
-=======
-        val (diffWithPatches, patchDiff) = applyAll(CancelAllLeases, CancelLeaseOverflow, CancelInvalidLeaseIn)
+        val (diffWithPatches, patchDiff) = applyAll(CancelAllLeases, CancelLeaseOverflow, CancelInvalidLeaseIn, CancelInvalidTx,CancelInvalidTx2)
         result.copy(diff = diffWithPatches, detailedDiff = result.detailedDiff.copy(parentDiff = patchDiff))
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
+
       }
   }
 }

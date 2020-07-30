@@ -243,23 +243,6 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
 
   property(s"can call a func with ARR") {
     val pk = PublicKey.fromBase58String(publicKey).explicitGet()
-<<<<<<< HEAD
-    InvokeScriptTransaction.create(
-      pk,
-      pk.toAddress,
-      Some(
-        Terms.FUNCTION_CALL(
-          FunctionHeader.User("foo"),
-          List(ARR(IndexedSeq(CONST_LONG(1L), CONST_LONG(2L))).explicitGet())
-        )
-      ),
-      Seq(),
-      1,
-      Waves,
-      1,
-      Proofs.empty
-    ) should produce("All arguments of invokeScript must be one of the types")
-=======
     InvokeScriptTransaction
       .create(
         1.toByte,
@@ -278,7 +261,6 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
         Proofs.empty
       )
       .explicitGet()
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
   }
 
   property(s"can't call a func with non native(simple) args - CaseObj") {

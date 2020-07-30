@@ -121,11 +121,7 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
       }
   }
 
-<<<<<<< HEAD
   val MinIssueFee = 100000000000L
-=======
-  val MinIssueFee = 100000000L
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
 
   val issueParamGen: Gen[(KeyPair, Array[Byte], Array[Byte], Long, Byte, Boolean, Long, TxTimestamp)] = for {
     sender      <- accountGen
@@ -489,21 +485,6 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
     for {
       (_, assetName, description, quantity, decimals, _, _, timestamp) <- issueParamGen
     } yield {
-<<<<<<< HEAD
-      IssueTransactionV1
-        .selfSigned(
-          sender,
-          assetName,
-          description,
-          fixedQuantity.getOrElse(quantity),
-          decimals,
-          reissuable = false,
-          1000 * Constants.UnitsInWave,
-          timestamp
-        )
-        .right
-        .get
-=======
       IssueTransaction(
         TxVersion.V1,
         sender.publicKey,
@@ -513,31 +494,15 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
         fixedDecimals.getOrElse(decimals),
         reissuable = false,
         script = None,
-        1 * Constants.UnitsInWave,
+        1000 * Constants.UnitsInWave,
         timestamp
       ).signWith(sender.privateKey)
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
     }
 
   def issueGen(sender: KeyPair, timestamp: Long): Gen[IssueTransaction] =
     for {
       (_, assetName, description, quantity, decimals, _, _, _) <- issueParamGen
     } yield {
-<<<<<<< HEAD
-      IssueTransactionV1
-        .selfSigned(
-          sender,
-          assetName,
-          description,
-          quantity,
-          decimals,
-          reissuable = false,
-          1000 * Constants.UnitsInWave,
-          timestamp
-        )
-        .right
-        .get
-=======
       IssueTransaction(
         TxVersion.V1,
         sender.publicKey,
@@ -547,10 +512,9 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
         decimals,
         reissuable = false,
         script = None,
-        1 * Constants.UnitsInWave,
+        1000 * Constants.UnitsInWave,
         timestamp
       ).signWith(sender.privateKey)
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
     }
 
   val issueGen: Gen[IssueTransaction]     = issueReissueBurnGen.map(_._1)
@@ -578,18 +542,10 @@ trait TransactionGenBase extends ScriptGen with TypedScriptGen with NTPTime { _:
       fee = (if (reducedFee) 0.001 * Constants.UnitsInWave else 1 * Constants.UnitsInWave.toDouble).toLong
     } yield (
       issue,
-<<<<<<< HEAD
-       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee), 100 * Constants.UnitsInWave, timestamp).explicitGet(),
-       SponsorFeeTransaction.selfSigned(sender, assetId, Some(minFee1), 100 * Constants.UnitsInWave, timestamp).explicitGet(),
-       SponsorFeeTransaction.selfSigned(sender, assetId, None, 100 * Constants.UnitsInWave, timestamp).explicitGet(),
-      )
-
-=======
       SponsorFeeTransaction.selfSigned(1.toByte, sender, assetId, Some(minFee), fee, timestamp).explicitGet(),
       SponsorFeeTransaction.selfSigned(1.toByte, sender, assetId, Some(minFee1), fee, timestamp).explicitGet(),
       SponsorFeeTransaction.selfSigned(1.toByte, sender, assetId, None, fee, timestamp).explicitGet()
     )
->>>>>>> 039e13fedd201bd21753a3b18910b8838f2c2596
 
   val sponsorFeeGen: Gen[SponsorFeeTransaction] = for {
     sender        <- accountGen
