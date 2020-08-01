@@ -3,7 +3,6 @@ package com.wavesplatform.state.diffs
 import cats.implicits._
 import cats.kernel.Monoid
 import cats.syntax.either.catsSyntaxEitherId
-import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.block.{Block, MicroBlock}
 import com.wavesplatform.features.BlockchainFeatures
 import com.wavesplatform.lang.ValidationError
@@ -197,7 +196,7 @@ object BlockDiffer extends ScorexLogging {
             } else prevResult
         }
 
-        val (diffWithPatches, patchDiff) = applyAll(CancelAllLeases, CancelLeaseOverflow, CancelInvalidLeaseIn, CancelInvalidTx,CancelInvalidTx2)
+        val (diffWithPatches, patchDiff) = applyAll( CancelInvalidTx, CancelInvalidTx2, CancelLeaseOverflow, CancelInvalidLeaseIn)
         result.copy(diff = diffWithPatches, detailedDiff = result.detailedDiff.copy(parentDiff = patchDiff))
 
       }

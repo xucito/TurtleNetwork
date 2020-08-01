@@ -16,36 +16,16 @@ object CancelInvalidTx extends DiffPatchFactory {
     val addr4 = Address.fromString("3JtJ5Kf3XuAUiMhtDQasSPdpaG6X5WLa8cE").explicitGet()
     val addr5 = Address.fromString("3JwSzCsBpTZtqxkfdj3KuZgZJ33BcTBnqQr").explicitGet()
 
-    val bal1 = 0L
-    val bal2 = 0L
-    val bal3 = 0L
+    val bal1 = 120000004131663L
+    val bal2 = 50000003846140L
 
     val pfs = Map(
       addr1 -> Portfolio(-bal1, LeaseBalance(0L, 0L), Map.empty),
       addr2 -> Portfolio(-bal2, LeaseBalance(0L, 0L), Map.empty),
-      addr3 -> Portfolio(bal2 + bal3, LeaseBalance(0L, 0L), Map.empty),
+      addr3 -> Portfolio(bal1 + bal2, LeaseBalance(0L, 0L), Map.empty),
       addr4 -> Portfolio(110000000L),
       addr5 -> Portfolio(108000000L)
     )
-    //    val pfs = patch.portfolios.map{
-    //
-    //      case (addr, p) if Address.fromString(addr).explicitGet() == addr1 && p.balance != 0L=>
-    //        bal1 = p.balance
-    //        Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
-    //
-    //      case (addr, p) if Address.fromString(addr).explicitGet() == addr2 && p.balance != 0L =>
-    //        bal2 = p.balance
-    //        Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
-    //
-    //      case (addr, p) if Address.fromString(addr).explicitGet() == addr3 =>
-    //        Portfolio(bal1 + bal2, p.lease, Map.empty)
-    //
-    //      case (addr, p) if Address.fromString(addr).explicitGet() == addr4 =>
-    //        Portfolio(110000000L,p.lease , Map.empty)
-    //
-    //      case (addr, p) if Address.fromString(addr).explicitGet() == addr5 =>
-    //        Portfolio(108000000L, p.lease, Map.empty)
-    //    }
 
     val diff = Diff.empty.copy(portfolios = pfs)
     diff
