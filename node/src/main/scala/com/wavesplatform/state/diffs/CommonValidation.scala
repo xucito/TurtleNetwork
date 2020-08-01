@@ -1,6 +1,8 @@
 package com.wavesplatform.state.diffs
 
 import cats._
+import com.wavesplatform.account.{Address, AddressScheme}
+import com.wavesplatform.features.OverdraftValidationProvider._
 import com.wavesplatform.features.{BlockchainFeature, BlockchainFeatures}
 import com.wavesplatform.lang.ValidationError
 import com.wavesplatform.lang.directives.values._

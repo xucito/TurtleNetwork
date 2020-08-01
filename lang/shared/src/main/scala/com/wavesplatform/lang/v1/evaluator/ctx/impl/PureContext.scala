@@ -22,7 +22,6 @@ import com.wavesplatform.lang.v1.evaluator.ctx._
 import com.wavesplatform.lang.v1.parser.BinaryOperation
 import com.wavesplatform.lang.v1.parser.BinaryOperation._
 import com.wavesplatform.lang.v1.{BaseGlobal, CTX}
-import com.wavesplatform.lang.v1.ContractLimits._
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -564,7 +563,7 @@ object PureContext {
   lazy val splitStr: BaseFunction[NoContext] =
     NativeFunction("split", Map(V3 -> 100L, V4 -> 75L), SPLIT, listString, ("str", STRING), ("separator", STRING)) {
       case CONST_STRING(str) :: CONST_STRING(sep) :: Nil =>
-          ARR(split(str, sep).toIndexedSeq, limited = true)
+        ARR(split(str, sep).toIndexedSeq, limited = true)
       case xs =>
         notImplemented[Id, EVALUATED]("split(str: String, separator: String)", xs)
     }
@@ -580,11 +579,11 @@ object PureContext {
   private val listWithEmptyStr = List(CONST_STRING("").explicitGet())
 
   @tailrec private def splitRec(
-      str: String,
-      sep: String,
-      offset: Int = 0,
-      splitted: ArrayBuffer[CONST_STRING] = ArrayBuffer()
-  ): ArrayBuffer[CONST_STRING] = {
+                                 str: String,
+                                 sep: String,
+                                 offset: Int = 0,
+                                 splitted: ArrayBuffer[CONST_STRING] = ArrayBuffer()
+                               ): ArrayBuffer[CONST_STRING] = {
     val index = str.indexOf(sep, offset)
     if (index == -1) splitted += CONST_STRING(str.substring(offset, str.length)).explicitGet()
     else
@@ -655,7 +654,7 @@ object PureContext {
     }
 
   def createRawOp(op: BinaryOperation, t: TYPE, r: TYPE, func: Short, complexity: Int = 1)(
-      body: (EVALUATED, EVALUATED) => Either[String, EVALUATED]
+    body: (EVALUATED, EVALUATED) => Either[String, EVALUATED]
   ): BaseFunction[NoContext] =
     NativeFunction(opsToFunctions(op), complexity, func, r, ("a", t), ("b", t)) {
       case a :: b :: Nil => body(a, b)
@@ -663,7 +662,7 @@ object PureContext {
     }
 
   def createRawOp(op: BinaryOperation, t: TYPE, r: TYPE, func: Short, complexity: Map[StdLibVersion, Long])(
-      body: (EVALUATED, EVALUATED) => Either[String, EVALUATED]
+    body: (EVALUATED, EVALUATED) => Either[String, EVALUATED]
   ): BaseFunction[NoContext] =
     NativeFunction(opsToFunctions(op), complexity, func, r, ("a", t), ("b", t)) {
       case a :: b :: Nil => body(a, b)
@@ -671,7 +670,7 @@ object PureContext {
     }
 
   def createOp(op: BinaryOperation, t: TYPE, r: TYPE, func: Short, complexity: Int = 1)(
-      body: (Long, Long) => Boolean
+    body: (Long, Long) => Boolean
   ): BaseFunction[NoContext] =
     NativeFunction(opsToFunctions(op), complexity, func, r, ("a", t), ("b", t)) {
       case CONST_LONG(a) :: CONST_LONG(b) :: Nil => Right(CONST_BOOLEAN(body(a, b)))
@@ -679,7 +678,7 @@ object PureContext {
     }
 
   def createTryOp(op: BinaryOperation, t: TYPE, r: TYPE, func: Short, complicity: Int = 1)(
-      body: (Long, Long) => Long
+    body: (Long, Long) => Long
   ): BaseFunction[NoContext] =
     NativeFunction(opsToFunctions(op), complicity, func, r, ("a", t), ("b", t)) {
       case CONST_LONG(a) :: CONST_LONG(b) :: Nil =>
@@ -792,10 +791,10 @@ object PureContext {
 
   @VisibleForTesting
   private[v1] def genericListIndexOf(
-     element: EVALUATED,
-     indexOf: EVALUATED => Int,
-     indexWhere: (EVALUATED => Boolean) => Int
-  ): Either[String, EVALUATED] =
+                                      element: EVALUATED,
+                                      indexOf: EVALUATED => Int,
+                                      indexWhere: (EVALUATED => Boolean) => Int
+                                    ): Either[String, EVALUATED] =
     if (element.weight <= MaxCmpWeight)
       Right {
         val i = indexOf(element)
@@ -806,8 +805,8 @@ object PureContext {
         if (listElement.weight > MaxCmpWeight)
           throw new RuntimeException(
             s"Both element to search for `$element` " +
-            s"and list element `$listElement` " +
-            s"are too heavy to compare"
+              s"and list element `$listElement` " +
+              s"are too heavy to compare"
           )
         listElement == element
       }
@@ -923,7 +922,7 @@ object PureContext {
           if (arr.nonEmpty)
             Right(CONST_LONG(global.median(arr.asInstanceOf[IndexedSeq[CONST_LONG]].map(_.t))))
           else
-          Left(s"Can't find median for empty list")
+            Left(s"Can't find median for empty list")
         } else {
           notImplemented[Id, EVALUATED](s"median(arr: List[Int])", xs)
         }
@@ -933,9 +932,9 @@ object PureContext {
   val unitVarName = "unit"
 
   private def singleObj(
-      ty: CASETYPEREF,
-      v: Map[String, EVALUATED] = Map.empty
-  ): (CASETYPEREF, ContextfulVal[NoContext]) =
+                         ty: CASETYPEREF,
+                         v: Map[String, EVALUATED] = Map.empty
+                       ): (CASETYPEREF, ContextfulVal[NoContext]) =
     ty -> ContextfulVal.pure(CaseObj(ty, v))
 
   private val nil: (String, (LIST, ContextfulVal[NoContext])) =
@@ -1037,7 +1036,7 @@ object PureContext {
 
   private val v3Functions =
     v1V2V3CommonFunctions ++
-    v3V4CommonFunctions ++
+      v3V4CommonFunctions ++
       Array(
         toUtf8String(reduceLimit = false),
         listConstructor(checkSize = false)
@@ -1045,7 +1044,7 @@ object PureContext {
 
   private val v4Functions =
     commonFunctions ++
-    v3V4CommonFunctions ++
+      v3V4CommonFunctions ++
       Array(
         contains,
         valueOrElse,
@@ -1057,11 +1056,11 @@ object PureContext {
         listIndexOf,
         listLastIndexOf,
         listRemoveByIndex,
-          listContains,
-          listMin,
-          listMax,
-          makeString,
-        ) ++ (MinTupleSize to MaxTupleSize).map(i => createTupleN(i))
+        listContains,
+        listMin,
+        listMax,
+        makeString,
+      ) ++ (MinTupleSize to MaxTupleSize).map(i => createTupleN(i))
 
   private val v1V2Ctx =
     CTX[NoContext](

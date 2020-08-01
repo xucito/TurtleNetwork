@@ -1,5 +1,6 @@
 package com.wavesplatform.state
 
+import com.wavesplatform.account.AddressScheme
 import com.wavesplatform.block.Block
 import com.wavesplatform.block.Block.BlockId
 import com.wavesplatform.common.state.ByteStr
@@ -129,7 +130,7 @@ package object appender extends ScorexLogging {
   private def checkExceptions(height: Int, block: Block): Either[ValidationError, Unit] = {
     Either
       .cond(
-        exceptions.contains((height, block.id())),
+        exceptions.contains((height, block.id)) || (height < wrongBLocksUntil && scheme.chainId == wrongNetworkChainId),
         (),
         GenericError(s"Block time ${block.header.timestamp} less than expected")
       )
