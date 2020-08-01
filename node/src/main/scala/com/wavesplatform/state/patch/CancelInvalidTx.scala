@@ -23,10 +23,15 @@ object CancelInvalidTx extends ScorexLogging {
     val bal3 = s.balance(addr3)
     log.info("before bal 3 " + bal3)
 
+    val bal4 = s.balance(addr4)
+    log.info("before bal 4 " + bal4)
+
+    val bal5 = s.balance(addr5)
+    log.info("before bal 5 " + bal5)
+
     val diff = s.collectLposPortfolios {
       case (addr, p) if addr == addr1 && bal1 != 0L =>
         Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
-
       case (addr, p) if addr == addr2 && bal2 != 0L =>
         Portfolio(-p.balance, LeaseBalance(0L, 0L), Map.empty)
 
@@ -48,6 +53,8 @@ object CancelInvalidTx2 extends ScorexLogging {
 
   def apply(s: Blockchain): Diff = {
     val addr1 = Address.fromString("3JreB3JjQJgFfuz6ntFt76eTDUyv7hxdzMk").explicitGet()
+    val bal1 = s.balance(addr1)
+    log.info("before bal 1 " + bal1)
 
     val diff = s.collectLposPortfolios {
       case (addr, p) if addr == addr1 =>
