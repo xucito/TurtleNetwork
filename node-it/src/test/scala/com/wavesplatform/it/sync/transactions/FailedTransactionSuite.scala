@@ -131,7 +131,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: dApp error propagates failed transaction") {
-    val invokeFee    = 0.005.waves
+    val invokeFee    = 0.005.TN
     val priorityData = List(StringDataEntry("crash", "yes"))
     val putDataFee   = calcDataFee(priorityData, 1)
     val priorityFee  = putDataFee + invokeFee
@@ -163,7 +163,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: insufficient action fees propagates failed transaction") {
-    val invokeFee            = 0.005.waves
+    val invokeFee            = 0.005.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -379,7 +379,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: reject transactions if account script failed") {
-    val invokeFee            = 0.005.waves
+    val invokeFee            = 0.005.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 

@@ -110,9 +110,8 @@ class CreateAliasTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPT
       val leaserEffBalance       = sender.wavesBalance(leaserAddr).effective
 
       sender.broadcastCreateAlias(aliasCreator, alias, minFee, version = v, waitForTx = true)
-      val leasingAmount = 1.waves
-
-      sender.broadcastLease(leaser, Recipient().withAlias(alias), leasingAmount, minFee, waitForTx = true)
+      val leasingAmount = 1.TN
+sender.broadcastLease(leaser, Recipient().withAlias(alias), leasingAmount, minFee, waitForTx = true)
 
       sender.wavesBalance(aliasCreatorAddr).available shouldBe aliasCreatorBalance - minFee
       sender.wavesBalance(aliasCreatorAddr).effective shouldBe aliasCreatorEffBalance + leasingAmount - minFee

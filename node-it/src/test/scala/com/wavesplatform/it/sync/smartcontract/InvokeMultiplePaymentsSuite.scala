@@ -124,7 +124,7 @@ class InvokeMultiplePaymentsSuite extends BaseTransactionSuite with CancelAfterF
   test("can invoke with single payment of Waves") {
     sender.invokeScript(caller, dAppAddress, payment = Seq(Payment(1.TN, Waves)), waitForTx = true)
     sender.getData(dAppAddress).size shouldBe 2
-    sender.getDataByKey(dAppAddress, "amount_0").as[IntegerDataEntry].value shouldBe 1.waves
+    sender.getDataByKey(dAppAddress, "amount_0").as[IntegerDataEntry].value shouldBe 1.TN
     sender.getDataByKey(dAppAddress, "asset_0").as[BinaryDataEntry].value shouldBe ByteStr.empty
   }
 

@@ -154,7 +154,7 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
       nodes.waitForHeightArise()
       miner.assertBalances(firstAddress, balance1, eff1)
 
-      val leaseAmount = 1.waves
+      val leaseAmount = 1.TN
       val leaseId     = sender.lease(firstKeyPair, secondAddress, leaseAmount, minFee).id
       nodes.waitForHeightAriseAndTxPresent(leaseId)
 

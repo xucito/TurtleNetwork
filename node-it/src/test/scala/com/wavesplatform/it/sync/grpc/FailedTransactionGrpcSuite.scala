@@ -133,7 +133,7 @@ class FailedTransactionGrpcSuite extends GrpcBaseTransactionSuite with FailedTra
   }
 
   test("InvokeScriptTransaction: dApp error propagates failed transaction") {
-    val invokeFee    = 0.005.waves
+    val invokeFee    = 0.005.TN
     val priorityData = List(DataEntry("crash", DataEntry.Value.StringValue("yes")))
     val putDataFee   = calcDataFee(priorityData)
     val priorityFee  = putDataFee + invokeFee
@@ -152,7 +152,7 @@ class FailedTransactionGrpcSuite extends GrpcBaseTransactionSuite with FailedTra
   }
 
   test("InvokeScriptTransaction: insufficient action fees propagates failed transaction") {
-    val invokeFee            = 0.005.waves
+    val invokeFee            = 0.005.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee * 2
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -341,7 +341,7 @@ class FailedTransactionGrpcSuite extends GrpcBaseTransactionSuite with FailedTra
   }
 
   test("InvokeScriptTransaction: reject transactions if account script failed") {
-    val invokeFee            = 0.005.waves
+    val invokeFee            = 0.005.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee * 2
     val priorityFee          = setAssetScriptMinFee + invokeFee
 

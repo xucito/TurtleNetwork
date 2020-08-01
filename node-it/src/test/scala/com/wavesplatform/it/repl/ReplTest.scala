@@ -98,8 +98,8 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
           reissuable = true,
           script = Some(assetScript),
           waitForTx = true,
-          fee = 1.waves
-        )
+          fee = 1.TN
+)
         .id
     val height = miner.height
 
