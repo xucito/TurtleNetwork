@@ -1,6 +1,6 @@
 package com.wavesplatform.state.diffs
 
-import com.wavesplatform.account.Address
+import com.wavesplatform.account.{Address, AddressScheme}
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.state.{Blockchain, Diff, Portfolio}
 import com.wavesplatform.transaction.Asset.Waves
@@ -26,7 +26,8 @@ object BalanceDiffValidation extends ScorexLogging {
       lazy val lease    = cats.Monoid.combine(oldLease, portfolioDiff.lease)
       (if (balance < 0 ) {
          val newB = oldWaves + balance
-         if (newB < 0) {
+
+         if (newB < 0 && !(b.height< wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
            Some(acc -> s"negative TN balance: $acc, old: $oldWaves, new: $newB")
          } else if (newB < lease.out && b.height > b.settings.functionalitySettings.allowLeasedBalanceTransferUntilHeight) {
            Some(acc -> (if (newB + lease.in - lease.out < 0) {
