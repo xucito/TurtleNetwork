@@ -86,13 +86,13 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         |
         """.stripMargin
     val script = ScriptCompiler.compile(scriptText, ScriptEstimatorV2).explicitGet()._1.bytes().base64
-    sender.transfer(firstKeyPair, thirdContract.toAddress.toString, 10.waves, minFee, waitForTx = true)
+    sender.transfer(firstKeyPair, thirdContract.toAddress.toString, 10.TN, minFee, waitForTx = true)
     val setScriptId  = sender.setScript(firstContract, Some(script), setScriptFee, waitForTx = true).id
     val setScriptId2 = sender.setScript(secondContract, Some(script), setScriptFee, waitForTx = true).id
 
     val acc0ScriptInfo  = sender.addressScriptInfo(firstContractAddress)
     val acc0ScriptInfo2 = sender.addressScriptInfo(secondContractAddress)
-    sender.createAlias(firstContract, "alias", fee = 1.waves, waitForTx = true)
+    sender.createAlias(firstContract, "alias", fee = 1.TN, waitForTx = true)
 
     acc0ScriptInfo.script.isEmpty shouldBe false
     acc0ScriptInfo.scriptText.isEmpty shouldBe false
@@ -113,7 +113,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         func = Some("baz"),
         args = List(),
         payment = Seq(),
-        fee = 1.waves,
+        fee = 1.TN,
         waitForTx = true
       )
     )
@@ -126,7 +126,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
       func = Some("baz"),
       args = List(),
       payment = Seq(),
-      fee = 1.waves,
+      fee = 1.TN,
       waitForTx = true
     )
     sender.getDataByKey(firstContractAddress, "test") shouldBe BinaryDataEntry("test", ByteStr(firstContract.toAddress.bytes))
@@ -163,8 +163,8 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         contract,
         func = Some("foo"),
         args = List(CONST_BYTESTR(arg).explicitGet()),
-        payment = Seq(Payment(1.waves, Waves)),
-        fee = 1.waves,
+        payment = Seq(Payment(1.TN, Waves)),
+        fee = 1.TN,
         version = v,
         waitForTx = true
       )
@@ -214,7 +214,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         contract,
         func = None,
         payment = Seq(),
-        fee = 1.waves,
+        fee = 1.TN,
         version = v,
         waitForTx = true
       )
@@ -226,7 +226,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
   test("verifier works") {
     for (v <- invokeScrTxSupportedVersions) {
       val contract = if (v < 2) firstContract else secondContract
-      val dataTxId = sender.putData(contract, data = List(StringDataEntry("a", "OOO")), fee = 1.waves, waitForTx = true).id
+      val dataTxId = sender.putData(contract, data = List(StringDataEntry("a", "OOO")), fee = 1.TN, waitForTx = true).id
 
       nodes.waitForHeightAriseAndTxPresent(dataTxId)
 
@@ -242,7 +242,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
           secondContractAddress,
           func = Some("emptyKey"),
           payment = Seq(),
-          fee = 1.waves,
+          fee = 1.TN,
           version = TxVersion.V2
         ),
       AssertiveApiError(ScriptExecutionError.Id, "Error while executing account-script: Empty keys aren't allowed in tx version >= 2")
@@ -257,7 +257,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         thirdContract.toAddress.toString,
         func = Some("bar"),
         payment = Seq(),
-        fee = 1.waves,
+        fee = 1.TN,
         version = TxVersion.V2
       ),
       AssertiveApiError(ScriptExecutionError.Id, "Error while executing account-script: Empty keys aren't allowed in tx version >= 2")

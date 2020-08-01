@@ -192,9 +192,9 @@ class AssetsBroadcastRouteSpec
           senderPrivateKey,
           receiverPrivateKey.toAddress,
           Asset.Waves,
-          1.waves,
+          1.TN,
           Asset.Waves,
-          0.3.waves,
+          0.3.TN,
           ByteStr.empty,
           System.currentTimeMillis()
         )
@@ -207,9 +207,9 @@ class AssetsBroadcastRouteSpec
         sender = senderPrivateKey.publicKey,
         recipient = receiverPrivateKey.toAddress,
         assetId = Asset.Waves,
-        amount = 1.waves,
+        amount = 1.TN,
         feeAssetId = Asset.Waves,
-        fee = 0.3.waves,
+        fee = 0.3.TN,
         attachment = ByteStr.empty,
         timestamp = System.currentTimeMillis(),
         proofs = Proofs(Seq.empty),

@@ -331,7 +331,7 @@ class AcceptFailedScriptActivationSuite extends BaseTransactionSuite with NTPTim
     sender.waitForHeight(ActivationHeight, 5 minutes)
 
     sender.setAssetScript(asset, dAppKP, priorityFee, assetScript(true), waitForTx = true)
-    sender.transfer(sender.keyPair, dApp, 100.waves, waitForTx = true)
+    sender.transfer(sender.keyPair, dApp, 100.TN , waitForTx = true)
     val tradeAsset =
       sender
         .issue(dAppKP, "TradeAsset", quantity = someAssetAmount, decimals = 8: Byte, script = assetScript(true), fee = priorityFee, waitForTx = true)

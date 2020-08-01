@@ -44,8 +44,8 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
       val req = TransferV1Request(
         assetId = None,
         feeAssetId = None,
-        amount = 1.waves,
-        fee = 0.3.waves,
+        amount = 1.TN,
+        fee = 0.3.TN,
         sender = senderPrivateKey.toAddress.toString,
         attachment = Some("attachment"),
         recipient = receiverPrivateKey.toAddress.toString,
@@ -62,9 +62,9 @@ class AssetsRouteSpec extends RouteSpec("/assets") with RequestGen with PathMock
     "accepts VersionedTransferRequest" in {
       val req = TransferV2Request(
         assetId = None,
-        amount = 1.waves,
+        amount = 1.TN,
         feeAssetId = None,
-        fee = 0.3.waves,
+        fee = 0.3.TN,
         sender = senderPrivateKey.toAddress.toString,
         attachment = None,
         recipient = receiverPrivateKey.toAddress.toString,

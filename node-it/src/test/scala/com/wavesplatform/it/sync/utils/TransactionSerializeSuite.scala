@@ -240,7 +240,7 @@ class TransactionSerializeSuite extends BaseTransactionSuite with TableDrivenPro
       publicKey,
       Waves,
       MassTransferTransaction
-        .parseTransfersList(List(Transfer(firstKeyPair.toAddress.toString, 1.waves), Transfer(secondKeyPair.toAddress.toString, 2.waves)))
+        .parseTransfersList(List(Transfer(firstKeyPair.toAddress.toString, 1.TN), Transfer(secondKeyPair.toAddress.toString, 2.TN)))
         .explicitGet(),
       2.TN,
       ts,

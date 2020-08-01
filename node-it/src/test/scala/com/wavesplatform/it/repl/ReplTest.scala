@@ -38,8 +38,8 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
   test("waves context") {
     val issuer = miner.createKeyPair()
     val sample = miner.createKeyPair()
-    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 100.waves, 1.waves, version = TxVersion.V3, waitForTx = true)
-    miner.transfer(miner.keyPair, sample.toAddress.toString, 100.waves, 1.waves, waitForTx = true)
+    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 100.TN , 1.TN, version = TxVersion.V3, waitForTx = true)
+    miner.transfer(miner.keyPair, sample.toAddress.toString, 100.TN , 1.TN, waitForTx = true)
     miner.createAlias(miner.keyPair, "aaaa", waitForTx = true)
 
     val failDApp = ScriptCompiler
@@ -111,11 +111,11 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
         BinaryDataEntry("bin", ByteStr(Base58.decode("r1Mw3j9J"))),
         BooleanDataEntry("bool", true)
       ),
-      1.waves,
+      1.TN,
       waitForTx = true
     )
 
-    miner.setScript(issuer, Some(failDApp), 1.waves, waitForTx = true)
+    miner.setScript(issuer, Some(failDApp), 1.TN, waitForTx = true)
 
     // used to fail invoke
     val priorityData = List(StringDataEntry("crash", "yes"))
@@ -221,7 +221,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
       )
     ).explicitGet() shouldBe "res11: Int = 1000"
 
-    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${100.waves}")
+    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${100.TN }")
     await(repl.execute(""" this.wavesBalance() """))
       .explicitGet() should fullyMatch regex "res13: BalanceDetails = BalanceDetails\\(\\s+available = \\d+\\s+regular = \\d+\\s+generating = \\d+\\s+effective = \\d+\\s+\\)".r
 

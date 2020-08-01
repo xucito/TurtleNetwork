@@ -41,7 +41,7 @@ class NodeRestartTestSuite extends FreeSpec with Matchers with WaitForHeight2 wi
         nodeB.keyPair,
         AddressOrAlias.fromString(nodeA.address).explicitGet(),
         Waves,
-        1.waves,
+        1.TN,
         Waves,
         minFee,
         ByteStr.empty,

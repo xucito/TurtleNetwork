@@ -203,9 +203,9 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
     super.beforeAll()
 
     withClue("send waves to dApp and caller accounts") {
-      val dAppTransferId        = sender.transfer(sender.keyPair, dAppAddress, 5.waves, minFee).id
-      val callerTransferId      = sender.transfer(sender.keyPair, callerAddress, 5.waves, minFee).id
-      val smartCallerTransferId = sender.transfer(sender.keyPair, smartCallerAddress, 5.waves, minFee).id
+      val dAppTransferId        = sender.transfer(sender.keyPair, dAppAddress, 5.TN, minFee).id
+      val callerTransferId      = sender.transfer(sender.keyPair, callerAddress, 5.TN, minFee).id
+      val smartCallerTransferId = sender.transfer(sender.keyPair, smartCallerAddress, 5.TN, minFee).id
 
       nodes.waitForHeightAriseAndTxPresent(smartCallerTransferId)
       nodes.waitForTransaction(callerTransferId)

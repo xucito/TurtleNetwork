@@ -20,7 +20,7 @@ class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
   protected override def beforeAll(): Unit = {
     super.beforeAll()
-    sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(fourthAddress), 10.waves, minFee, waitForTx = true)
+    sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(fourthAddress), 10.TN, minFee, waitForTx = true)
   }
 
   test("sender's waves balance is decreased by fee.") {
@@ -188,10 +188,10 @@ class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
       assertGrpcError(sender.putData(firstAcc, tooBigKeyDataEntry, calcDataFee(tooBigKeyDataEntry, v), version = v),
         "Too big sequences requested", Code.INVALID_ARGUMENT)
-      assertGrpcError(sender.putData(firstAcc, List(DataEntry("", DataEntry.Value.BoolValue(false))), 1.waves, version = v),
+      assertGrpcError(sender.putData(firstAcc, List(DataEntry("", DataEntry.Value.BoolValue(false))), 1.TN, version = v),
         "Empty key found", Code.INVALID_ARGUMENT)
       assertGrpcError(
-        sender.putData(firstAcc, List(DataEntry("abc", DataEntry.Value.BoolValue(false)), DataEntry("abc", DataEntry.Value.BoolValue(false))), 1.waves, version = v),
+        sender.putData(firstAcc, List(DataEntry("abc", DataEntry.Value.BoolValue(false)), DataEntry("abc", DataEntry.Value.BoolValue(false))), 1.TN, version = v),
         "Duplicated keys found",
         Code.INVALID_ARGUMENT)
 

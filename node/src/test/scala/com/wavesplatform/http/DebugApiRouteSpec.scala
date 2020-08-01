@@ -87,7 +87,7 @@ class DebugApiRouteSpec extends RouteSpec("/debug") with RestAPISettingsHelper w
 
       val route = debugApiRoute.copy(blockchain = blockchain).route
 
-      val tx = TxHelpers.transfer(TxHelpers.defaultSigner, TestValues.address, 1.waves)
+      val tx = TxHelpers.transfer(TxHelpers.defaultSigner, TestValues.address, 1.TN)
       Post(routePath("/validate"), HttpEntity(ContentTypes.`application/json`, tx.json().toString())) ~> route ~> check {
         val json = Json.parse(responseAs[String])
         (json \ "valid").as[Boolean] shouldBe true
@@ -101,7 +101,7 @@ class DebugApiRouteSpec extends RouteSpec("/debug") with RestAPISettingsHelper w
 
       val route = debugApiRoute.copy(blockchain = blockchain).route
 
-      val tx = TxHelpers.transfer(TxHelpers.defaultSigner, TestValues.address, 1.waves)
+      val tx = TxHelpers.transfer(TxHelpers.defaultSigner, TestValues.address, 1.TN)
       Post(routePath("/validate"), HttpEntity(ContentTypes.`application/json`, tx.json().toString())) ~> route ~> check {
         val json = Json.parse(responseAs[String])
         println(json)

@@ -151,7 +151,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       sender.addressScriptInfo(contract.toAddress.toString).scriptText shouldBe None
       sender.assertBalances(
         contract.toAddress.toString,
-        contractBalance - setScriptFee - 0.004.waves,
+        contractBalance - setScriptFee - 0.004.TN,
         contractEffBalance - setScriptFee - 0.004.waves
       )
     }

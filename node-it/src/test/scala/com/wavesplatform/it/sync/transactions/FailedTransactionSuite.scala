@@ -47,7 +47,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   protected override def beforeAll(): Unit = {
     super.beforeAll()
 
-    sender.transfer(sender.keyPair, contractAddress, 100.waves, minFee, waitForTx = true)
+    sender.transfer(sender.keyPair, contractAddress, 100.TN , minFee, waitForTx = true)
 
     smartAsset = sender
       .issue(
@@ -626,7 +626,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
     docker.restartNode(dockerNodes().head, configForMinMicroblockAge)
 
     val caller = sender.createKeyPair()
-    sender.transfer(sender.keyPair, caller.toAddress.toString, 100.waves, minFee, waitForTx = true)
+    sender.transfer(sender.keyPair, caller.toAddress.toString, 100.TN, minFee, waitForTx = true)
 
     sender.waitFor("even height")(n => n.height, (h: Int) => h % 2 == 0, 500.millis)
 
@@ -684,9 +684,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
 
   private def exchangePreconditions(initScript: Option[String]): Precondition = {
     val transfers = Seq(
-      sender.transfer(sender.keyPair, sellerAddress.toAddress.toString, 100.waves).id,
-      sender.transfer(sender.keyPair, buyerAddress.toAddress.toString, 100.waves).id,
-      sender.transfer(sender.keyPair, matcherAddress.toAddress.toString, 100.waves).id
+      sender.transfer(sender.keyPair, sellerAddress.toAddress.toString, 100.TN).id,
+      sender.transfer(sender.keyPair, buyerAddress.toAddress.toString, 100.TN).id,
+      sender.transfer(sender.keyPair, matcherAddress.toAddress.toString, 100.TN).id
     )
 
     val amountAsset  = sender.issue(sellerAddress, "Amount asset", script = initScript, decimals = 8).id

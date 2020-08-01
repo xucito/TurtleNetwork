@@ -39,7 +39,7 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
     // explicitly create two new addresses in node's wallet
     sender.postForm("/addresses")
     sender.postForm("/addresses")
-    sender.transfer(firstKeyPair, fourthAddress, 10.waves, minFee, waitForTx = true)
+    sender.transfer(firstKeyPair, fourthAddress, 10.TN, minFee, waitForTx = true)
   }
 
   test("put and remove keys") {
@@ -426,19 +426,19 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
       )
 
       val extraValueData = List(BinaryDataEntry("key", ByteStr(Array.fill(maxValueSize + 1)(1.toByte))))
-      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, extraValueData, 1.waves, version = v), TooBig)
+      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, extraValueData, 1.TN, version = v), TooBig)
       nodes.waitForHeightArise()
 
       val largeBinData = List.tabulate(5)(n => BinaryDataEntry(extraKey, ByteStr(Array.fill(maxValueSize)(n.toByte))))
-      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, largeBinData, 1.waves, version = v), TooBig)
+      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, largeBinData, 1.TN, version = v), TooBig)
       nodes.waitForHeightArise()
 
       val largeStrData = List.tabulate(5)(n => StringDataEntry(extraKey, "A" * maxValueSize))
-      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, largeStrData, 1.waves, version = v), TooBig)
+      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, largeStrData, 1.TN, version = v), TooBig)
       nodes.waitForHeightArise()
 
       val tooManyEntriesData = List.fill(maxEntryCount + 1)(IntegerDataEntry("key", 88))
-      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, tooManyEntriesData, 1.waves, version = v), TooBig)
+      assertBadRequestAndResponse(postDataTxJson(firstKeyPair, tooManyEntriesData, 1.TN, version = v), TooBig)
       nodes.waitForHeightArise()
     }
   }

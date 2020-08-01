@@ -86,7 +86,7 @@ object CustomFeeTransactionSuite {
     decimals = 2,
     reissuable = false,
     script = None,
-    fee = 1.waves,
+    fee = 1.TN,
     timestamp = System.currentTimeMillis()
   ).signWith(senderKeyPair.privateKey)
 

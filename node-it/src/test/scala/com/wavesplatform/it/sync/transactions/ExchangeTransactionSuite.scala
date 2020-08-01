@@ -193,7 +193,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
 
   test("exchange tx with orders v4 can use price that is impossible for orders v3/v2/v1") {
 
-    sender.transfer(sender.keyPair, firstAddress, 1000.waves, waitForTx = true)
+    sender.transfer(sender.keyPair, firstAddress, 1000.TN, waitForTx = true)
 
     val seller        = acc1
     val buyer         = acc0

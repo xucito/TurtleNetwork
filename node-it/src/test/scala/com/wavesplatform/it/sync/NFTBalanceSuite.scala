@@ -46,7 +46,7 @@ class NFTBalanceSuite extends FreeSpec with BaseTransactionSuiteLike {
     val fundAndIssue =
       for {
         _      <- traverse(nodes)(_.waitForHeight(2))
-        fundTx <- node.transfer(node.address, issuer.toAddress.toString, 1000.waves, 0.001.waves)
+        fundTx <- node.transfer(node.address, issuer.toAddress.toString, 1000.TN, 0.001.TN)
         _      <- node.waitForTransaction(fundTx.id)
         _ <- Future.sequence((simple ++ nft) map { tx =>
           for {
@@ -86,7 +86,7 @@ class NFTBalanceSuite extends FreeSpec with BaseTransactionSuiteLike {
       val other = KeyPair("other".getBytes)
 
       val transfer = TransferTransaction
-        .selfSigned(1.toByte, issuer, other.toAddress, randomTokenToTransfer, 1, Waves, 0.001.waves, ByteStr.empty, System.currentTimeMillis())
+        .selfSigned(1.toByte, issuer, other.toAddress, randomTokenToTransfer, 1, Waves, 0.001.TN, ByteStr.empty, System.currentTimeMillis())
         .explicitGet()
 
       val assertion = for {
@@ -169,7 +169,7 @@ object NFTBalanceSuite {
         8,
         reissuable = true,
         script = None,
-        1.waves,
+        1.TN,
         System.currentTimeMillis()
       ).signWith(issuer.privateKey)
     }
@@ -184,7 +184,7 @@ object NFTBalanceSuite {
         0,
         reissuable = false,
         script = None,
-        1.waves,
+        1.TN,
         System.currentTimeMillis()
       ).signWith(issuer.privateKey)
     }

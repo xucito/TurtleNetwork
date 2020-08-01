@@ -69,7 +69,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
         """.stripMargin
     val script  = ScriptCompiler.compile(scriptText, ScriptEstimatorV2).explicitGet()._1
     val script2 = ScriptCompiler.compile(scriptTextV4, ScriptEstimatorV3).explicitGet()._1
-    sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(thirdContractAddr), 10.waves, minFee, waitForTx = true)
+    sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(thirdContractAddr), 10.TN, minFee, waitForTx = true)
     sender.setScript(firstContract, Right(Some(script)), setScriptFee, waitForTx = true)
     sender.setScript(secondContract, Right(Some(script)), setScriptFee, waitForTx = true)
     sender.setScript(thirdContract, Right(Some(script2)), setScriptFee, waitForTx = true)
@@ -116,7 +116,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
       val contract    = if (v < 2) firstContractAddr else secondContractAddr
       val dAppBalance = sender.wavesBalance(contract)
       assertGrpcError(
-        sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(contract), transferAmount, 1.waves),
+        sender.broadcastTransfer(firstAcc, Recipient().withPublicKeyHash(contract), transferAmount, 1.TN),
         "Transaction is not allowed by account-script",
         Code.INVALID_ARGUMENT
       )
@@ -131,7 +131,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
         caller,
         Recipient().withPublicKeyHash(secondContractAddr),
         Some(FUNCTION_CALL(FunctionHeader.User("emptyKey"), List.empty)),
-        fee = 1.waves,
+        fee = 1.TN,
         version = TxVersion.V2
       ),
       "Empty keys aren't allowed in tx version >= 2"
@@ -142,7 +142,7 @@ class InvokeScriptTransactionGrpcSuite extends GrpcBaseTransactionSuite {
         caller,
         Recipient().withPublicKeyHash(thirdContractAddr),
         Some(FUNCTION_CALL(FunctionHeader.User("foo"), List.empty)),
-        fee = 1.waves,
+        fee = 1.TN,
         version = TxVersion.V2,
         waitForTx = true
       ),

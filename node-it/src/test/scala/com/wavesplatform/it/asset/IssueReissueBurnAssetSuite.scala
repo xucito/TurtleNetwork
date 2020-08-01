@@ -22,7 +22,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
       .overrideBase(_.quorum(0))
       .withDefault(1)
       .buildNonConflicting()
-  private val initialWavesBalance = 100.waves
+  private val initialWavesBalance = 100.TN
   private val setScriptPrice      = 0.01.waves
 
   private val CallableMethod    = "@Callable"

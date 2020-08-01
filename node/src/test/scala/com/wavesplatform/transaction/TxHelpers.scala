@@ -26,15 +26,15 @@ object TxHelpers {
     lastTimestamp
   }
 
-  def genesis(address: Address, amount: Long = 1000.waves): GenesisTransaction =
+  def genesis(address: Address, amount: Long = 1000.TN): GenesisTransaction =
     GenesisTransaction.create(address, amount, timestamp).explicitGet()
 
-  def transfer(from: KeyPair, to: AddressOrAlias, amount: Long = 1.waves, asset: Asset = Waves): TransferTransaction =
+  def transfer(from: KeyPair, to: AddressOrAlias, amount: Long = 1.TN, asset: Asset = Waves): TransferTransaction =
     TransferTransaction.selfSigned(TxVersion.V1, from, to, asset, amount, Waves, TestValues.fee, ByteStr.empty, timestamp).explicitGet()
 
   def issue(amount: Long = 1000, script: Script = null): IssueTransaction =
     IssueTransaction
-      .selfSigned(TxVersion.V2, defaultSigner, "test", "", amount, 0, reissuable = true, Option(script), 1.waves, timestamp)
+      .selfSigned(TxVersion.V2, defaultSigner, "test", "", amount, 0, reissuable = true, Option(script), 1.TN, timestamp)
       .explicitGet()
 
   def orderV3(orderType: OrderType, asset: Asset, feeAsset: Asset): Order = {
