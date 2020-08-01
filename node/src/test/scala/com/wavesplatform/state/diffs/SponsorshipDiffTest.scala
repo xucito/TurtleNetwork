@@ -261,7 +261,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
           blockDiffEi should produce("Asset was issued by other address")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-          blockDiffEi should produce("(999999999 in TN) does not exceed minimal value of 1000000000 TN\")
+          blockDiffEi should produce("(999999999 in TN) does not exceed minimal value of 1000000000 TN")
         }
     }
   }
