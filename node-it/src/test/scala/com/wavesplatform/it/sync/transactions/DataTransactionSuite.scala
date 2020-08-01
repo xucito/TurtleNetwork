@@ -481,8 +481,8 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
   test("put data in liquid block") {
     val newAddress = sender.createKeyPair()
     val entries    = List(StringDataEntry("test", "test"))
-    sender.transfer(firstKeyPair, newAddress.toAddress.toString, 2 waves, 1 waves, waitForTx = true)
-    sender.broadcastData(newAddress, entries, 0.1 waves, waitForTx = true)
+    sender.transfer(firstKeyPair, newAddress.toAddress.toString, 2 TN, 1 TN, waitForTx = true)
+    sender.broadcastData(newAddress, entries, 0.1 TN, waitForTx = true)
     sender.getData(newAddress.toAddress.toString) shouldBe entries
     nodes.waitForHeightArise()
     sender.getData(newAddress.toAddress.toString) shouldBe entries
