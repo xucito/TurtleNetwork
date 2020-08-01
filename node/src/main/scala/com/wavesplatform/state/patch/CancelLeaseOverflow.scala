@@ -8,14 +8,15 @@ object CancelLeaseOverflow extends ScorexLogging {
     log.info("Cancelling all lease overflows for sender")
 
     blockchain.collectLposPortfolios {
-      case (_, p) if p.balance < p.lease.out => log.info(s"Outgoing -lease {0} ", -p.lease.out)
+      case (_, p) if p.balance < p.lease.out => log.info(s"Outgoing -lease  ${-p.lease.out}")
     }
+
     val addressesWithLeaseOverflow = blockchain.collectLposPortfolios {
       case (_, p) if p.balance < p.lease.out => Portfolio(0, LeaseBalance(0, -p.lease.out), Map.empty)
     }
 
     val addressSet = addressesWithLeaseOverflow.keySet
-    addressSet.foreach(addr => log.info(s"Resetting lease overflow for $addr with out "))
+    addressSet.foreach(addr => log.info(s"Resetting lease overflow for $addr"))
 
     val leasesToCancel = concurrent.blocking {
       blockchain
