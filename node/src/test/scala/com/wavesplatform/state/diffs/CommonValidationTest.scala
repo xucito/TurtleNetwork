@@ -111,7 +111,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
             2,
             reissuable = false,
             Some(script),
-            Constants.UnitsInWave,
+            1000*Constants.UnitsInWave,
             ts
           ).signWith(richAcc.privateKey)
         else
@@ -124,7 +124,7 @@ class CommonValidationTest extends PropSpec with PropertyChecks with Matchers wi
             2,
             reissuable = false,
             script = None,
-            Constants.UnitsInWave,
+            1000*Constants.UnitsInWave,
             ts
           ).signWith(richAcc.privateKey)
 

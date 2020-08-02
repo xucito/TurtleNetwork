@@ -141,7 +141,7 @@ class TransactionsRouteSpec
         } yield (sender.publicKey, tx, IssuedAsset(assetId))
       "without sponsorship" in forAll(transferTxWithAssetFeeScenario) {
         case (_, transferTx, _) =>
-          (addressTransactions.calculateFee _).expects(*).returning(Right((Asset.Waves, 100000L, 0L))).once()
+          (addressTransactions.calculateFee _).expects(*).returning(Right((Asset.Waves, 2000000L, 0L))).once()
 
           Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
             status shouldEqual StatusCodes.OK
