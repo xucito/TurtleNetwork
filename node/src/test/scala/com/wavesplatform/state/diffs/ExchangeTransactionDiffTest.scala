@@ -820,7 +820,7 @@ class ExchangeTransactionDiffTest
   }
 
   property("Disable use Order on SmartAccount") {
-    val enoughFee        = 100000000
+    val enoughFee        = 100000000000L
     val script           = "true"
     val txScriptCompiled = ScriptCompiler(script, isAssetScript = false, estimator).explicitGet()._1
 
@@ -881,7 +881,7 @@ class ExchangeTransactionDiffTest
   }
 
   property("ExchangeTransaction with Orders V4 uses asset decimals for price calculation") {
-    val enoughFee = 100000000L
+    val enoughFee = 100000000000L
     val buyer     = accountGen.sample.get
     val seller    = accountGen.sample.get
 
@@ -979,7 +979,7 @@ class ExchangeTransactionDiffTest
         gtx1 = GenesisTransaction.create(buyer.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
         gtx2 = GenesisTransaction.create(seller.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
         gtx3 = GenesisTransaction.create(MATCHER.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
-        fee  = 100000000L
+        fee  = 100000000000L
         itx1 <- issueGen(MATCHER, Some(ENOUGH_AMT), fixedDecimals = Some(8.toByte))
         itx2 <- issueGen(MATCHER, Some(ENOUGH_AMT), fixedDecimals = Some(8.toByte))
         ttx1 = TransferTransaction
@@ -1081,7 +1081,7 @@ class ExchangeTransactionDiffTest
         gTx1           = GenesisTransaction.create(buyer.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
         gTx2           = GenesisTransaction.create(seller.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
         gTx3           = GenesisTransaction.create(MATCHER.toAddress, ENOUGH_AMT, ntpTime.getTimestamp()).explicitGet()
-        fee            = 100000000L
+        fee            = 100000000000L
         throwingScript = ExprScript(FUNCTION_CALL(Native(THROW), Nil)).explicitGet()
         quantity <- matcherAmountGen
         iTx = IssueTransaction
@@ -1312,7 +1312,7 @@ class ExchangeTransactionDiffTest
       sellerScriptSrc: Gen[String],
       txScript: Gen[String]
   ): Gen[(GenesisTransaction, List[TransferTransaction], List[Transaction], ExchangeTransaction)] = {
-    val enoughFee = 100000000
+    val enoughFee = 100000000000L
 
     for {
       txScript <- txScript

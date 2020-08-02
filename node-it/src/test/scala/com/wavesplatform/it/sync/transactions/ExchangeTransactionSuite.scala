@@ -209,7 +209,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
         decimals = 0,
         reissuable = false,
         script = None,
-        fee = 0.001.TN,
+        fee = 1.TN,
         waitForTx = true
       )
       .id
