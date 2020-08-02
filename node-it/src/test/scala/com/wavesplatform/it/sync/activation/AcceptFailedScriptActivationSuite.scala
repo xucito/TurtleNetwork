@@ -457,7 +457,7 @@ object AcceptFailedScriptActivationSuite {
 
   private val estimator = ScriptEstimatorV3
 
-  private val priorityFee  = 5.waves
+  private val priorityFee  = 5.TN
   private val minInvokeFee = invokeFee + smartFee // invoke fee + transfer action fee
 
   private def assetScript(result: Boolean): Option[String] =

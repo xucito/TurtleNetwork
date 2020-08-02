@@ -48,7 +48,7 @@ class MicroblocksFeeTestSuite extends FreeSpec with Matchers with CancelAfterFai
       _ <- traverse(nodes)(_.height).map(_.max)
 
       _ <- traverse(nodes)(_.waitForHeight(microblockActivationHeight - 1))
-      _ <- txRequestsGen(200, 2.waves)
+      _ <- txRequestsGen(200, 2.TN)
       _ <- traverse(nodes)(_.waitForHeight(microblockActivationHeight + 3))
 
       initialBalances <- notMiner.debugStateAt(microblockActivationHeight - 1) //100%
