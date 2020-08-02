@@ -18,9 +18,11 @@ package object sync {
   val leasingFee: Long                 = 0.02.TN
   val issueFee: Long                   = 1000.TN
   val reissueFee: Long                 = 1000.TN
+  val reissueReducedFee: Long          = 1.TN
   val burnFee: Long                    = 10.TN
   val invokeFee: Long                  = 1.TN
   val sponsorFee: Long                 = 10.TN
+  val sponsorReducedFee: Long          = 0.01.TN
   val setAssetScriptFee: Long          = 1.TN + smartFee
   val setScriptFee: Long               = 1.TN
   val transferAmount: Long             = 10.TN
