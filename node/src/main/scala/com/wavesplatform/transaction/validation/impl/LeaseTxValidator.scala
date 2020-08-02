@@ -11,7 +11,7 @@ object LeaseTxValidator extends TxValidator[LeaseTransaction] {
     import tx._
     V.seq(tx)(
       V.fee(fee),
-      V.cond(amount > 0, TxValidationError.NonPositiveAmount(amount, "waves")),
+      V.cond(amount > 0, TxValidationError.NonPositiveAmount(amount, "TN")),
       V.noOverflow(amount, fee),
       V.cond(sender.toAddress != recipient, TxValidationError.ToSelf),
       V.addressChainId(recipient, chainId)

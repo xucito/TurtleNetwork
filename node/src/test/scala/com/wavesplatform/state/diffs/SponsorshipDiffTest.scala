@@ -104,7 +104,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
     val setup = for {
       master <- accountGen
       ts     <- timestampGen
-      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000, ts).explicitGet()
+      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000000L, ts).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       recipient                  <- accountGen
       assetId = issueTx.id()
@@ -272,7 +272,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       master    <- accountGen
       recipient <- accountGen
       ts        <- timestampGen
-      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 300000000, ts).explicitGet()
+      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 30000000000L, ts).explicitGet()
       issue = IssueTransaction(
         TxVersion.V1,
         master.publicKey,
@@ -282,14 +282,14 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
         2,
         reissuable = false,
         script = None,
-        100000000,
+        100000000000L,
         ts + 1
       ).signWith(master.privateKey)
       assetId = IssuedAsset(issue.id())
-      sponsor = SponsorFeeTransaction.selfSigned(1.toByte, master, assetId, Some(100), 100000000, ts + 2).explicitGet()
-      assetTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, assetId, issue.quantity, Waves, 100000, ByteStr.empty,  ts + 3)
+      sponsor = SponsorFeeTransaction.selfSigned(1.toByte, master, assetId, Some(100), 1000000000, ts + 2).explicitGet()
+      assetTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, assetId, issue.quantity, Waves, 2000000, ByteStr.empty,  ts + 3)
         .explicitGet()
-      wavesTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 99800000, Waves, 100000, ByteStr.empty,  ts + 4)
+      wavesTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 99800000, Waves, 2000000, ByteStr.empty,  ts + 4)
         .explicitGet()
       backWavesTransfer = TransferTransaction
         .selfSigned(1.toByte, recipient, master.toAddress, Waves, 100000, assetId, 100, ByteStr.empty,  ts + 5)
