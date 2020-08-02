@@ -40,7 +40,7 @@ class ReissueTransactionDiffTest
       )
     } yield (Seq(b1, b2), reissue)
 
-  property("Reissue transaction's fee before feature activation is 1 WAVES") {
+  property("Reissue transaction's fee before feature activation is 1000 TN") {
     forAll(beforeActivationScenario) {
       case (bs, txs) =>
         checkFee(bs, txs) {

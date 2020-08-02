@@ -283,10 +283,10 @@ class ScriptsCountTest extends PropSpec with PropertyChecks with WithState with 
         .explicitGet()
       data = DataTransaction.selfSigned(1.toByte, master, List(BooleanDataEntry("q", true)), 15000000, timestamp).explicitGet()
       tr1 = TransferTransaction
-        .selfSigned(2.toByte, master, acc.toAddress, Waves, 10000000000L, Waves, fee, ByteStr.empty, timestamp)
+        .selfSigned(2.toByte, master, acc.toAddress, Waves, 200000000000L, Waves, fee, ByteStr.empty, timestamp)
         .explicitGet()
       tr2 = TransferTransaction
-        .selfSigned(2.toByte, master, acc.toAddress, IssuedAsset(issueScr.id()), 1000000000L, Waves, fee, ByteStr.empty, timestamp)
+        .selfSigned(2.toByte, master, acc.toAddress, IssuedAsset(issueScr.id()), 200000000000L, Waves, fee, ByteStr.empty, timestamp)
         .explicitGet()
       mt1 = MassTransferTransaction
         .selfSigned(1.toByte, master, Waves, List(ParsedTransfer(acc.toAddress, 1)), fee, timestamp, ByteStr.empty)

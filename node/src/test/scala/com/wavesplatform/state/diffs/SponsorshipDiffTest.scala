@@ -272,7 +272,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       master    <- accountGen
       recipient <- accountGen
       ts        <- timestampGen
-      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 30000000000L, ts).explicitGet()
+      genesis: GenesisTransaction = GenesisTransaction.create(master.toAddress, 300000000000L, ts).explicitGet()
       issue = IssueTransaction(
         TxVersion.V1,
         master.publicKey,
