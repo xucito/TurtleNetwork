@@ -151,7 +151,7 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
           )
         ),
         Seq(InvokeScriptTransaction.Payment(7, IssuedAsset(ByteStr.decodeBase58(publicKey).get))),
-        100000,
+        104000000,
         Waves,
         1526910778245L
       )
@@ -190,7 +190,7 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
         KeyPair("test4".getBytes("UTF-8")).toAddress,
         None,
         Seq(InvokeScriptTransaction.Payment(7, IssuedAsset(ByteStr.decodeBase58(publicKey).get))),
-        100000,
+        104000000,
         Waves,
         1526910778245L
       )
