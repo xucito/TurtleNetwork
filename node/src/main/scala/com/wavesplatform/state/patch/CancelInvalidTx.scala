@@ -7,6 +7,7 @@ import com.wavesplatform.state.{Diff, LeaseBalance, Portfolio}
 object CancelInvalidTx extends DiffPatchFactory {
   val height: Int = AddressScheme.current.chainId.toChar match {
     case 'L' => 450000
+    case _   => 0
   }
 
   def apply(): Diff = {
