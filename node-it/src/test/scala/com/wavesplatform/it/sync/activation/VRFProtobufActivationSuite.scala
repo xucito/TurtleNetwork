@@ -25,7 +25,7 @@ class VRFProtobufActivationSuite extends BaseTransactionSuite {
       .Builder(Default, 1, Seq.empty)
       .overrideBase(_.quorum(0))
       .overrideBase(_.preactivatedFeatures((BlockchainFeatures.BlockV5.id, activationHeight)))
-      .overrideBase(_.raw(s"waves.blockchain.custom.functionality.min-asset-info-update-interval = $updateInterval"))
+      .overrideBase(_.raw(s"TN.blockchain.custom.functionality.min-asset-info-update-interval = $updateInterval"))
       .buildNonConflicting()
 
   private def senderAcc     = firstKeyPair

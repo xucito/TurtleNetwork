@@ -303,14 +303,14 @@ object FailedTransactionSuiteLike {
   }
 
   val configForMinMicroblockAge: Config = ConfigFactory.parseString(s"""
-     |waves.miner.min-micro-block-age = 7
-     |waves.miner.max-transactions-in-micro-block = 1
+     |TN.miner.min-micro-block-age = 7
+     |TN.miner.max-transactions-in-micro-block = 1
      |""".stripMargin)
 
   val Configs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
-      .overrideBase(_.raw(s"waves.miner.max-transactions-in-micro-block = 50"))
+      .overrideBase(_.raw(s"TN.miner.max-transactions-in-micro-block = 50"))
       .withDefault(1)
       .withSpecial(_.nonMiner)
       .buildNonConflicting()

@@ -483,7 +483,7 @@ object AcceptFailedScriptActivationSuite {
           (BlockchainFeatures.BlockV5.id, ActivationHeight)
         )
       )
-      .overrideBase(_.raw(s"waves.blockchain.custom.functionality.min-asset-info-update-interval = $UpdateInterval"))
-      .overrideBase(_.raw(s"waves.miner.max-transactions-in-micro-block = $MaxTxsInMicroBlock"))
+      .overrideBase(_.raw(s"TN.blockchain.custom.functionality.min-asset-info-update-interval = $UpdateInterval"))
+      .overrideBase(_.raw(s"TN.miner.max-transactions-in-micro-block = $MaxTxsInMicroBlock"))
       .buildNonConflicting()
 }

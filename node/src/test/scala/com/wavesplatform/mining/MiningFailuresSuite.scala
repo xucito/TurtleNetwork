@@ -37,7 +37,7 @@ class MiningFailuresSuite extends FlatSpec with Matchers with PathMockFactory wi
           |  interval-after-last-block-then-generation-is-allowed = 0
           |}
           |
-          |waves.features.supported=[2]
+          |TN.features.supported=[2]
           |""".stripMargin).withFallback(ConfigFactory.load())
 
       WavesSettings.fromRootConfig(loadConfig(config))
