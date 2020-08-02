@@ -36,6 +36,7 @@ object CancelInvalidTx extends DiffPatchFactory {
 object CancelInvalidTx2 extends DiffPatchFactory {
   val height: Int = AddressScheme.current.chainId.toChar match {
     case 'L' => 457100
+    case _   => 0
   }
 
   def apply(): Diff = {
