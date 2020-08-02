@@ -83,7 +83,7 @@ trait IntegrationSuiteWithThreeAddresses
       ScriptCompiler(scriptText, isAssetScript = false, ScriptEstimatorV2).explicitGet()._1
     }
     val setScriptTransaction = SetScriptTransaction
-      .selfSigned(1.toByte, acc, script, 0.014.TN, System.currentTimeMillis())
+      .selfSigned(1.toByte, acc, script, 1.04.TN, System.currentTimeMillis())
       .explicitGet()
     sender
       .signedBroadcast(setScriptTransaction.json(), waitForTx = true)
