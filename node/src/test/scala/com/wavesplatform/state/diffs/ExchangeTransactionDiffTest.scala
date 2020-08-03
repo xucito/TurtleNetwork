@@ -529,7 +529,7 @@ class ExchangeTransactionDiffTest
           sender = buyer,
           matcher = matcher.publicKey,
           pair = assetPair,
-          amount = 1000000L,
+          amount = 10000000L,
           price = price,
           timestamp = Ts,
           expiration = Ts + 1,
@@ -1257,7 +1257,7 @@ class ExchangeTransactionDiffTest
 
         val feeUnits = FeeValidation.getMinFee(d.blockchainUpdater, exchange).explicitGet().minFeeInWaves / FeeValidation.FeeUnit
         if (complexity > 0) feeUnits shouldBe 7
-        else feeUnits shouldBe 3
+        else feeUnits shouldBe 2
       }
     }
 

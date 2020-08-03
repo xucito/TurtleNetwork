@@ -39,7 +39,7 @@ class BalancesV4Test extends PropSpec with PropertyChecks with WithState with Tr
   val DataTxFee: Long         = 15000000L
   val InvokeScriptTxFee: Long = 15000000L
   val MassTransferTxFee: Long = 15000000L
-  val SetScriptFee: Long      = Constants.UnitsInWave / 1000L
+  val SetScriptFee: Long      = Constants.UnitsInWave
   val SetAssetScriptFee: Long = Constants.UnitsInWave
 
   val rideV4Activated: FunctionalitySettings = TestFunctionalitySettings.Enabled.copy(
