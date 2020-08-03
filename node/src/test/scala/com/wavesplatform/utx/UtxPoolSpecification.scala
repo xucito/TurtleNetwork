@@ -872,7 +872,7 @@ class UtxPoolSpecification
           Block.NgBlockVersion,
           ntpTime.correctedTime()
         )
-        txs3 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+        txs3 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
         block3 = UnsafeBlocks.unsafeBlock(mbs2.last.totalResBlockSig, txs3, acc, Block.NgBlockVersion, ntpTime.correctedTime())
         block4 = UnsafeBlocks.unsafeBlock(genBlock.id(), txs4, acc, Block.NgBlockVersion, ntpTime.correctedTime())
       } yield (genBlock, (block1, mbs1), (block2, mbs2), block3, block4)

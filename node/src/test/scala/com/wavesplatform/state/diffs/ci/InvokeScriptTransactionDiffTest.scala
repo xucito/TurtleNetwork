@@ -447,7 +447,7 @@ class InvokeScriptTransactionDiffTest
       script      = ContractScript(version, contract)
       setContract = SetScriptTransaction.selfSigned(1.toByte, master, script.toOption, fee, ts + 2).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
-      sponsoredFee = Sponsorship.fromWaves(900000L, sponsorTx.minSponsoredAssetFee.get)
+      sponsoredFee = Sponsorship.fromWaves(9000000L, sponsorTx.minSponsoredAssetFee.get)
       fc = if (!isCIDefaultFunc)
         Some(Terms.FUNCTION_CALL(FunctionHeader.User(funcBinding), List(CONST_BYTESTR(ByteStr(arg)).explicitGet())))
       else
