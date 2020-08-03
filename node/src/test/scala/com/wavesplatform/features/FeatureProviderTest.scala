@@ -37,8 +37,8 @@ class FeatureProviderTest extends FlatSpec with Matchers with ScalaCheckProperty
       else blockchain.blockVersionAt(h) shouldBe Block.ProtoBlockVersion
     }
 
-    blockchain.blockVersionAt(v3ActivationHeight) shouldBe Block.PlainBlockVersion
-    blockchain.blockVersionAt(v3ActivationHeight + 1) shouldBe Block.PlainBlockVersion
+    blockchain.blockVersionAt(v3ActivationHeight) shouldBe Block.GenesisBlockVersion
+    blockchain.blockVersionAt(v3ActivationHeight + 1) shouldBe Block.GenesisBlockVersion
     blockchain.blockVersionAt(v3ActivationHeight + 2) shouldBe Block.NgBlockVersion
 
     blockchain.blockVersionAt(v4ActivationHeight) shouldBe Block.NgBlockVersion
