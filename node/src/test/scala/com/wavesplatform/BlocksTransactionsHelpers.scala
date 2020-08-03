@@ -20,7 +20,7 @@ import org.scalacheck.Gen
 
 trait BlocksTransactionsHelpers { self: TransactionGen =>
   object QuickTX {
-    val FeeAmount = 400000
+    val FeeAmount = 1000000
 
     def transfer(
         from: KeyPair,

@@ -208,8 +208,8 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       master     <- accountGen
       notSponsor <- accountGen
       ts         <- timestampGen
-      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000, ts).explicitGet()
-      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 400000000, ts).explicitGet()
+      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000000L, ts).explicitGet()
+      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 400000000000L, ts).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = IssuedAsset(issueTx.id())
       senderNotIssuer = SponsorFeeTransaction
@@ -289,10 +289,10 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       sponsor = SponsorFeeTransaction.selfSigned(1.toByte, master, assetId, Some(100), 1000000000, ts + 2).explicitGet()
       assetTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, assetId, issue.quantity, Waves, 2000000, ByteStr.empty,  ts + 3)
         .explicitGet()
-      wavesTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 99800000, Waves, 2000000, ByteStr.empty,  ts + 4)
+      wavesTransfer = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 198996000000L, Waves, 2000000, ByteStr.empty,  ts + 4)
         .explicitGet()
       backWavesTransfer = TransferTransaction
-        .selfSigned(1.toByte, recipient, master.toAddress, Waves, 100000, assetId, 100, ByteStr.empty,  ts + 5)
+        .selfSigned(1.toByte, recipient, master.toAddress, Waves, 2000000, assetId, 100, ByteStr.empty,  ts + 5)
         .explicitGet()
     } yield (genesis, issue, sponsor, assetTransfer, wavesTransfer, backWavesTransfer)
 

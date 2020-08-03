@@ -79,7 +79,7 @@ class OverdraftTest extends PropSpec with PropertyChecks with Matchers with Tran
     ) {
       case (genesis, setDApp, ci, activation, issue) =>
         assertDiffEi(Seq(TestBlock.create(genesis ++ List(setDApp, issue))), TestBlock.create(Seq(ci)), features(activation)) {
-          _ should produce("leads to negative waves balance to (at least) temporary negative state")
+          _ should produce("leads to negative TN balance to (at least) temporary negative state")
         }
     }
   }

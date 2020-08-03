@@ -72,7 +72,7 @@ class ReissueTransactionDiffTest
       )
     } yield (Seq(b1, b2, b3), reissue)
 
-  property("Reissue transaction's fee after feature activation is 0.001 WAVES") {
+  property("Reissue transaction's fee after feature activation is 1 TN") {
     forAll(afterActivationScenario) {
       case (bs, txs) =>
         checkFee(bs, txs) {
@@ -139,6 +139,6 @@ object ReissueTransactionDiffTest {
       )
     )
 
-  val BeforeActivationFee: Long = 1 * Constants.UnitsInWave
-  val AfterActivationFee: Long  = 100000
+  val BeforeActivationFee: Long = 1000 * Constants.UnitsInWave
+  val AfterActivationFee: Long  = 1 * Constants.UnitsInWave
 }

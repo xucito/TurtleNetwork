@@ -188,7 +188,7 @@ class TransactionsRouteSpec
         Post(routePath("/calculateFee"), transferTx) ~> route ~> check {
           status shouldEqual StatusCodes.OK
           (responseAs[JsObject] \ "feeAssetId").as[String] shouldBe assetId.id.toString
-          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 25
+          (responseAs[JsObject] \ "feeAmount").as[Long] shouldEqual 45
         }
       }
     }

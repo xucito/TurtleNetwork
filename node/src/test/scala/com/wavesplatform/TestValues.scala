@@ -14,7 +14,7 @@ object TestValues {
   val asset: IssuedAsset = IssuedAsset(ByteStr(("A" * 32).getBytes("ASCII")))
   val bigMoney: Long     = com.wavesplatform.state.diffs.ENOUGH_AMT
   val timestamp: Long    = System.currentTimeMillis()
-  val fee: Long          = 1e6.toLong
+  val fee: Long          = 1e8.toLong
 
   val (script, scriptComplexity) = ScriptCompiler
     .compile(

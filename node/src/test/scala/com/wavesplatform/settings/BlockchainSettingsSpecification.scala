@@ -88,7 +88,7 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
 
     settings.addressSchemeCharacter should be('l')
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0)
-    settings.functionalitySettings.blockVersion3AfterHeight should be(161700)
+    settings.functionalitySettings.blockVersion3AfterHeight should be(0)
     settings.functionalitySettings.maxTransactionTimeBackOffset should be(120.minutes)
     settings.functionalitySettings.maxTransactionTimeForwardOffset should be(90.minutes)
     settings.rewardsSettings.initial should be(600000000)
