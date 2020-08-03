@@ -175,7 +175,7 @@ class BlockchainUpdaterNFTTest
           reference = randomSig,
           txs = Seq(
             GenesisTransaction.create(richAccount.toAddress, diffs.ENOUGH_AMT, 0).explicitGet(),
-            GenesisTransaction.create(secondAccount.toAddress, 1000000, 0).explicitGet()
+            GenesisTransaction.create(secondAccount.toAddress, 60000000, 0).explicitGet()
           ),
           signer = TestBlock.defaultSigner,
           version = 3,

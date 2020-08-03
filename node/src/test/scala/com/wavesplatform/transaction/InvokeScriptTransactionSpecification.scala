@@ -84,7 +84,7 @@ class InvokeScriptTransactionSpecification extends PropSpec with PropertyChecks 
                          "id": "F4Kf5GZqAEnfTgaK9Zj9CypXApE6M4yYGR2DQ3yMhjwF",
                          "sender": "3FX9SibfqAWcdnhrmFzqM1mGqya6DkVVnps",
                          "senderPublicKey": "$publicKey",
-                         "fee": 104000000,
+                         "fee": 100000,
                          "feeAssetId": null,
                          "timestamp": 1526910778245,
                          "proofs": ["x7T161SxvUxpubEAKv4UL5ucB5pquAhTryZ8Qrd347TPuQ4yqqpVMQ2B5FpeFXGnpyLvb7wGeoNsyyjh5R61u7F"],

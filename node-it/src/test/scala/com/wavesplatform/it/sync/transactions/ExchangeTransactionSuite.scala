@@ -62,7 +62,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
       val sellAmount = 1
       val amount     = 1
 
-      val pair = AssetPair.createAssetPair("WAVES", assetId).get
+      val pair = AssetPair.createAssetPair("TN", assetId).get
       val buy  = Order.buy(buyVersion, buyer, matcher.publicKey, pair, buyAmount, buyPrice, ts, expirationTimestamp, matcherFee)
       val sell = Order.sell(sellVersion, seller, matcher.publicKey, pair, sellAmount, sellPrice, ts, expirationTimestamp, matcherFee)
 
@@ -235,7 +235,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
     val nftWavesPrice       = 1000 * math.pow(10, 8).toLong
     val nftForAssetPrice    = 1 * math.pow(10, 8).toLong
 
-    val nftWavesPair      = AssetPair.createAssetPair(nftAsset, "WAVES").get
+    val nftWavesPair      = AssetPair.createAssetPair(nftAsset, "TN").get
     val nftOtherAssetPair = AssetPair.createAssetPair(nftAsset, dec6AssetId).get
 
     val sellNftForWaves =

@@ -41,7 +41,7 @@ case class Order(
     (timestamp > 0) :| "timestamp should be > 0" &&
     (expiration - atTime <= MaxLiveTime) :| "expiration should be earlier than 30 days" &&
     (expiration >= atTime) :| "expiration should be > currentTime" &&
-    (matcherFeeAssetId == Waves || version >= Order.V3) :| "matcherFeeAssetId should be waves"
+    (matcherFeeAssetId == Waves || version >= Order.V3) :| "matcherFeeAssetId should be TN"
   }
 
   def isValidAmount(matchAmount: Long, matchPrice: Long): Validation = {

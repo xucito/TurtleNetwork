@@ -37,7 +37,7 @@ object GenesisTransaction extends TransactionParser {
 
   implicit val validator: TxValidator[GenesisTransaction] =
     tx => TxConstraints.seq(tx)(
-      Validated.condNel(tx.amount >= 0, tx, TxValidationError.NegativeAmount(tx.amount, "waves")),
+      Validated.condNel(tx.amount >= 0, tx, TxValidationError.NegativeAmount(tx.amount, "TN")),
       TxConstraints.addressChainId(tx.recipient, tx.chainId)
     )
 

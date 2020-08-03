@@ -160,7 +160,7 @@ class UtxPoolSpecification
   private val stateGen = for {
     sender        <- accountGen.label("sender")
     senderBalance <- positiveLongGen.label("senderBalance")
-    if senderBalance > 100000L
+    if senderBalance > 2000000L
   } yield {
     val bcu = mkBlockchain(sender.toAddress, senderBalance)
     (sender, senderBalance, bcu)

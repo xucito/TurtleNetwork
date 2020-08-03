@@ -10,7 +10,7 @@ object TransferTxValidator extends TxValidator[TransferTransaction] {
     import transaction._
     V.seq(transaction)(
       V.fee(fee),
-      V.positiveAmount(amount, assetId.maybeBase58Repr.getOrElse("waves")),
+      V.positiveAmount(amount, assetId.maybeBase58Repr.getOrElse("TN")),
       V.transferAttachment(attachment),
       V.addressChainId(recipient, chainId)
     )
