@@ -1256,7 +1256,7 @@ class ExchangeTransactionDiffTest
         diff.diff.scriptsComplexity shouldBe complexity
 
         val feeUnits = FeeValidation.getMinFee(d.blockchainUpdater, exchange).explicitGet().minFeeInWaves / FeeValidation.FeeUnit
-        if (complexity > 0) feeUnits shouldBe 7
+        if (complexity > 0) feeUnits shouldBe 4
         else feeUnits shouldBe 2
       }
     }
