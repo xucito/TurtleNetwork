@@ -20,7 +20,7 @@ import org.scalatestplus.scalacheck.{ScalaCheckPropertyChecks => PropertyChecks}
 import play.api.libs.json.Json
 
 class SponsorFeeTransactionSpecification extends PropSpec with PropertyChecks with WithState with TransactionGen {
-  val One = 100000000L
+  val One = 1000000000L
   val NgAndSponsorshipSettings: FunctionalitySettings = TestFunctionalitySettings.Enabled.copy(
     preActivatedFeatures = Map(NG.id -> 0, FeeSponsorship.id -> 0, SmartAccounts.id -> 0),
     blocksForFeatureActivation = 1,
