@@ -213,13 +213,13 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = IssuedAsset(issueTx.id())
       senderNotIssuer = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave, ts + 1)
         .explicitGet()
       insufficientFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave - 1, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave - 1, ts + 1)
         .explicitGet()
       insufficientReducedFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, (0.001 * Constants.UnitsInWave).toLong - 1, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, (0.01 * Constants.UnitsInWave).toLong - 1, ts + 1)
         .explicitGet()
     } yield (Seq(genesis1, genesis2, issueTx, sponsorTx), senderNotIssuer, insufficientFee, insufficientReducedFee)
 

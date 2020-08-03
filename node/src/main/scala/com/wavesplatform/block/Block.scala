@@ -179,7 +179,7 @@ object Block extends ScorexLogging {
   val GenesisGenerationSignature: BlockId = ByteStr(new Array[Byte](crypto.DigestLength))
 
   val GenesisBlockVersion: Byte = 1
-  val PlainBlockVersion: Byte   = 2
+  val PlainBlockVersion: Byte   = 1
   val NgBlockVersion: Byte      = 3
   val RewardBlockVersion: Byte  = 4
   val ProtoBlockVersion: Byte   = 5
