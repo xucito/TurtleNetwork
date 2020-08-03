@@ -137,9 +137,9 @@ class MultiPaymentInvokeDiffTest extends PropSpec with PropertyChecks with Match
           TestBlock.create(Seq(ci)),
           features
         ) {
-          val expectedFee = (0.005 + 0.004 + 0.004 * (ContractLimits.MaxAttachedPaymentAmount - 1)) * Constants.UnitsInWave
+          val expectedFee = (0.05 + 0.04 + 0.04 * (ContractLimits.MaxAttachedPaymentAmount - 1)) * Constants.UnitsInWave
           _ should produce(
-            s"Fee in WAVES for InvokeScriptTransaction (${ci.fee} in TN) " +
+            s"Fee in TN for InvokeScriptTransaction (${ci.fee} in TN) " +
               s"with ${ContractLimits.MaxAttachedPaymentAmount} total scripts invoked " +
               s"does not exceed minimal value of ${expectedFee.toLong} TN"
           )

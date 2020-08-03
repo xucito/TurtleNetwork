@@ -80,7 +80,7 @@ object InvokeScriptTransactionDiff {
               (),
               GenericError(
                 s"Fee in $assetName for $txName (${tx.assetFee._2} in $assetName)" +
-                  s" does not exceed minimal value of $minFee WAVES."
+                  s" does not exceed minimal value of $minFee TN."
               )
             )
           }

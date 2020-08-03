@@ -147,7 +147,7 @@ object InvokeDiffsCommon {
           totalScriptsInvoked,
           FailedTransactionError.feeForActions(
             s"Fee in $assetName for $txName (${tx.assetFee._2} in $assetName)" +
-              s" with $totalScriptsInvoked total scripts invoked$stepsInfo does not exceed minimal value of $minWaves WAVES.",
+              s" with $totalScriptsInvoked total scripts invoked$stepsInfo does not exceed minimal value of $minWaves TN.",
             invocationComplexity
           )
         )

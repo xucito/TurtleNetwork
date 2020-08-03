@@ -661,7 +661,7 @@ class UtxPoolSpecification
           acc  <- accountGen
           acc1 <- accountGen
           tx1  <- transfer(acc, ENOUGH_AMT / 3, ntpTime)
-          txs  <- Gen.nonEmptyListOf(transfer(acc1, 10000000L, ntpTime).suchThat(_.fee < tx1.fee))
+          txs  <- Gen.nonEmptyListOf(transfer(acc1, 100000000L, ntpTime).suchThat(_.fee < tx1.fee))
         } yield (tx1, txs)
 
         forAll(gen) {
@@ -735,8 +735,8 @@ class UtxPoolSpecification
         acc1        <- accountGen
         acc2        <- accountGen
         tx1         <- transferV2(acc, ENOUGH_AMT / 3, ntpTime)
-        nonScripted <- Gen.nonEmptyListOf(transferV2(acc1, 10000000L, ntpTime).suchThat(_.fee < tx1.fee))
-        scripted    <- Gen.nonEmptyListOf(transferV2(acc2, 10000000L, ntpTime).suchThat(_.fee < tx1.fee))
+        nonScripted <- Gen.nonEmptyListOf(transferV2(acc1, 100000000L, ntpTime).suchThat(_.fee < tx1.fee))
+        scripted    <- Gen.nonEmptyListOf(transferV2(acc2, 100000000L, ntpTime).suchThat(_.fee < tx1.fee))
       } yield (tx1, nonScripted, scripted)
 
       def createState(scripted: Address, settings: WavesSettings = WavesSettings.default(), setBalance: Boolean = true): Blockchain = {
@@ -853,7 +853,7 @@ class UtxPoolSpecification
         acc <- accountGen
         genesis  = GenesisTransaction.create(acc.toAddress, ENOUGH_AMT, ntpTime.correctedTime()).explicitGet()
         genBlock = TestBlock.create(Seq(genesis))
-        txs1 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+        txs1 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
         (block1, mbs1) = UnsafeBlocks.unsafeChainBaseAndMicro(
           genBlock.id(),
           Nil,
@@ -862,8 +862,8 @@ class UtxPoolSpecification
           Block.NgBlockVersion,
           ntpTime.correctedTime()
         )
-        txs2 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
-        txs4 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+        txs2 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
+        txs4 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
         (block2, mbs2) = UnsafeBlocks.unsafeChainBaseAndMicro(
           mbs1.head.totalResBlockSig,
           Nil,
