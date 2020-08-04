@@ -29,7 +29,7 @@ object BalanceDiffValidation extends ScorexLogging {
 
          if (newB < 0 && !(b.height< wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
            Some(acc -> s"negative TN balance: $acc, old: $oldWaves, new: $newB")
-         } else if (newB < lease.out && b.height > b.settings.functionalitySettings.allowLeasedBalanceTransferUntilHeight) {
+         } else if (newB < lease.out && b.height > b.settings.functionalitySettings.allowLeasedBalanceTransferUntilHeight&& !(b.height< wrongBLocksUntil && scheme.chainId==wrongNetworkChainId)) {
            Some(acc -> (if (newB + lease.in - lease.out < 0) {
                           s"negative effective balance: $acc, old: ${(oldWaves, oldLease)}, new: ${(newB, lease)}"
                         } else if (portfolioDiff.lease.out == 0) {
