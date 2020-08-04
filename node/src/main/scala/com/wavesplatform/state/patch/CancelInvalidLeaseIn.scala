@@ -7,7 +7,6 @@ import com.wavesplatform.state.{Diff, _}
 case object CancelInvalidLeaseIn extends DiffPatchFactory {
   val height: Int = AddressScheme.current.chainId.toChar match {
     case 'W' => 1060000
-    case 'L' => 930000
     case _   => 0
   }
 
