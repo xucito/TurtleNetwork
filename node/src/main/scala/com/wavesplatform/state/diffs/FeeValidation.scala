@@ -53,7 +53,7 @@ object FeeValidation {
       for {
         feeDetails <- getMinFee(blockchain, tx)
         _ <- Either.cond(
-          feeDetails.minFeeInAsset <= tx.assetFee._2,
+          feeDetails.minFeeInAsset <= tx.assetFee._2|| (blockchain.height<wrongFeesUntil && scheme.chainId == wrongNetworkChainId),
           (),
           notEnoughFeeError(tx.typeId, feeDetails, tx.assetFee._2)
         )
