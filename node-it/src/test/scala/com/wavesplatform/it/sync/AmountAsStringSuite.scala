@@ -220,7 +220,7 @@ class AmountAsStringSuite extends BaseTransactionSuite {
         "version"         -> 1,
         "senderPublicKey" -> Base58.encode(new Array[Byte](32))
       )
-    sender.calculateFee(tx, amountsAsStrings = true).feeAmount shouldBe minFee
+    sender.calculateFee(tx, amountsAsStrings = true).feeAmount shouldBe aliasFeeAmount
   }
 
   test("amount as string in blocks api") {
