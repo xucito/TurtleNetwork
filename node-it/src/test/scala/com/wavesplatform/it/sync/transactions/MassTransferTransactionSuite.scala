@@ -247,9 +247,9 @@ class MassTransferTransactionSuite extends BaseTransactionSuite {
       val alias = s"masstest_alias$v"
 
       val aliasFee = if (!sender.aliasByAddress(secondAddress).exists(_.endsWith(alias))) {
-        val aliasId = sender.createAlias(secondKeyPair, alias, minFee).id
+        val aliasId = sender.createAlias(secondKeyPair, alias, aliasFeeAmount).id
         nodes.waitForHeightAriseAndTxPresent(aliasId)
-        minFee
+        aliasFeeAmount
       } else 0
 
       val aliasFull = sender.aliasByAddress(secondAddress).find(_.endsWith(alias)).get
@@ -276,7 +276,7 @@ class MassTransferTransactionSuite extends BaseTransactionSuite {
   test("reporting MassTransfer transactions") {
     for (v <- massTransferTxSupportedVersions) {
       val transfers = List(Transfer(firstAddress, 5.TN), Transfer(secondAddress, 2.TN), Transfer(thirdAddress, 3.TN))
-      val txId      = sender.massTransfer(firstKeyPair, transfers, 300000, version = v).id
+      val txId      = sender.massTransfer(firstKeyPair, transfers, 6000000, version = v).id
       nodes.waitForHeightAriseAndTxPresent(txId)
 
       // /transactions/info/txID should return complete list of transfers
@@ -319,13 +319,13 @@ class MassTransferTransactionSuite extends BaseTransactionSuite {
   test("reporting MassTransfer transactions to aliases") {
     for (v <- massTransferTxSupportedVersions) {
       val aliases        = List(s"alias1v$v", s"alias2v$v")
-      val createAliasTxs = aliases.map(sender.createAlias(secondKeyPair, _, 100000).id)
+      val createAliasTxs = aliases.map(sender.createAlias(secondKeyPair, _, aliasFeeAmount).id)
       createAliasTxs.foreach(sender.waitForTransaction(_))
 
       val transfers = aliases.map { alias =>
         Transfer(Alias.create(alias).explicitGet().stringRepr, 2.TN)
       }
-      val txId = sender.massTransfer(firstKeyPair, transfers, 300000, version = v).id
+      val txId = sender.massTransfer(firstKeyPair, transfers, 6000000, version = v).id
       nodes.waitForHeightAriseAndTxPresent(txId)
 
       val rawTxs = sender

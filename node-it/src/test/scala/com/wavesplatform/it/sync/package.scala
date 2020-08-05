@@ -20,6 +20,7 @@ package object sync {
   val reissueFee: Long                 = 1000.TN
   val reissueReducedFee: Long          = 1.TN
   val burnFee: Long                    = 10.TN
+  val aliasFeeAmount: Long                  = 10.TN
   val invokeFee: Long                  = 1.TN
   val sponsorFee: Long                 = 10.TN
   val sponsorReducedFee: Long          = 0.01.TN
