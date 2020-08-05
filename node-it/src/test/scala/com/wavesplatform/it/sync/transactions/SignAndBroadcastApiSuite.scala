@@ -109,7 +109,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime with Be
       "type"            -> CreateAliasTransaction.typeId,
       "senderPublicKey" -> sender.publicKey.toString,
       "alias"           -> "alias",
-      "fee"             -> 100000,
+      "fee"             -> 1000000000,
       "timestamp"       -> timestamp,
       "signature"       -> "A" * 64
     )
@@ -121,7 +121,7 @@ class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime with Be
       "version"         -> 2,
       "senderPublicKey" -> sender.publicKey.toString,
       "alias"           -> "alias",
-      "fee"             -> 100000,
+      "fee"             -> 1000000000,
       "timestamp"       -> timestamp,
       "proofs"          -> List("A" * 64)
     )
