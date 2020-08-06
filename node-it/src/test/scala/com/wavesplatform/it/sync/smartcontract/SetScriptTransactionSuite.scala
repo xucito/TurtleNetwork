@@ -99,7 +99,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           assetId = Waves,
           amount = 1000,
           feeAssetId = Waves,
-          fee = minFee + 0.004.TN,
+          fee = minFee + 0.04.TN,
           attachment = ByteStr.empty,
           timestamp = System.currentTimeMillis(),
           proofs = Proofs.empty,
@@ -114,8 +114,8 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
 
       sender.assertBalances(
         contract.toAddress.toString,
-        contractBalance - 1000 - minFee - 0.004.TN,
-        contractEffBalance - 1000 - minFee - 0.004.TN
+        contractBalance - 1000 - minFee - 0.04.TN,
+        contractEffBalance - 1000 - minFee - 0.04.TN
       )
       sender.assertBalances(acc3.toAddress.toString, acc3Balance + 1000, acc3EffBalance + 1000)
     }
@@ -130,7 +130,7 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
           version = v,
           sender = contract.publicKey,
           script = None,
-          fee = setScriptFee + 0.004.TN,
+          fee = setScriptFee + 0.04.TN,
           timestamp = System.currentTimeMillis(),
           proofs = Proofs.empty
         )
@@ -151,8 +151,8 @@ class SetScriptTransactionSuite extends BaseTransactionSuite with CancelAfterFai
       sender.addressScriptInfo(contract.toAddress.toString).scriptText shouldBe None
       sender.assertBalances(
         contract.toAddress.toString,
-        contractBalance - setScriptFee - 0.004.TN,
-        contractEffBalance - setScriptFee - 0.004.TN
+        contractBalance - setScriptFee - 0.04.TN,
+        contractEffBalance - setScriptFee - 0.04.TN
       )
     }
   }

@@ -20,19 +20,19 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
       val alias            = randomAlias()
       val (balance1, eff1) = miner.accountBalances(firstAddress)
 
-      val aliasTx = sender.createAlias(firstKeyPair, alias, minFee, version = v)
+      val aliasTx = sender.createAlias(firstKeyPair, alias, aliasFeeAmount, version = v)
       nodes.waitForHeightAriseAndTxPresent(aliasTx.id)
       if (v >= 3) {
         aliasTx.chainId shouldBe Some(AddressScheme.current.chainId)
         sender.transactionInfo[TransactionInfo](aliasTx.id).chainId shouldBe Some(AddressScheme.current.chainId)
       }
-      miner.assertBalances(firstAddress, balance1 - minFee, eff1 - minFee)
+      miner.assertBalances(firstAddress, balance1 - aliasFeeAmount, eff1 - aliasFeeAmount)
 
       val aliasFull = fullAliasByAddress(firstAddress, alias)
 
       val transferId = sender.transfer(firstKeyPair, aliasFull, transferAmount, minFee).id
       nodes.waitForHeightAriseAndTxPresent(transferId)
-      miner.assertBalances(firstAddress, balance1 - minFee - minFee, eff1 - minFee - minFee)
+      miner.assertBalances(firstAddress, balance1 - aliasFeeAmount - minFee, eff1 - aliasFeeAmount - minFee)
     }
   }
 
@@ -44,7 +44,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
       val aliasFee         = createAlias(firstKeyPair, alias)
       miner.assertBalances(firstAddress, balance1 - aliasFee, eff1 - aliasFee)
 
-      assertApiErrorRaised(createAliasFromJson(firstKeyPair, alias, minFee, version = v))
+      assertApiErrorRaised(createAliasFromJson(firstKeyPair, alias, aliasFeeAmount, version = v))
       miner.assertBalances(firstAddress, balance1 - aliasFee, eff1 - aliasFee)
     }
   }
@@ -56,7 +56,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
 
       val (balance1, eff1) = miner.accountBalances(firstAddress)
       val aliasFee         = createAlias(firstKeyPair, alias)
-      assertBadRequestAndMessage(createAliasFromJson(secondKeyPair, alias, minFee, version = v), "Alias already claimed")
+      assertBadRequestAndMessage(createAliasFromJson(secondKeyPair, alias, aliasFeeAmount, version = v), "Alias already claimed")
       miner.assertBalances(firstAddress, balance1 - aliasFee, eff1 - aliasFee)
     }
   }
@@ -109,7 +109,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
   forAll(invalid_aliases_names) { (alias: String, message: String) =>
     test(s"Not able to create alias named $alias") {
       for (v <- aliasTxSupportedVersions) {
-        assertBadRequestAndMessage(createAliasFromJson(secondKeyPair, alias, minFee, version = v), message)
+        assertBadRequestAndMessage(createAliasFromJson(secondKeyPair, alias, aliasFeeAmount, version = v), message)
       }
     }
   }
@@ -123,12 +123,12 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
     val aliasFee  = createAlias(thirdKeyPair, thirdAddressAlias)
     val aliasFull = fullAliasByAddress(thirdAddress, thirdAddressAlias)
     //lease maximum value, to pass next thirdAddress
-    val leasingAmount = balance1 - minFee - 0.5.TN
+    val leasingAmount = balance1 - aliasFeeAmount - 0.5.TN
 
-    val leasingTx = sender.lease(firstKeyPair, aliasFull, leasingAmount, minFee).id
+    val leasingTx = sender.lease(firstKeyPair, aliasFull, leasingAmount, aliasFeeAmount).id
     nodes.waitForHeightAriseAndTxPresent(leasingTx)
 
-    miner.assertBalances(firstAddress, balance1 - minFee, eff1 - leasingAmount - minFee)
+    miner.assertBalances(firstAddress, balance1 - aliasFeeAmount, eff1 - leasingAmount - aliasFeeAmount)
     miner.assertBalances(thirdAddress, balance3 - aliasFee, eff3 - aliasFee + leasingAmount)
 
   }
@@ -139,7 +139,7 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
       val balance = miner.accountBalances(firstAddress)._1
       val alias   = randomAlias()
       assertBadRequestAndMessage(
-        createAliasFromJson(firstKeyPair, alias, balance + minFee, version = v),
+        createAliasFromJson(firstKeyPair, alias, balance + aliasFeeAmount, version = v),
         "State check failed. Reason: Accounts balance errors"
       )
     }
@@ -147,9 +147,9 @@ class AliasTransactionSuite extends BaseTransactionSuite with TableDrivenPropert
 
   private def createAlias(address: KeyPair, alias: String): Long = {
     if (!sender.aliasByAddress(address.toAddress.toString).exists(_.endsWith(alias))) {
-      val aliasId = sender.createAlias(address, alias, minFee, version = version).id
+      val aliasId = sender.createAlias(address, alias, aliasFeeAmount, version = version).id
       nodes.waitForHeightAriseAndTxPresent(aliasId)
-      500*minFee
+      aliasFeeAmount
     } else 0
   }
 

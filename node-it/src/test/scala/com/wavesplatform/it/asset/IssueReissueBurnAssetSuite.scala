@@ -546,7 +546,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
   }
 
   def invocationCost(aCount: Int, isSmartAcc: Boolean = true, sPCount: Int = 0, sAinActions: Int = 0): Long = {
-    0.005.TN + (if (isSmartAcc) 0.004.TN else 0L) + 0.004.TN * sPCount + 0.004.TN * sAinActions + 1.TN * aCount
+    0.005.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * sPCount + 0.04.TN * sAinActions + 1.TN * aCount
   }
 
   def script(asset: Asset, function: String = ""): String = {

@@ -68,7 +68,7 @@ class RideReplBlockchainFunctionsSuite extends BaseTransactionSuite {
       )
       .id
 
-    sender.createAlias(bob, alias, minFee).id
+    sender.createAlias(bob, alias, aliasFeeAmount).id
     assetId = sender.issue(alice, "Asset", "descr", 1000, 2, waitForTx = true).id
 
     transferTxIds =

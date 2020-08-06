@@ -58,7 +58,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         "Test Asset #1",
         someAssetAmount,
         0,
-        fee = issueFee + 400000,
+        fee = issueFee + 4000000,
         script = Some(scriptBase64),
         waitForTx = true
       )
@@ -91,7 +91,7 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
         ),
       AssertiveApiError(
         ScriptExecutionError.Id,
-        "Error while executing account-script: Fee in WAVES for InvokeScriptTransaction (1300000 in WAVES) with 12 total scripts invoked does not exceed minimal value of 5300000 WAVES."
+        "Error while executing account-script: Fee in TN for InvokeScriptTransaction (1300000 in TN) with 12 total scripts invoked does not exceed minimal value of 14000000 TN."
       )
     )
   }
