@@ -709,7 +709,7 @@ object SyncHttpApi extends Assertions {
         assetId: String,
         name: String,
         description: String,
-        fee: Long = issueFee,
+        fee: Long = transferAmount,
         feeAssetId: Option[String] = None,
         version: TxVersion = TxVersion.V1,
         timestamp: Option[Long] = None,

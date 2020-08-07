@@ -111,7 +111,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     val nextTerm = sender.transactionInfo[TransactionInfo](assetId).height + updateInterval + 1
     nodes.waitForHeight(nextTerm)
     val issuerBalance       = sender.balanceDetails(issuer.publicKey.toAddress.toString)
-    val updateAssetInfoTxId = notMiner.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", minFee)._1.id
+    val updateAssetInfoTxId = notMiner.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", issueFee)._1.id
     checkUpdateAssetInfoTx(notMiner.utx().head, "updatedName", "updatedDescription")
     miner.waitForTransaction(updateAssetInfoTxId)
     val updateAssetInfoTxHeight = sender.transactionInfo[TransactionInfo](updateAssetInfoTxId).height
@@ -135,7 +135,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     sender.assetsDetails(assetId).name shouldBe "updatedName"
     sender.assetsDetails(assetId).description shouldBe "updatedDescription"
 
-    sender.balanceDetails(issuer.publicKey.toAddress.toString).available shouldBe issuerBalance.available - minFee
+    sender.balanceDetails(issuer.publicKey.toAddress.toString).available shouldBe issuerBalance.available - issueFee
     nodes.waitForHeightArise()
   }
 
@@ -163,7 +163,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
 
   test("not able to update name/description more than once within interval") {
     val nextTermEnd = sender.transactionInfo[TransactionInfo](assetId).height + 2 * updateInterval
-    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message should include(
         s"Can't update info of asset with id=$assetId before ${nextTermEnd + 1} block, current height=${sender.height}, minUpdateInfoInterval=$updateInterval"
@@ -171,7 +171,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     }
     sender.waitForHeight(nextTermEnd)
 
-    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message should include(
         s"Can't update info of asset with id=$assetId before ${nextTermEnd + 1} block, current height=${sender.height}, minUpdateInfoInterval=$updateInterval"
@@ -183,7 +183,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
 
   test("able to update info of other asset after updating info of first asset") {
     nodes.waitForHeightArise()
-    val updateAssetInfoTxId = sender.updateAssetInfo(issuer, otherAssetId, "secondUpdate", "secondUpdatedDescription", minFee)._1.id
+    val updateAssetInfoTxId = sender.updateAssetInfo(issuer, otherAssetId, "secondUpdate", "secondUpdatedDescription", issueFee)._1.id
     sender.waitForUtxIncreased(0)
     checkUpdateAssetInfoTx(sender.utx().head, "secondUpdate", "secondUpdatedDescription")
     sender.waitForTransaction(updateAssetInfoTxId)
@@ -214,7 +214,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     sender.assetsDetails(otherAssetId).name shouldBe "otherAsset"
     sender.assetsDetails(otherAssetId).description shouldBe "otherDescription"
 
-    sender.updateAssetInfo(issuer, otherAssetId, "secondUpdate", "secondUpdatedDescription", minFee, waitForTx = true)
+    sender.updateAssetInfo(issuer, otherAssetId, "secondUpdate", "secondUpdatedDescription", issueFee, waitForTx = true)
   }
 
   test("able to update asset info after rollback to issue height") {
@@ -248,7 +248,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     test(s"not able to update name to $assetName") {
       sender.waitForHeight(sender.height + updateInterval + 1, 3.minutes)
       assertApiError(
-        sender.updateAssetInfo(issuer, assetId, assetName, "updatedDescription", minFee),
+        sender.updateAssetInfo(issuer, assetId, assetName, "updatedDescription", issueFee),
         InvalidName
       )
     }
@@ -257,28 +257,28 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
   test("not able to set too big description") {
     val tooBigDescription = Random.nextString(1001)
     assertApiError(
-      sender.updateAssetInfo(issuer, assetId, "updatedName", tooBigDescription, minFee),
+      sender.updateAssetInfo(issuer, assetId, "updatedName", tooBigDescription, issueFee),
       TooBigArrayAllocation
     )
   }
 
   test("not able to update asset info without paying enough fee") {
-    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", minFee - 1)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, assetId, "updatedName", "updatedDescription", issueFee - 1)) { error =>
       error.id shouldBe StateCheckFailed.Id
-      error.message shouldBe s"State check failed. Reason: . Fee for UpdateAssetInfoTransaction (${minFee - 1} in WAVES) does not exceed minimal value of $minFee WAVES."
+      error.message shouldBe s"State check failed. Reason: . Fee for UpdateAssetInfoTransaction (${issueFee - 1} in TN) does not exceed minimal value of $issueFee TN."
     }
   }
 
   test("not able to update info of not-issued asset") {
     val notIssuedAssetId = "BzARFPgBqWFu6MHGxwkPVKmaYAzyShu495Ehsgru72Wz"
-    assertApiError(sender.updateAssetInfo(issuer, notIssuedAssetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, notIssuedAssetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message shouldBe "State check failed. Reason: Referenced assetId not found"
     }
   }
 
   test("non-issuer cannot update asset info") {
-    assertApiError(sender.updateAssetInfo(nonIssuer, assetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(nonIssuer, assetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message should include("Asset was issued by other address")
     }
@@ -329,26 +329,26 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
     val smartAssetId =
       sender.broadcastIssue(issuer, "smartAsset", "description", someAssetAmount, 8, reissuable = true, script = Some(script), waitForTx = true).id
     sender.waitForHeight(sender.height + updateInterval + 1, 3.minutes)
-    assertApiError(sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", minFee + smartFee - 1)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", issueFee + smartFee - 1)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message shouldBe s"State check failed. Reason: Transaction involves 1 scripted assets. Requires $smartFee extra fee." +
-        s" Fee for UpdateAssetInfoTransaction (${smartMinFee - 1} in WAVES) does not exceed minimal value of $smartMinFee WAVES."
+        s" Fee for UpdateAssetInfoTransaction (${issueFee + smartFee - 1} in TN) does not exceed minimal value of ${issueFee + smartFee} TN."
     }
     sender.setScript(issuer, Some(script), waitForTx = true)
-    assertApiError(sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", minFee + 2 * smartFee - 1)) { error =>
+    assertApiError(sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", issueFee + 2 * smartFee - 1)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message shouldBe s"State check failed. Reason: Transaction sent from smart account. Requires $smartFee extra fee." +
         s" Transaction involves 1 scripted assets. Requires $smartFee extra fee." +
-        s" Fee for UpdateAssetInfoTransaction (${smartMinFee + smartFee - 1} in WAVES) does not exceed minimal value of ${smartMinFee + smartFee} WAVES."
+        s" Fee for UpdateAssetInfoTransaction (${issueFee +2* smartFee - 1} in TN) does not exceed minimal value of ${issueFee +2* smartFee} TN."
     }
 
-    sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", minFee + 2 * smartFee, waitForTx = true)
+    sender.updateAssetInfo(issuer, smartAssetId, "updatedName", "updatedDescription", issueFee + 2 * smartFee, waitForTx = true)
     nodes.waitForHeightArise()
   }
 
 
   test("able to update name/description of nft") {
-    val updateAssetInfoTxId = sender.updateAssetInfo(issuer, nftId, "updatedName", "updatedDescription", minFee + smartFee)._1.id
+    val updateAssetInfoTxId = sender.updateAssetInfo(issuer, nftId, "updatedName", "updatedDescription", issueFee + smartFee)._1.id
     checkUpdateAssetInfoTx(sender.utx().head, "updatedName", "updatedDescription")
     sender.waitForTransaction(updateAssetInfoTxId)
     val updateAssetInfoTxHeight = sender.transactionInfo[TransactionInfo](updateAssetInfoTxId).height
