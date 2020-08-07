@@ -419,7 +419,7 @@ object UpdateAssetInfoTransactionSuite {
   private def configWithUpdateIntervalSetting(interval: Long) =
     ConfigFactory.parseString(
       s"""
-         |waves {
+         |TN {
          |   blockchain.custom {
          |      functionality {
          |        min-asset-info-update-interval = $interval
