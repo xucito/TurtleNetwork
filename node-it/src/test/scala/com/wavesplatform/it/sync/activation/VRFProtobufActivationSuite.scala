@@ -60,7 +60,7 @@ class VRFProtobufActivationSuite extends BaseTransactionSuite {
   }
 
   test("not able to broadcast UpdateAssetInfoTransaction before activation") {
-    assertApiError(sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.statusCode shouldBe 400
       error.message shouldBe "State check failed. Reason: ActivationError(Ride V4, VRF, Protobuf, Failed transactions feature has not been activated yet)"
       error.id shouldBe 112
@@ -97,7 +97,7 @@ class VRFProtobufActivationSuite extends BaseTransactionSuite {
 
   test("not able to update asset info after activation if update interval has not been reached after asset issue") {
     sender.waitForHeight(activationHeight, 2.minutes)
-    assertApiError(sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", minFee)) { error =>
+    assertApiError(sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", issueFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
       error.message should include(s"Can't update info of asset with id=$otherAssetId")
     }
@@ -121,13 +121,13 @@ class VRFProtobufActivationSuite extends BaseTransactionSuite {
   }
 
   test("able to broadcast UpdateAssetInfoTransaction if interval's reached before activation") {
-    sender.updateAssetInfo(senderAcc, assetId, "updatedName", "updatedDescription", minFee, waitForTx = true)
+    sender.updateAssetInfo(senderAcc, assetId, "updatedName", "updatedDescription", issueFee, waitForTx = true)
   }
 
   test("able to broadcast UpdateAssetInfoTransaction after activation") {
     val nextTerm = sender.transactionInfo[TransactionInfo](otherAssetId).height + updateInterval + 1
     sender.waitForHeight(nextTerm, 2.minutes)
-    secondUpdateAssetTxId = sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", minFee, waitForTx = true)._1.id
+    secondUpdateAssetTxId = sender.updateAssetInfo(senderAcc, otherAssetId, "updatedName", "updatedDescription", issueFee, waitForTx = true)._1.id
   }
 
   test("able to broadcast tx of new version after activation") {
