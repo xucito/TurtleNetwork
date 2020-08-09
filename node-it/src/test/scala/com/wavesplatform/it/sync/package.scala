@@ -45,7 +45,7 @@ package object sync {
     } else {
       val payload   = DataTransactionData(data.map(dataEntry => PBTransactions.toPBDataEntry(dataEntry))).toByteArray
       val feeInUnit = 1 + (payload.length - 1) / 1024
-      feeInUnit * 100000
+      feeInUnit * 2000000
     }
   }
 
