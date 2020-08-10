@@ -288,7 +288,7 @@ class AmountAsStringSuite extends BaseTransactionSuite {
     sender.debugBalanceHistory(firstAddress, amountsAsStrings = true).head.balance shouldBe firstBalance
 
     val stateWavesOnHeight = sender.getWithCustomHeader(
-      s"/debug/stateWaves/${sender.height}",
+      s"/debug/stateTN/${sender.height}",
       headerValue = "application/json;large-significand-format=string",
       withApiKey = true
     )
