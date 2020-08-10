@@ -127,7 +127,7 @@ class RideV4ActivationSuite extends BaseTransactionSuite with CancelAfterFailure
 
     assertApiError(sender.reissue(callerAcc, issuedAssetId, someAssetAmount, reissuable = true, fee = reissueReducedFee)) { error =>
       error.id shouldBe StateCheckFailed.Id
-      error.message should include(s"Fee for ReissueTransaction ($reissueReducedFee in WAVES) does not exceed minimal value of $reissueFee WAVES.")
+      error.message should include(s"Fee for ReissueTransaction ($reissueReducedFee in TN) does not exceed minimal value of $reissueFee TN.")
     }
   }
 
@@ -331,7 +331,7 @@ class RideV4ActivationSuite extends BaseTransactionSuite with CancelAfterFailure
     assertApiError(
       sender.invokeScript(callerAcc, smartAccV4.toAddress.toString, Some("payBack"), payment = Seq(Payment(balance + 1, Waves)))
     ) { error =>
-      error.message should include("Transaction application leads to negative waves balance")
+      error.message should include("Transaction application leads to negative TN balance")
       error.id shouldBe StateCheckFailed.Id
       error.statusCode shouldBe 400
     }
