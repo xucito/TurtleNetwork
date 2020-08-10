@@ -70,7 +70,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
     //make transfer to users
     val transfers =
       MassTransferTransaction
-        .parseTransfersList(List(Transfer(thirdAddress, 4 * transferAmount), Transfer(secondAddress, 4 * transferAmount)))
+        .parseTransfersList(List(Transfer(thirdAddress, 4 * tokenTransferAmount), Transfer(secondAddress, 4 * tokenTransferAmount)))
         .explicitGet()
 
     val unsigned =
@@ -86,7 +86,7 @@ class MassTransferSmartContractSuite extends BaseTransactionSuite with CancelAft
     val heightBefore = notMiner.height
 
     val transfersToGov =
-      MassTransferTransaction.parseTransfersList(List(Transfer(firstAddress, transferAmount), Transfer(fourthAddress, transferAmount))).explicitGet()
+      MassTransferTransaction.parseTransfersList(List(Transfer(firstAddress, tokenTransferAmount), Transfer(fourthAddress, tokenTransferAmount))).explicitGet()
 
     val unsignedToGov =
       MassTransferTransaction
