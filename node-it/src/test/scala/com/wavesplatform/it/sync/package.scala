@@ -27,6 +27,7 @@ package object sync {
   val setAssetScriptFee: Long          = 1.TN + smartFee
   val setScriptFee: Long               = 1.TN
   val transferAmount: Long             = 1100.TN
+  val tokenTransferAmount: Long        = 10.TN
   val leasingAmount: Long              = transferAmount
   val issueAmount: Long                = transferAmount
   val massTransferFeePerTransfer: Long = 0.01.TN

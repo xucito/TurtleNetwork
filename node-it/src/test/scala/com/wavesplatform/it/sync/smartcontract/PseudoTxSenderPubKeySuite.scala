@@ -101,13 +101,13 @@ class PseudoTxSenderPubKeySuite extends BaseTransactionSuite {
       args = List(
         Terms.CONST_BYTESTR(ByteStr.decodeBase58(secondDApp.toAddress.toString).get).explicitGet(),
         Terms.CONST_BYTESTR(ByteStr.decodeBase58(firstAssetId).get).explicitGet(),
-        Terms.CONST_LONG(transferAmount)
+        Terms.CONST_LONG(tokenTransferAmount)
       ),
       fee = smartMinFee + smartFee,
       waitForTx = true
     )
 
-    sender.assetBalance(firstDApp.toAddress.toString, firstAssetId).balance shouldBe smartAssetBalanceBefore - transferAmount
+    sender.assetBalance(firstDApp.toAddress.toString, firstAssetId).balance shouldBe smartAssetBalanceBefore - tokenTransferAmount
   }
 
   test("not able to burn asset if required senderPublicKey didn't match") {
