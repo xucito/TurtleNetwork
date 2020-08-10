@@ -36,7 +36,7 @@ class ObsoleteHandlersSuite extends BaseTransactionSuite with BeforeAndAfterAll 
 
   test("alias create") {
     val json =
-      sender.postJsonWithApiKey("/alias/create", CreateAliasRequest("testalias", Some(1.toByte), sender = Some(firstAddress), fee = Some(minFee)))
+      sender.postJsonWithApiKey("/alias/create", CreateAliasRequest("testalias", Some(1.toByte), sender = Some(firstAddress), fee = Some(aliasFeeAmount)))
     val tx = Json.parse(json.getResponseBody).as[Transaction].id
     nodes.waitForTransaction(tx)
   }
@@ -79,7 +79,7 @@ class ObsoleteHandlersSuite extends BaseTransactionSuite with BeforeAndAfterAll 
         "sender"  -> firstAddress,
         "assetId" -> issue,
         "amount"  -> someAssetAmount / 2,
-        "fee"     -> issueFee
+        "fee"     -> burnFee
       )
     )
     val burn = Json.parse(burnJson.getResponseBody).as[Transaction].id
