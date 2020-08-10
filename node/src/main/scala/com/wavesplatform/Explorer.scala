@@ -92,7 +92,7 @@ object Explorer extends ScorexLogging {
           if (actualTotalBalance != expectedTotalBalance || expectedTotalBalance != byKeyTotalBalance)
             log.error(
               s"Something wrong, actual total TN balance: $actualTotalBalance," +
-                s" expected total waves balance: $expectedTotalBalance, total TN balance by key: $byKeyTotalBalance"
+                s" expected total TN balance: $expectedTotalBalance, total TN balance by key: $byKeyTotalBalance"
             )
           else
             log.info(s"Correct total TN balance: $actualTotalBalance WAVELETS")

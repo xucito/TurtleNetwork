@@ -38,7 +38,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
   test("waves context") {
     val issuer = miner.createKeyPair()
     val sample = miner.createKeyPair()
-    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 100.TN , 1.TN, version = TxVersion.V3, waitForTx = true)
+    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 1100.TN , 1.TN, version = TxVersion.V3, waitForTx = true)
     miner.transfer(miner.keyPair, sample.toAddress.toString, 100.TN , 1.TN, waitForTx = true)
     miner.createAlias(miner.keyPair, "aaaa", waitForTx = true)
 
@@ -98,7 +98,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
           reissuable = true,
           script = Some(assetScript),
           waitForTx = true,
-          fee = 1.TN
+          fee = 1000.TN
 )
         .id
     val height = miner.height

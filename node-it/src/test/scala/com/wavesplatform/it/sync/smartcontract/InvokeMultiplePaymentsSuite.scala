@@ -66,7 +66,7 @@ class InvokeMultiplePaymentsSuite extends BaseTransactionSuite with CancelAfterF
 
     asset1 = IssuedAsset(ByteStr.decodeBase58(sender.issue(caller, waitForTx = true).id).get)
     asset2 = IssuedAsset(ByteStr.decodeBase58(sender.issue(caller, waitForTx = true).id).get)
-    sender.createAlias(caller, "recipientalias", smartMinFee, waitForTx = true)
+    sender.createAlias(caller, "recipientalias", aliasFeeAmount+smartFee, waitForTx = true)
   }
 
   test("can transfer to alias") {
@@ -187,7 +187,7 @@ class InvokeMultiplePaymentsSuite extends BaseTransactionSuite with CancelAfterF
         payment = Seq(Payment(wavesBalance - 1.TN, Waves), Payment(2.TN, Waves))
       )
     ) { error =>
-      error.message should include("Transaction application leads to negative waves balance to (at least) temporary negative state")
+      error.message should include("Transaction application leads to negative TN balance to (at least) temporary negative state")
       error.id shouldBe StateCheckFailed.Id
       error.statusCode shouldBe 400
     }

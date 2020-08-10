@@ -356,7 +356,7 @@ object SyncHttpApi extends Assertions {
     def createAlias(
         sender: KeyPair,
         alias: String,
-        fee: Long = minFee,
+        fee: Long = aliasFeeAmount,
         version: TxVersion = TxVersion.V2,
         waitForTx: Boolean = false
     ): Transaction =
