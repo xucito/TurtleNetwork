@@ -4,7 +4,7 @@ import com.wavesplatform.account.{AddressScheme, Alias}
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.common.utils.EitherExt2
 import com.wavesplatform.it.api.SyncHttpApi._
-import com.wavesplatform.it.sync.{minFee, setScriptFee, smartFee}
+import com.wavesplatform.it.sync.{aliasFeeAmount, minFee, setScriptFee, smartFee}
 import com.wavesplatform.it.transactions.BaseTransactionSuite
 import com.wavesplatform.lang.script.v1.ExprScript
 import com.wavesplatform.lang.v1.FunctionHeader
@@ -39,7 +39,7 @@ class ScriptExecutionErrorSuite extends BaseTransactionSuite with CancelAfterFai
 
     val alias = Alias.fromString(s"alias:${AddressScheme.current.chainId.toChar}:asdasdasdv").explicitGet()
     assertBadRequestAndResponse(
-      sender.signedBroadcast(CreateAliasTransaction.selfSigned(Transaction.V2, thirdKeyPair, alias, minFee + smartFee, ts).explicitGet().json()),
+      sender.signedBroadcast(CreateAliasTransaction.selfSigned(Transaction.V2, thirdKeyPair, alias, aliasFeeAmount + smartFee, ts).explicitGet().json()),
       "Your transaction has incorrect type."
     )
   }
