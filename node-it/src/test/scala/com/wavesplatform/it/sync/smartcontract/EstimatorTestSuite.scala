@@ -148,7 +148,7 @@ class EstimatorTestSuite extends BaseTransactionSuite with CancelAfterFailure {
           .get
       )
     )
-    sender.putData(smartAcc, data, 0.3.TN, waitForTx = true)
+    sender.putData(smartAcc, data, 0.66.TN, waitForTx = true)
   }
 
   test("can issue scripted asset and set script fro asset before precheck activation") {
