@@ -681,7 +681,7 @@ object SyncHttpApi extends Assertions {
         func: Option[String] = None,
         args: List[Terms.EXPR] = List.empty,
         payment: Seq[InvokeScriptTransaction.Payment] = Seq.empty,
-        fee: Long = smartMinFee,
+        fee: Long = invokeFee+smartFee,
         feeAssetId: Option[String] = None,
         version: TxVersion = TxVersion.V1,
         waitForTx: Boolean = false

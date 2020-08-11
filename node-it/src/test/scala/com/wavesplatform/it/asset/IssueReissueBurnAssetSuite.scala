@@ -22,8 +22,8 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
       .overrideBase(_.quorum(0))
       .withDefault(1)
       .buildNonConflicting()
-  private val initialWavesBalance = 100.TN
-  private val setScriptPrice      = 0.01.TN
+  private val initialWavesBalance = 1100.TN
+  private val setScriptPrice      = 1.TN
 
   private val CallableMethod    = "@Callable"
   private val TransactionMethod = "Transaction"
@@ -393,7 +393,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
       .invokeScript(
         sender,
         sender.toAddress.toString,
-        fee = fee,
+        fee = issueFee+invokeFee,
         waitForTx = wait,
         func = Some(function),
         args = args,
@@ -546,7 +546,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
   }
 
   def invocationCost(aCount: Int, isSmartAcc: Boolean = true, sPCount: Int = 0, sAinActions: Int = 0): Long = {
-    0.005.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * sPCount + 0.04.TN * sAinActions + 1.TN * aCount
+    0.06.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * sPCount + 0.04.TN * sAinActions + 1000.TN * aCount
   }
 
   def script(asset: Asset, function: String = ""): String = {
