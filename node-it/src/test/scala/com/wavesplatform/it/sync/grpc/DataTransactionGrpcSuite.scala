@@ -254,7 +254,7 @@ class DataTransactionGrpcSuite extends GrpcBaseTransactionSuite {
     } else {
       val payload = DataTransactionData(data).toByteArray
       val feeInUnit = 1 + (payload.length - 1) / 1024
-      feeInUnit * 100000
+      feeInUnit * 2000000
     }
   }
 
