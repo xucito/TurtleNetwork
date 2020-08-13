@@ -156,7 +156,7 @@ class InvokeScriptPayAndTransferAssetGrpcSuite extends GrpcBaseTransactionSuite 
     sender.wavesBalance(receiverAddress).regular shouldBe receiverInitBalance.regular + 1
   }
 
-  def invoke(func: String, amount: Long, assetId: String = "TN", fee: Long = 500000): PBSignedTransaction = {
+  def invoke(func: String, amount: Long, assetId: String = "TN", fee: Long = 6000000): PBSignedTransaction = {
     val assetIdByteSting = if (assetId == "TN") ByteString.EMPTY else ByteString.copyFrom(Base58.decode(assetId))
     sender.broadcastInvokeScript(
       caller,
