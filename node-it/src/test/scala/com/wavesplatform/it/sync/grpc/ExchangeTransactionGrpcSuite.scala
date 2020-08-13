@@ -57,7 +57,7 @@ class ExchangeTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime
   }
 
   test("exchange tx with orders v3") {
-    val feeAsset           = sender.broadcastIssue(buyer, "feeAsset", someAssetAmount, 8, reissuable = true, 1.TN, waitForTx = true)
+    val feeAsset           = sender.broadcastIssue(buyer, "feeAsset", someAssetAmount, 8, reissuable = true, 1000.TN, waitForTx = true)
     val feeAssetId         = PBTransactions.vanilla(feeAsset).explicitGet().id()
     val price              = 500000L
     val amount             = 40000000L

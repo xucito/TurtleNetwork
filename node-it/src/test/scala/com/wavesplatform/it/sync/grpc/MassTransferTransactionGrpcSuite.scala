@@ -163,7 +163,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     val alias = "masstest_alias"
 
-    sender.broadcastCreateAlias(secondAcc, alias, minFee, waitForTx = true)
+    sender.broadcastCreateAlias(secondAcc, alias, aliasFeeAmount, waitForTx = true)
 
     val transfers = List(Transfer(Some(Recipient().withPublicKeyHash(firstAddress)), transferAmount), Transfer(Some(Recipient().withAlias(alias)), transferAmount))
 
@@ -172,7 +172,7 @@ class MassTransferTransactionGrpcSuite extends GrpcBaseTransactionSuite {
 
     sender.wavesBalance(firstAddress).regular shouldBe firstBalance.regular - massTransferTransactionFee - transferAmount
     sender.wavesBalance(firstAddress).effective shouldBe firstBalance.effective - massTransferTransactionFee - transferAmount
-    sender.wavesBalance(secondAddress).regular shouldBe secondBalance.regular + transferAmount - minFee
-    sender.wavesBalance(secondAddress).effective shouldBe secondBalance.effective + transferAmount - minFee
+    sender.wavesBalance(secondAddress).regular shouldBe secondBalance.regular + transferAmount - aliasFeeAmount
+    sender.wavesBalance(secondAddress).effective shouldBe secondBalance.effective + transferAmount - aliasFeeAmount
   }
 }

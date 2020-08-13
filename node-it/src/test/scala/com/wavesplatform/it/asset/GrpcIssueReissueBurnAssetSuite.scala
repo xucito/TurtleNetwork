@@ -22,8 +22,8 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 class GrpcIssueReissueBurnAssetSuite extends FreeSpec with GrpcBaseTransactionSuiteLike {
-  private val initialWavesBalance = 100.TN
-  private val setScriptPrice      = 0.01.TN
+  private val initialWavesBalance = 1100.TN
+  private val setScriptPrice      = 1.TN
 
   private val CallableMethod    = "@Callable"
   private val TransactionMethod = "Transaction"
@@ -474,7 +474,7 @@ class GrpcIssueReissueBurnAssetSuite extends FreeSpec with GrpcBaseTransactionSu
   }
 
   def invocationCost(issuesCount: Int, isSmartAcc: Boolean = true, smartPaymentCount: Int = 0, smartAssetsInActions: Int = 0): Long = {
-    0.005.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * smartPaymentCount + 0.04.TN * smartAssetsInActions + 1.TN * issuesCount
+    0.06.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * smartPaymentCount + 0.04.TN * smartAssetsInActions + 1000.TN * issuesCount
   }
 
   def script(asset: Asset, function: String = ""): String = {

@@ -67,8 +67,8 @@ class IssueTransactionGrpcSuite extends GrpcBaseTransactionSuite with NTPTime wi
       )
 
       assertGrpcError(
-        sender.broadcastIssue(issuer, assetName, nftQuantity, nftDecimals, nftReissuable, minFee - 1, assetDescription, version = v),
-        s"does not exceed minimal value of $minFee",
+        sender.broadcastIssue(issuer, assetName, nftQuantity, nftDecimals, nftReissuable, 0.1.TN - 1, assetDescription, version = v),
+        s"does not exceed minimal value of ${0.1.TN}",
         Code.INVALID_ARGUMENT
       )
 
