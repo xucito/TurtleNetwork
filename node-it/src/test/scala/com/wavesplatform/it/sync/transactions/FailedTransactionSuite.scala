@@ -47,7 +47,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   protected override def beforeAll(): Unit = {
     super.beforeAll()
 
-    sender.transfer(sender.keyPair, contractAddress, 100.TN , minFee, waitForTx = true)
+    sender.transfer(sender.keyPair, contractAddress, 2100.TN , minFee, waitForTx = true)
 
     smartAsset = sender
       .issue(
@@ -131,7 +131,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: dApp error propagates failed transaction") {
-    val invokeFee    = 0.005.TN
+    val invokeFee    = 0.06.TN
     val priorityData = List(StringDataEntry("crash", "yes"))
     val putDataFee   = calcDataFee(priorityData, 1)
     val priorityFee  = putDataFee + invokeFee
@@ -163,7 +163,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: insufficient action fees propagates failed transaction") {
-    val invokeFee            = 0.005.TN
+    val invokeFee            = 0.06.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -191,8 +191,8 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
 
         val minFee        = if (typeName == "issue") invokeFee + issueFee else invokeFee + smartFee
         val scriptInvoked = if (typeName == "issue") 0 else 1
-        val text = s"Fee in WAVES for InvokeScriptTransaction ($invokeFee in WAVES)" +
-          s" with $scriptInvoked total scripts invoked does not exceed minimal value of $minFee WAVES."
+        val text = s"Fee in TN for InvokeScriptTransaction ($invokeFee in TN)" +
+          s" with $scriptInvoked total scripts invoked does not exceed minimal value of $minFee TN."
 
         failed.foreach { s =>
           checkStateChange(sender.debugStateChanges(s.id), 2, text)
@@ -204,7 +204,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: invoke script error in action asset propagates failed transaction") {
-    val invokeFee            = 0.005.TN + smartFee
+    val invokeFee            = 0.06.TN + smartFee
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -237,7 +237,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: invoke script error in payment asset propagates failed transaction") {
-    val invokeFee            = 0.005.TN + smartFee
+    val invokeFee            = 0.06.TN + smartFee
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -301,8 +301,8 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: sponsored fee on failed transaction should be charged correctly") {
-    val invokeFee            = 0.005.TN + smartFee
-    val invokeFeeInAsset     = invokeFee / 100000 // assetFee = feeInWaves / feeUnit * sponsorship
+    val invokeFee            = 0.06.TN + smartFee
+    val invokeFeeInAsset     = invokeFee / 2000000 // assetFee = feeInWaves / feeUnit * sponsorship
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -329,7 +329,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: account state should not be changed after accepting failed transaction") {
-    val invokeFee            = 0.005.TN + smartFee
+    val invokeFee            = 0.06.TN + smartFee
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -379,7 +379,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: reject transactions if account script failed") {
-    val invokeFee            = 0.005.TN
+    val invokeFee            = 0.06.TN
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -427,7 +427,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   }
 
   test("InvokeScriptTransaction: transactionHeightById returns only succeed transactions") {
-    val invokeFee            = 0.005.TN + smartFee
+    val invokeFee            = 0.06.TN + smartFee
     val setAssetScriptMinFee = setAssetScriptFee + smartFee
     val priorityFee          = setAssetScriptMinFee + invokeFee
 
@@ -453,9 +453,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
       exchangePreconditions(Some(ScriptCompiler.compile("true", ScriptEstimatorV3).explicitGet()._1.bytes().base64))
 
     val assetPair      = AssetPair.createAssetPair(amountAsset, priceAsset).get
-    val fee            = 0.003.TN + 4 * smartFee
-    val sellMatcherFee = fee / 100000L
-    val buyMatcherFee  = fee / 100000L
+    val fee            = 0.04.TN + 4 * smartFee
+    val sellMatcherFee = fee / 2000000L
+    val buyMatcherFee  = fee / 2000000L
 
     val (assetScript, _) = ScriptCompiler.compile("if true then throw(\"error\") else false", ScriptEstimatorV3).explicitGet()
     val scriptTx         = sender.setAssetScript(priceAsset, buyerAddress, script = Some(assetScript.bytes().base64))
@@ -479,9 +479,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
       exchangePreconditions(Some(ScriptCompiler.compile("true", ScriptEstimatorV3).explicitGet()._1.bytes().base64))
 
     val assetPair      = AssetPair.createAssetPair(amountAsset, priceAsset).get
-    val fee            = 0.003.TN + 4 * smartFee
-    val sellMatcherFee = fee / 100000L
-    val buyMatcherFee  = fee / 100000L
+    val fee            = 0.04.TN + 4 * smartFee
+    val sellMatcherFee = fee / 2000000L
+    val buyMatcherFee  = fee / 2000000L
     val priorityFee    = setAssetScriptFee + smartFee + fee * 10
 
     val allCases =
@@ -515,9 +515,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
       exchangePreconditions(Some(ScriptCompiler.compile("true", ScriptEstimatorV3).explicitGet()._1.bytes().base64))
 
     val assetPair      = AssetPair.createAssetPair(amountAsset, priceAsset).get
-    val fee            = 0.003.TN + 4 * smartFee
-    val sellMatcherFee = fee / 100000L
-    val buyMatcherFee  = fee / 100000L
+    val fee            = 0.04.TN + 4 * smartFee
+    val sellMatcherFee = fee / 2000000L
+    val buyMatcherFee  = fee / 2000000L
 
     val allCases =
       Seq((amountAsset, sellerAddress), (priceAsset, buyerAddress), (sellFeeAsset, matcherAddress), (buyFeeAsset, matcherAddress))
@@ -538,9 +538,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
     val Precondition(amountAsset, priceAsset, buyFeeAsset, sellFeeAsset) = exchangePreconditions(None)
 
     val assetPair      = AssetPair.createAssetPair(amountAsset, priceAsset).get
-    val fee            = 0.003.TN + smartFee
-    val sellMatcherFee = fee / 100000L
-    val buyMatcherFee  = fee / 100000L
+    val fee            = 0.04.TN + smartFee
+    val sellMatcherFee = fee / 2000000L
+    val buyMatcherFee  = fee / 2000000L
     val priorityFee    = setScriptFee + smartFee + fee * 10
 
     val allCases = Seq(sellerAddress, buyerAddress, matcherAddress)
@@ -570,9 +570,9 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
       exchangePreconditions(Some(ScriptCompiler.compile("true", ScriptEstimatorV3).explicitGet()._1.bytes().base64))
 
     val assetPair      = AssetPair.createAssetPair(amountAsset, priceAsset).get
-    val fee            = 0.003.TN + 4 * smartFee
-    val sellMatcherFee = fee / 100000L
-    val buyMatcherFee  = fee / 100000L
+    val fee            = 0.04.TN + 4 * smartFee
+    val sellMatcherFee = fee / 2000000L
+    val buyMatcherFee  = fee / 2000000L
     val priorityFee    = setAssetScriptFee + smartFee + fee * 10
 
     updateAssetScript(result = true, amountAsset, sellerAddress, priorityFee)

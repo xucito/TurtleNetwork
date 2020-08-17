@@ -69,11 +69,6 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         | }
         |
         | @Callable(inv)
-        | func baz() = {
-        |  WriteSet([DataEntry("test", this.bytes)])
-        | }
-        |
-        | @Callable(inv)
         | func default() = {
         |  WriteSet([DataEntry("a", "b"), DataEntry("sender", "senderId")])
         | }
@@ -86,13 +81,13 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
         |
         """.stripMargin
     val script = ScriptCompiler.compile(scriptText, ScriptEstimatorV2).explicitGet()._1.bytes().base64
-    sender.transfer(firstKeyPair, thirdContract.toAddress.toString, 10.TN, minFee, waitForTx = true)
+    sender.transfer(firstKeyPair, thirdContract.toAddress.toString, 30.TN, minFee, waitForTx = true)
     val setScriptId  = sender.setScript(firstContract, Some(script), setScriptFee, waitForTx = true).id
     val setScriptId2 = sender.setScript(secondContract, Some(script), setScriptFee, waitForTx = true).id
 
     val acc0ScriptInfo  = sender.addressScriptInfo(firstContractAddress)
     val acc0ScriptInfo2 = sender.addressScriptInfo(secondContractAddress)
-    sender.createAlias(firstContract, "alias", fee = 1.TN, waitForTx = true)
+    sender.createAlias(firstContract, "alias", fee = aliasFeeAmount+smartFee, waitForTx = true)
 
     acc0ScriptInfo.script.isEmpty shouldBe false
     acc0ScriptInfo.scriptText.isEmpty shouldBe false
@@ -268,7 +263,7 @@ class InvokeScriptTransactionSuite extends BaseTransactionSuite with CancelAfter
   }
 
   test("invoke script via dApp alias") {
-    sender.createAlias(thirdContract, "dappalias", smartMinFee, waitForTx = true)
+    sender.createAlias(thirdContract, "dappalias", aliasFeeAmount+smartMinFee, waitForTx = true)
     val dAppAlias = sender.aliasByAddress(thirdContract.toAddress.toString).find(_.endsWith("dappalias")).get
     for (v <- invokeScrTxSupportedVersions) {
       sender.invokeScript(caller, dAppAlias, fee = smartMinFee + smartFee, func = Some("biz"), version = v, waitForTx = true)
