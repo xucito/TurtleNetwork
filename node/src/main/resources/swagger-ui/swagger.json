@@ -4053,7 +4053,7 @@
           "node"
         ],
         "summary": "Version",
-        "description": "Get Waves node version",
+        "description": "Get TN node version",
         "operationId": "version_1",
         "parameters": [],
         "responses": {

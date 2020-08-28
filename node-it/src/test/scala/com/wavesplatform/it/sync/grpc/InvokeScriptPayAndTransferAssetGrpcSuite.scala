@@ -75,7 +75,7 @@ class InvokeScriptPayAndTransferAssetGrpcSuite extends GrpcBaseTransactionSuite 
          |  if (isDefined(i.payment)) then
          |    let pay = extract(i.payment)
          |    TransferSet([ScriptTransfer(receiver, 1, pay.assetId)])
-         |  else throw("need payment in WAVES or any Asset")
+         |  else throw("need payment in TN or any Asset")
          |}
         """.stripMargin,
         estimator
