@@ -62,9 +62,9 @@ class RebroadcastTransactionSuite extends BaseTransactionSuite with NodesFromDoc
 object RebroadcastTransactionSuite {
 
   private val configWithRebroadcastAllowed =
-    parseString("waves.synchronization.utx-synchronizer.allow-tx-rebroadcasting = true")
+    parseString("TN.synchronization.utx-synchronizer.allow-tx-rebroadcasting = true")
 
   private val configWithRebroadcastNotAllowed =
-    parseString("waves.synchronization.utx-synchronizer.allow-tx-rebroadcasting = false")
+    parseString("TN.synchronization.utx-synchronizer.allow-tx-rebroadcasting = false")
 
 }

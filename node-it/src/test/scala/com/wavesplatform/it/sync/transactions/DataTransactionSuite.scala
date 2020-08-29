@@ -24,8 +24,8 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
   override def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
       .overrideBase(_.quorum(0))
-      .overrideBase(_.raw("waves.blockchain.custom.functionality.blocks-for-feature-activation = 1"))
-      .overrideBase(_.raw("waves.blockchain.custom.functionality.feature-check-blocks-period = 1"))
+      .overrideBase(_.raw("TN.blockchain.custom.functionality.blocks-for-feature-activation = 1"))
+      .overrideBase(_.raw("TN.blockchain.custom.functionality.feature-check-blocks-period = 1"))
       .overrideBase(_.preactivatedFeatures(15 -> 0))
       .withDefault(1)
       .withSpecial(1, _.nonMiner)
