@@ -14,7 +14,7 @@ import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import org.scalatest.FreeSpec
 
 class GrpcSponsorFeeActionSuite extends FreeSpec with GrpcBaseTransactionSuiteLike {
-  private val initialWavesBalance = 100.TN
+  private val initialWavesBalance = 2100.TN
 
   private val minSponsoredAssetFee      = 100
   private var sponsoredAssetId: String  = ""
