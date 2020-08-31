@@ -70,7 +70,7 @@ class InvokeScriptErrorMsgGrpcSuite extends GrpcBaseTransactionSuite {
         payments = payments,
         fee = 1000
       ),
-      "Transaction sent from smart account. Requires 400000 extra fee. Transaction involves 1 scripted assets",
+      "Transaction sent from smart account. Requires 4000000 extra fee. Transaction involves 1 scripted assets",
       Code.INVALID_ARGUMENT
     )
 
