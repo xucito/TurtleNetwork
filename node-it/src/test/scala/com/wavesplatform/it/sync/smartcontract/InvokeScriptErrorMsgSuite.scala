@@ -87,11 +87,11 @@ class InvokeScriptErrorMsgSuite extends BaseTransactionSuite with CancelAfterFai
           payment = Seq(
             InvokeScriptTransaction.Payment(10, Asset.fromString(Some(asset1)))
           ),
-          fee = 1300000
+          fee = 14000000
         ),
       AssertiveApiError(
         ScriptExecutionError.Id,
-        "Error while executing account-script: Fee in TN for InvokeScriptTransaction (1300000 in TN) with 12 total scripts invoked does not exceed minimal value of 14000000 TN."
+        "Error while executing account-script: Fee in TN for InvokeScriptTransaction (14000000 in TN) with 12 total scripts invoked does not exceed minimal value of 54000000 TN."
       )
     )
   }
