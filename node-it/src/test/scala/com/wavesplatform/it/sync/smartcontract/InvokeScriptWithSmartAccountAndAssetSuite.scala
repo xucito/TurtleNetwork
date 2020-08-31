@@ -50,11 +50,11 @@ class InvokeScriptWithSmartAccountAndAssetSuite extends BaseTransactionSuite wit
           dAppAddress,
           Some("spendMaxFee"),
           payment = Seq(Payment(paymentAmount, IssuedAsset(ByteStr.decodeBase58(asset2).get))),
-          fee = 0.05299999.TN
+          fee = 0.14999999.TN
         ),
       AssertiveApiError(
         ScriptExecutionError.Id,
-        "Error while executing account-script: Fee in TN for InvokeScriptTransaction (5299999 in TN) with 12 total scripts invoked does not exceed minimal value of 14000000 TN."
+        "Error while executing account-script: Fee in TN for InvokeScriptTransaction (14999999 in TN) with 12 total scripts invoked does not exceed minimal value of 54000000 TN."
       )
     )
 

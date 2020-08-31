@@ -68,7 +68,7 @@ object ExtensionPackaging extends AutoPlugin {
              |chown -R ${nodePackageName.value}:${nodePackageName.value} /usr/share/${nodePackageName.value}""".stripMargin
       ),
       libraryDependencies ++= Dependencies.logDeps,
-      javaOptions in run ++= extensionClasses.value.zipWithIndex.map { case (extension, index) => s"-Dwaves.extensions.$index=$extension" }
+      javaOptions in run ++= extensionClasses.value.zipWithIndex.map { case (extension, index) => s"-DTN.extensions.$index=$extension" }
     ) ++ nameFix ++ inScope(Global)(nameFix) ++ maintainerFix
 
   private def maintainerFix =
