@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 class GrpcIssueReissueBurnAssetSuite extends FreeSpec with GrpcBaseTransactionSuiteLike {
-  private val initialWavesBalance = 2000.TN
+  private val initialWavesBalance = 25000.TN
   private val setScriptPrice      = 1.TN
 
   private val CallableMethod    = "@Callable"
