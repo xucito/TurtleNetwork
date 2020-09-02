@@ -19,7 +19,6 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
         |        feature-check-blocks-period = 10000
         |        blocks-for-feature-activation = 9000
         |        generation-balance-depth-from-50-to-1000-after-height = 4
-        |        reset-effective-balances-at-height = 15
         |        block-version-3-after-height = 18
         |        pre-activated-features {
         |          1 = 0
@@ -59,7 +58,6 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
     settings.functionalitySettings.featureCheckBlocksPeriod should be(10000)
     settings.functionalitySettings.blocksForFeatureActivation should be(9000)
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(4)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(15)
     settings.functionalitySettings.blockVersion3AfterHeight should be(18)
     settings.functionalitySettings.preActivatedFeatures should be(Map(5 -> 0, 1 -> 0, 6 -> 0, 2 -> 0, 3 -> 0))
     settings.functionalitySettings.doubleFeaturesPeriodsAfterHeight should be(21)
@@ -90,7 +88,6 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
 
     settings.addressSchemeCharacter should be('l')
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(1)
     settings.functionalitySettings.blockVersion3AfterHeight should be(0)
     settings.functionalitySettings.maxTransactionTimeBackOffset should be(120.minutes)
     settings.functionalitySettings.maxTransactionTimeForwardOffset should be(90.minutes)
@@ -124,7 +121,6 @@ class BlockchainSettingsSpecification extends FlatSpec with Matchers {
 
     settings.addressSchemeCharacter should be('L')
     settings.functionalitySettings.generationBalanceDepthFrom50To1000AfterHeight should be(0L)
-    settings.functionalitySettings.resetEffectiveBalancesAtHeight should be(1)
     settings.functionalitySettings.maxTransactionTimeBackOffset should be(120.minutes)
     settings.functionalitySettings.maxTransactionTimeForwardOffset should be(90.minutes)
     settings.rewardsSettings.initial should be(600000000)

@@ -1,0 +1,24 @@
+{
+  "balances": {
+    "3Jr347UtLyzxh12oXC2DDMtVW8uT1St5Tuj": {
+      "in": 0,
+      "out": -2076500000000
+    },
+    "3JtSvRikEAGUNLRBnuUpNxYkpiDsaCGGfaC": {
+      "in": 0,
+      "out": 0
+    },
+    "3JdgkxuhUkSk15RYz2YVLjw3NxRNjB7ypMz": {
+      "in": 0,
+      "out": -90000000
+    },
+    "3Jm75BtBv3NRoJuccoG421R1ETnfgaFhKRB": {
+      "in": 0,
+      "out": 0
+    }
+  },
+  "cancelledLeases": [
+    "HQMoZK1xPoAnf2H5aZH5Z6MgLzj5fMBXy9zMWjzP7HY8",
+    "2L9ksfiErWtndqCL2u45Wmmg4kgUoNp8vXG8wyuJLhv1"
+  ]
+}

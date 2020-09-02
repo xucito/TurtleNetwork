@@ -103,6 +103,8 @@ abstract class HandshakeHandler(
               establishedConnections.put(ctx.channel(), peerInfo(remoteHandshake, ctx.channel()))
 
               ctx.channel().attr(NodeNameAttributeKey).set(remoteHandshake.nodeName)
+              ctx.channel().attr(NodeVersionAttributeKey).set(remoteHandshake.applicationVersion)
+
               Option(ctx.channel().attr(ConnectionStartAttributeKey).get()).foreach { start =>
                 log.trace(s"Time taken to accept handshake = ${System.currentTimeMillis() - start} ms")
               }
@@ -138,10 +140,12 @@ abstract class HandshakeHandler(
 object HandshakeHandler extends ScorexLogging {
 
   val NodeNameAttributeKey        = AttributeKey.newInstance[String]("name")
+  val NodeVersionAttributeKey     = AttributeKey.newInstance[(Int, Int, Int)]("version")
   val ConnectionStartAttributeKey = AttributeKey.newInstance[Long]("connectionStart")
 
   def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean =
-    (remoteVersion._1 == 0 && remoteVersion._2 >= 16) || (remoteVersion._1 == 1 && remoteVersion._2 >= 0)
+   // (remoteVersion._1 == 0 && remoteVersion._2 >= 16) || (remoteVersion._1 == 1 && remoteVersion._2 >= 0)
+      remoteVersion._1 == 1 && remoteVersion._2 >= 1 && remoteVersion._3 >= 10
 
   def removeHandshakeHandlers(ctx: ChannelHandlerContext, thisHandler: ChannelHandler): Unit = {
     ctx.pipeline().remove(classOf[HandshakeTimeoutHandler])

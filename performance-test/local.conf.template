@@ -1,5 +1,5 @@
 
-waves {
+TN {
   network {
     port = 6867
     known-peers = ${known_peers}
