@@ -196,7 +196,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     sender.assetBalance(dAppAddress, dAppAsset).balance shouldBe halfQuantity + (feeAmount - 10) + smartFeeAmount
     sender.assetBalance(dAppAddress, callerAsset).balance shouldBe halfQuantity + paymentAmount
-    sender.accountBalances(dAppAddress)._1 shouldBe dAppInitBalance - 0.009.TN - 0.053.TN
+    sender.accountBalances(dAppAddress)._1 shouldBe dAppInitBalance - 0.1.TN - 0.54.TN
 
     sender.assetBalance(callerAddress, dAppAsset).balance shouldBe halfQuantity + (-feeAmount + 10) - smartFeeAmount
     sender.assetBalance(callerAddress, callerAsset).balance shouldBe halfQuantity - paymentAmount
