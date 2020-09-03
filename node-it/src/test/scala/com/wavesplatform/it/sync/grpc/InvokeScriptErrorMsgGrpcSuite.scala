@@ -80,7 +80,7 @@ class InvokeScriptErrorMsgGrpcSuite extends GrpcBaseTransactionSuite {
         Recipient().withPublicKeyHash(contractAddress),
         None,
         payments = payments,
-        fee = 1300000
+        fee = 14000000
       ),
       "Fee in TN for InvokeScriptTransaction .* with 12 total scripts invoked does not exceed minimal value"
     )
