@@ -78,13 +78,13 @@ class InvokeMultiplePaymentsSuite extends BaseTransactionSuite with CancelAfterF
         caller,
         dAppAddress,
         Some("f"),
-        payment = Seq(Payment(1.TN, Waves)),
+        payment = Seq(Payment(0.06.TN, Waves)),
         args = List(CONST_STRING("recipientalias").explicitGet()),
         waitForTx = true
       )
 
     sender.balance(dAppAddress).balance shouldBe dAppBalance
-    sender.balance(callerAddress).balance shouldBe callerBalance - smartMinFee
+    sender.balance(callerAddress).balance shouldBe callerBalance- invokeFee - smartFee
   }
 
   test("script should sheck if alias not exists") {
