@@ -247,7 +247,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       assetId = IssuedAsset(issueTx.id())
       minFee <- smallFeeGen
       senderNotIssuer = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, Some(minFee), 1 * Constants.UnitsInWave, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, Some(minFee), 10 * Constants.UnitsInWave, ts + 1)
         .explicitGet()
       insufficientFee = SponsorFeeTransaction
         .selfSigned(1.toByte, master, assetId, Some(minFee), (0.02 * Constants.UnitsInWave).toLong - 1, ts + 1)
