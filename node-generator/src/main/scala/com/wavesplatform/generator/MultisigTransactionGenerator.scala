@@ -26,8 +26,8 @@ class MultisigTransactionGenerator(settings: MultisigTransactionGenerator.Settin
     val bank   = accounts.head
     val owners = Seq(createAccount(), accounts(1), createAccount(), accounts(2), createAccount(), accounts(3), createAccount(), createAccount())
 
-    val enoughFee               = 0.005.TN
-    val totalAmountOnNewAccount = 1.TN
+    val enoughFee               = 0.005.waves
+    val totalAmountOnNewAccount = 1.waves
 
     val script: Script = Gen.multiSigScript(owners, 3, estimator)
 
