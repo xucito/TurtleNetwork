@@ -153,7 +153,7 @@ class ExchangeTransactionSuite extends BaseTransactionSuite with NTPTime {
 
       if (matcherFeeOrder1 == Waves && matcherFeeOrder2 != Waves) {
         assetBalanceBefore = sender.assetBalance(secondKeyPair.toAddress.toString, assetId.toString).balance
-        sender.transfer(buyer, seller.toAddress.toString, 2000000, minFee, Some(assetId.toString), waitForTx = true)
+        sender.transfer(buyer, seller.toAddress.toString, 3800000, minFee, Some(assetId.toString), waitForTx = true)
       }
 
       val buyPrice   = 500000
