@@ -171,8 +171,6 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         ),
       AssertiveApiError(ScriptExecutionError.Id, "with 12 total scripts invoked does not exceed minimal value", matchMessage = true)
     )
-<<<<<<< HEAD
-=======
 
     assertApiError(
       sender
@@ -186,7 +184,6 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
         ),
       AssertiveApiError(ScriptExecutionError.Id, "with 12 total scripts invoked does not exceed minimal value", matchMessage = true)
     )
->>>>>>> 013945e90e14b0631799b523ebf082460f39be7d
 
     sender
       .invokeScript(
@@ -212,11 +209,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
 
     sender.assetBalance(dAppAddress, dAppAsset).balance shouldBe halfQuantity + (feeAmount - 10) + smartFeeAmount
     sender.assetBalance(dAppAddress, callerAsset).balance shouldBe halfQuantity + paymentAmount
-<<<<<<< HEAD
     sender.accountBalances(dAppAddress)._1 shouldBe dAppInitBalance - 0.1.TN - 0.54.TN
-=======
-    sender.accountBalances(dAppAddress)._1 shouldBe dAppInitBalance - 0.009.waves - 0.053.waves
->>>>>>> 013945e90e14b0631799b523ebf082460f39be7d
 
     sender.assetBalance(callerAddress, dAppAsset).balance shouldBe halfQuantity + (-feeAmount + 10) - smartFeeAmount
     sender.assetBalance(callerAddress, callerAsset).balance shouldBe halfQuantity - paymentAmount
@@ -244,11 +237,7 @@ class InvokeScriptWithSponsorshipSuite extends BaseTransactionSuite with CancelA
       .id
 
     sender.assetBalance(dAppAddress, dAppAsset).balance shouldBe dAppAssetBalance
-<<<<<<< HEAD
     sender.accountBalances(dAppAddress)._1  shouldBe dAppWavesBalance - 0.12.TN
-=======
-    sender.accountBalances(dAppAddress)._1 shouldBe dAppWavesBalance - 0.009.waves
->>>>>>> 013945e90e14b0631799b523ebf082460f39be7d
   }
 
 }
