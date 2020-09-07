@@ -39,7 +39,7 @@ class IssueNFTSuite extends BaseTransactionSuite with TableDrivenPropertyChecks 
     )
 
     assertApiErrorRaised(
-      firstNode.issue(firstKeyPair, assetName, assetDescription, 1, 0, reissuable = false, 1.TN / 10, waitForTx = true)
+      firstNode.issue(firstKeyPair, assetName, assetDescription, 1, 0, reissuable = false, 1000.TN / 10000, waitForTx = true)
     )
   }
 

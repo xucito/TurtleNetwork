@@ -84,7 +84,7 @@ class InvokeMultiplePaymentsSuite extends BaseTransactionSuite with CancelAfterF
       )
 
     sender.balance(dAppAddress).balance shouldBe dAppBalance
-    sender.balance(callerAddress).balance shouldBe callerBalance- invokeFee - smartFee
+    sender.balance(callerAddress).balance shouldBe callerBalance - invokeFee - smartFee
   }
 
   test("script should sheck if alias not exists") {

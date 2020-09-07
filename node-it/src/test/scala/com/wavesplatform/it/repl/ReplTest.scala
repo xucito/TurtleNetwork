@@ -4,7 +4,6 @@ import com.typesafe.config.Config
 import com.wavesplatform.common.state.ByteStr
 import com.wavesplatform.common.utils._
 import com.wavesplatform.features.BlockchainFeatures
-import com.wavesplatform.it.BaseSuite
 import com.wavesplatform.it.api.SyncHttpApi._
 import com.wavesplatform.it.sync._
 import com.wavesplatform.it.sync.transactions.{FailedTransactionSuiteLike, OverflowBlock}
@@ -99,7 +98,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
           script = Some(assetScript),
           waitForTx = true,
           fee = 1000.TN
-)
+        )
         .id
     val height = miner.height
 
@@ -221,7 +220,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
       )
     ).explicitGet() shouldBe "res11: Int = 1000"
 
-    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${100.TN }")
+    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${100.TN}")
     await(repl.execute(""" this.wavesBalance() """))
       .explicitGet() should fullyMatch regex "res13: BalanceDetails = BalanceDetails\\(\\s+available = \\d+\\s+regular = \\d+\\s+generating = \\d+\\s+effective = \\d+\\s+\\)".r
 

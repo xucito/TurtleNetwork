@@ -47,7 +47,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
   protected override def beforeAll(): Unit = {
     super.beforeAll()
 
-    sender.transfer(sender.keyPair, contractAddress, 2100.TN , minFee, waitForTx = true)
+    sender.transfer(sender.keyPair, contractAddress, 2100.TN, minFee, waitForTx = true)
 
     smartAsset = sender
       .issue(
@@ -684,6 +684,7 @@ class FailedTransactionSuite extends BaseTransactionSuite with CancelAfterFailur
 
   private def exchangePreconditions(initScript: Option[String]): Precondition = {
     val transfers = Seq(
+
       sender.transfer(sender.keyPair, sellerAddress.toAddress.toString, 100.TN).id,
       sender.transfer(sender.keyPair, buyerAddress.toAddress.toString, 100.TN).id,
       sender.transfer(sender.keyPair, matcherAddress.toAddress.toString, 100.TN).id

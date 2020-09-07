@@ -490,7 +490,7 @@ class DataTransactionSuite extends BaseTransactionSuite with EitherValues {
 
   def data(
       entries: List[DataEntry[_]],
-      fee: Long = 100000,
+      fee: Long = 2000000,
       timestamp: Long = System.currentTimeMillis,
       version: TxVersion
   ): DataTransaction =

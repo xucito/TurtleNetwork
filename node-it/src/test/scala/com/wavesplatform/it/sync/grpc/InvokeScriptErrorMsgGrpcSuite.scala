@@ -82,7 +82,7 @@ class InvokeScriptErrorMsgGrpcSuite extends GrpcBaseTransactionSuite {
         payments = payments,
         fee = 14000000
       ),
-      "Fee in TN for InvokeScriptTransaction .* with 12 total scripts invoked does not exceed minimal value"
+    "Fee in TN for InvokeScriptTransaction .* with 12 total scripts invoked does not exceed minimal value"
     )
   }
 

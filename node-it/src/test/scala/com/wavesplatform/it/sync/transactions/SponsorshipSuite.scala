@@ -230,7 +230,7 @@ class SponsorshipSuite
       aliceSecondSponsorAssetBalance.sponsorBalance shouldBe Some(sponsorEffectiveBalance)
     }
 
-    "TN fee depends on sponsor fee and sponsored token decimals" in {
+    "waves fee depends on sponsor fee and sponsored token decimals" in {
       val transferTxCustomLargeFeeAlice1 = sender.transfer(alice, bobAddress, 1.TN, LargeFee, None, Some(firstSponsorAssetId)).id
       val transferTxCustomLargeFeeAlice2 = sender.transfer(alice, bobAddress, 1.TN, LargeFee, None, Some(secondSponsorAssetId)).id
       nodes.waitForHeightAriseAndTxPresent(transferTxCustomLargeFeeAlice1)

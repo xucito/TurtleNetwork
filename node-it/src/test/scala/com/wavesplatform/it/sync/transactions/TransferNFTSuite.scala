@@ -28,7 +28,7 @@ class TransferNFTSuite extends BaseTransactionSuite with NTPTime {
   private lazy val callerAddress: String = caller.toAddress.toString
   private lazy val dAppAddress: String   = dApp.toAddress.toString
   test("NFT should be correctly transferred via transfer transaction") {
-    val nftAsset = sender.issue(caller, assetName, assetDescription, 1, 0, reissuable = false, 1.TN, waitForTx = true).id
+    val nftAsset = sender.issue(caller, assetName, assetDescription, 1, 0, reissuable = false, 1000.TN / 10000, waitForTx = true).id
     sender.transfer(caller, dAppAddress, 1, minFee, Some(nftAsset), waitForTx = true)
 
     sender.assetBalance(callerAddress, nftAsset).balance shouldBe 0
@@ -129,8 +129,9 @@ class TransferNFTSuite extends BaseTransactionSuite with NTPTime {
   }
 
   test("NFT should be correctly transferred via mass transfer transaction") {
-    val nftAsset = sender.issue(caller, assetName, assetDescription, 1, 0, reissuable = false, 1.TN, waitForTx = true).id
+    val nftAsset = sender.issue(caller, assetName, assetDescription, 1, 0, reissuable = false, 1000.TN / 10000, waitForTx = true).id
     sender.massTransfer(caller, List(Transfer(receiver.toAddress.toString, 1)), calcMassTransferFee(1), assetId = Some(nftAsset), waitForTx = true)
+
     sender.assetBalance(callerAddress, nftAsset).balance shouldBe 0
     sender.nftList(callerAddress, 10).map(info => info.assetId) shouldNot contain(nftAsset)
     sender.assetBalance(receiver.toAddress.toString, nftAsset).balance shouldBe 1

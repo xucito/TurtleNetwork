@@ -39,7 +39,6 @@ echo "WAVES_WALLET_SEED='${WAVES_WALLET_SEED}'" | tee -a /var/log/TN/TN.log
 echo "WAVES_WALLET_PASSWORD='${WAVES_WALLET_PASSWORD}'" | tee -a /var/log/TN/TN.log
 echo "JAVA_OPTS='${JAVA_OPTS}'" | tee -a /var/log/TN/TN.log
 
-
 exec java -Dlogback.stdout.level=${WAVES_LOG_LEVEL} \
   -XX:+ExitOnOutOfMemoryError \
   -Xmx${WAVES_HEAP_SIZE} \

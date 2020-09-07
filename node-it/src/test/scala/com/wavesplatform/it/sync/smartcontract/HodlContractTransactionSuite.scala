@@ -18,6 +18,8 @@ class HodlContractTransactionSuite extends BaseTransactionSuite with CancelAfter
 
   private def contract = firstKeyPair
   private def caller   = secondKeyPair
+  private lazy val contractAddress: String = contract.toAddress.toString
+  private lazy val callerAddress: String   = caller.toAddress.toString
 
   private lazy val contractAddress: String = contract.toAddress.toString
   private lazy val callerAddress: String   = caller.toAddress.toString

@@ -135,7 +135,6 @@ class RideFuncSuite extends BaseTransactionSuite with CancelAfterFailure {
     val scriptSetBroadcast = sender.signedBroadcast(scriptSet.explicitGet().json())
     nodes.waitForHeightAriseAndTxPresent(scriptSetBroadcast.id)
 
-
     val transfer = TransferTransaction.selfSigned(2.toByte, pkNewAddress, pkNewAddress.toAddress, Waves, 1.TN, Waves, smartMinFee, ByteStr.empty,  System.currentTimeMillis())
     val transferBroadcast = sender.signedBroadcast(transfer.explicitGet().json())
     nodes.waitForHeightAriseAndTxPresent(transferBroadcast.id)

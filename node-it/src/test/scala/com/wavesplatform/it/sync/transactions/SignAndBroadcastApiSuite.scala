@@ -29,7 +29,6 @@ import scala.util.Random
 
 class SignAndBroadcastApiSuite extends BaseTransactionSuite with NTPTime with BeforeAndAfterAll {
   test("height should always be reported for transactions") {
-
     val txId = sender.transfer(firstKeyPair, secondAddress, 1.TN, fee = minFee).id
 
     sender.waitForTransaction(txId)
