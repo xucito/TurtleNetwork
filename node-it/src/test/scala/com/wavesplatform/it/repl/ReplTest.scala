@@ -37,8 +37,8 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
   test("waves context") {
     val issuer = miner.createKeyPair()
     val sample = miner.createKeyPair()
-    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 1100.TN , 1.TN, version = TxVersion.V3, waitForTx = true)
-    miner.transfer(miner.keyPair, sample.toAddress.toString, 100.TN , 1.TN, waitForTx = true)
+    val trans  = miner.transfer(miner.keyPair, issuer.toAddress.toString, 1800.TN , 0.02.TN, version = TxVersion.V3, waitForTx = true)
+    miner.transfer(miner.keyPair, sample.toAddress.toString, 2000.TN , 0.02.TN, waitForTx = true)
     miner.createAlias(miner.keyPair, "aaaa", waitForTx = true)
 
     val failDApp = ScriptCompiler
@@ -220,7 +220,7 @@ class ReplTest extends BaseTransactionSuite with FailedTransactionSuiteLike[Stri
       )
     ).explicitGet() shouldBe "res11: Int = 1000"
 
-    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${100.TN}")
+    await(repl.execute(s""" wavesBalance(Address(base58'${sample.toAddress}')).regular """)) shouldBe Right(s"res12: Int = ${2000.TN}")
     await(repl.execute(""" this.wavesBalance() """))
       .explicitGet() should fullyMatch regex "res13: BalanceDetails = BalanceDetails\\(\\s+available = \\d+\\s+regular = \\d+\\s+generating = \\d+\\s+effective = \\d+\\s+\\)".r
 
