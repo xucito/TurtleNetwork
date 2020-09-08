@@ -132,7 +132,7 @@ class UpdateAssetInfoTransactionSuite extends BaseTransactionSuite with CancelAf
       .as[JsObject] ++ Json.obj("type" -> UpdateAssetInfoTransaction.typeId)
 
     val fee = sender.calculateFee(txJson)
-    fee.feeAmount shouldBe 1e5.toLong
+    fee.feeAmount shouldBe 1e11.toLong
     fee.feeAssetId shouldBe None
   }
 
