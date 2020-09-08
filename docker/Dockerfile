@@ -85,14 +85,7 @@ RUN groupadd -g 143 TN                                                   &&  \
 WORKDIR /var/lib/TN
 EXPOSE 6861 6860 6560 6862
 
-<<<<<<< HEAD
 USER TN
 VOLUME /var/lib/TN
 VOLUME /usr/share/TN/lib/plugins
 ENTRYPOINT ["/usr/share/TN/bin/entrypoint.sh"]
-=======
-USER waves
-VOLUME /var/lib/waves
-VOLUME /usr/share/waves/lib/plugins
-ENTRYPOINT ["/usr/share/waves/bin/entrypoint.sh"]
->>>>>>> 013945e90e14b0631799b523ebf082460f39be7d
