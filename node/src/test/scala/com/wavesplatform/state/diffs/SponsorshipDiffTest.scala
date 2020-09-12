@@ -219,13 +219,13 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
         .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave - 1, ts + 1)
         .explicitGet()
       insufficientReducedFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, (0.01 * Constants.UnitsInWave).toLong - 1, ts + 1)
+        .selfSigned(1.toByte, master, assetId, None, 1.toLong, ts + 1)
         .explicitGet()
-    } yield (Seq(genesis1, genesis2, issueTx, sponsorTx), senderNotIssuer, insufficientFee, insufficientReducedFee)
+    } yield (genesis1, genesis2, issueTx, sponsorTx, senderNotIssuer, insufficientFee, insufficientReducedFee)
 
     forAll(setup) {
-      case (preconditions, senderNotIssuer, _, insufficientReducedFee) =>
-        val setupBlocks = Seq(block(preconditions), block(Seq()))
+      case (genesis1, genesis2, issueTx, sponsorTx, senderNotIssuer, _, insufficientReducedFee) =>
+        val setupBlocks = Seq(block(Seq(genesis1, genesis2, issueTx, sponsorTx)))
         assertDiffEi(setupBlocks, block(Seq(senderNotIssuer)), s) { blockDiffEi =>
           blockDiffEi should produce("Asset was issued by other address")
         }
