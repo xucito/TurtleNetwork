@@ -22,7 +22,8 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
       .overrideBase(_.quorum(0))
       .withDefault(1)
       .buildNonConflicting()
-  private val initialWavesBalance = 1100.TN
+  private val initialWavesBalance = 2100.TN
+  private val initialWavesBalanceBig = 12000.TN
   private val setScriptPrice      = 1.TN
 
   private val CallableMethod    = "@Callable"
@@ -193,7 +194,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
     }
 
     "Issue 10 assets should not produce an error" in {
-      val acc = createDapp(script(simpleNonreissuableAsset))
+      val acc = createDappBig(script(simpleNonreissuableAsset))
       val tx  = invokeScript(acc, "issue10Assets", fee = invocationCost(10))
       for (nth <- 0 to 9) {
         val assetId = validateIssuedAssets(acc, tx, simpleNonreissuableAsset, nth, CallableMethod)
@@ -203,14 +204,14 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
     }
 
     "Issue more than 10 assets should produce an error" in {
-      val acc = createDapp(script(simpleNonreissuableAsset))
+      val acc = createDappBig(script(simpleNonreissuableAsset))
       assertApiError(invokeScript(acc, "issue11Assets").id) { e =>
         e.message should include("Too many script actions: max: 10, actual: 11")
       }
     }
 
     "More than 10 actions Issue/Reissue/Burn should produce an error" in {
-      val acc     = createDapp(script(simpleReissuableAsset))
+      val acc     = createDappBig(script(simpleReissuableAsset))
       val txIssue = issue(acc, method, simpleReissuableAsset, invocationCost(1))
       val assetId = validateIssuedAssets(acc, txIssue, simpleReissuableAsset, method = method)
 
@@ -220,7 +221,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
     }
 
     "More than 10 issue action in one invocation should produce an error" in {
-      val acc = createDapp(script(simpleNonreissuableAsset))
+      val acc = createDappBig(script(simpleNonreissuableAsset))
       assertApiError(invokeScript(acc, "issue11Assets").id) { e =>
         e.message should include("Too many script actions: max: 10, actual: 11")
       }
@@ -369,6 +370,33 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
     address
   }
 
+  def createDappBig(scriptParts: String*): KeyPair = {
+    val script  = scriptParts.mkString(" ")
+    val address = miner.createKeyPair()
+    val compiledScript = ScriptCompiler
+      .compile(
+        script,
+        ScriptEstimatorV2
+      )
+      .explicitGet()
+      ._1
+
+    miner.transfer(sender.keyPair, address.toAddress.toString, initialWavesBalanceBig, setScriptFee * 2, waitForTx = true)
+
+    miner.waitForHeight(nodes.waitForTransaction(
+      miner
+        .signedBroadcast(
+          SetScriptTransaction
+            .selfSigned(1.toByte, address, Some(compiledScript), setScriptFee, System.currentTimeMillis())
+            .explicitGet()
+            .json()
+        )
+        .id
+    ).height + 1)
+
+    address
+  }
+
   def invokeScript(
       sender: KeyPair,
       function: String,
@@ -393,7 +421,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
       .invokeScript(
         sender,
         sender.toAddress.toString,
-        fee = issueFee+invokeFee,
+        fee = fee,
         waitForTx = wait,
         func = Some(function),
         args = args,
@@ -488,7 +516,6 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
           }
         }
         tx
-
       case _ =>
         sender.issue(
           account,
@@ -500,6 +527,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
           fee = fee,
           waitForTx = true
         )
+
     }
   }
 
@@ -546,7 +574,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
   }
 
   def invocationCost(aCount: Int, isSmartAcc: Boolean = true, sPCount: Int = 0, sAinActions: Int = 0): Long = {
-    0.06.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * sPCount + 0.04.TN * sAinActions + 1000.TN * aCount
+    0.1.TN + (if (isSmartAcc) 0.04.TN else 0L) + 0.04.TN * sPCount + 0.04.TN * sAinActions + 1000.TN * aCount
   }
 
   def script(asset: Asset, function: String = ""): String = {
