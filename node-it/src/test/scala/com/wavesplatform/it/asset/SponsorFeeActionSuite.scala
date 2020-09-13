@@ -13,7 +13,7 @@ import com.wavesplatform.transaction.smart.SetScriptTransaction
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 
 class SponsorFeeActionSuite extends BaseSuite {
-  private val initialWavesBalance = 100.TN
+  private val initialWavesBalance = 2100.TN
 
   private var sponsoredAssetId: String  = ""
   private var globalDAppAddress: String = ""
