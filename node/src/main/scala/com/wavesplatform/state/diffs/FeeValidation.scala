@@ -24,7 +24,7 @@ object FeeValidation {
   val FeeUnit        = 2000000
   val NFTMultiplier  = 0.0001
   val BlockV5Multiplier = 0.001
-  val wrongFeesUntil = 675000
+  val wrongBLocksUntil = 675000
   val wrongNetworkChainId = 76
   val scheme = AddressScheme.current
 
@@ -53,7 +53,7 @@ object FeeValidation {
       for {
         feeDetails <- getMinFee(blockchain, tx)
         _ <- Either.cond(
-          feeDetails.minFeeInAsset <= tx.assetFee._2|| (blockchain.height<wrongFeesUntil && scheme.chainId == wrongNetworkChainId),
+          feeDetails.minFeeInAsset <= tx.assetFee._2|| (blockchain.height<wrongBLocksUntil && scheme.chainId == wrongNetworkChainId),
           (),
           notEnoughFeeError(tx.typeId, feeDetails, tx.assetFee._2)
         )
