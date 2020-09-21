@@ -75,7 +75,7 @@ object PreActivatedFeaturesTestSuite {
   val featureDescr               = BlockchainFeatures.SmallerMinimalGeneratingBalance.description
   private val supportedConfig    = ConfigFactory.parseString(s"""TN {
                                                              |  blockchain.custom.functionality {
-                                                             |    pre-activated-features = null
+                                                             |    pre-activated-features = {}
                                                              |    feature-check-blocks-period = $votingInterval
                                                              |    blocks-for-feature-activation = 1
                                                              |  }

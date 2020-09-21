@@ -26,7 +26,7 @@ class BalanceDiffValidationTest extends PropSpec with PropertyChecks with WithSt
     masterTransfersToAlice: TransferTransaction = createWavesTransfer(master, alice.toAddress, amt, fee, ts).explicitGet()
     (aliceLeasesToBob, _)    <- leaseAndCancelGeneratorP(alice, bob.toAddress) suchThat (_._1.amount < amt)
     (masterLeasesToAlice, _) <- leaseAndCancelGeneratorP(master, alice.toAddress) suchThat (_._1.amount > aliceLeasesToBob.amount)
-    transferAmt              <- Gen.choose(amt - fee - aliceLeasesToBob.amount, amt - fee)
+    transferAmt              <- Gen.choose(amt - fee - aliceLeasesToBob.amount, amt - 2 * fee)
     aliceTransfersMoreThanOwnsMinusLeaseOut = createWavesTransfer(alice, cooper.toAddress, transferAmt, fee, ts).explicitGet()
 
   } yield (genesis, masterTransfersToAlice, aliceLeasesToBob, masterLeasesToAlice, aliceTransfersMoreThanOwnsMinusLeaseOut)
