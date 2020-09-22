@@ -213,10 +213,10 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = IssuedAsset(issueTx.id())
       senderNotIssuer = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave, ts + 1)
         .explicitGet()
       insufficientFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave - 1, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave - 1, ts + 1)
         .explicitGet()
       insufficientReducedFee = SponsorFeeTransaction
         .selfSigned(1.toByte, notSponsor, assetId, None, (0.02 * Constants.UnitsInWave).toLong - 1, ts + 1)
@@ -241,8 +241,8 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       master     <- accountGen
       notSponsor <- accountGen
       ts         <- timestampGen
-      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000, ts).explicitGet()
-      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 400000000, ts).explicitGet()
+      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 100000000000000L, ts).explicitGet()
+      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 100000000000000L, ts).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = IssuedAsset(issueTx.id())
       minFee <- smallFeeGen
@@ -261,7 +261,7 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
           blockDiffEi should produce("Asset was issued by other address")
         }
         assertDiffEi(setupBlocks, block(Seq(insufficientFee)), s) { blockDiffEi =>
-          blockDiffEi should produce("(999999999 in TN) does not exceed minimal value of 1000000000 TN")
+          blockDiffEi should produce("(1999999 in TN) does not exceed minimal value of 2000000 TN")
         }
     }
   }
