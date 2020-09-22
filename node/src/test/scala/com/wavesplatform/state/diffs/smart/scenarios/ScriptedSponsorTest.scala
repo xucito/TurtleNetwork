@@ -23,7 +23,7 @@ class ScriptedSponsorTest extends PropSpec with PropertyChecks with WithState wi
   import com.wavesplatform.state.diffs._
 
   val ENOUGH_FEE: Long  = 100000000000L
-  val SPONSOR_FEE: Long = 100000
+  val SPONSOR_FEE: Long = 2000000
 
   private val fs = TestFunctionalitySettings.Enabled
     .copy(
