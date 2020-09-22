@@ -96,7 +96,7 @@ object FeeValidation {
             val multiplier = if (blockchain.isFeatureActivated(BlockchainFeatures.BlockV5)) BlockV5Multiplier else 1
             (baseFee * multiplier).toLong
           case _: SponsorFeeTransaction =>
-            val multiplier = if (blockchain.isFeatureActivated(BlockchainFeatures.BlockV5)) BlockV5Multiplier else 1
+            val multiplier = if (blockchain.isFeatureActivated(BlockchainFeatures.BlockV5)) BlockV5Multiplier * 2 else 1
             (baseFee * multiplier).toLong
           case _ => baseFee
         }

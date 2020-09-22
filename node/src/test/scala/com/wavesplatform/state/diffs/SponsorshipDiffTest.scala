@@ -111,15 +111,15 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       assetOverspend = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 1000000, IssuedAsset(assetId), issueTx.quantity + 1, ByteStr.empty,  ts + 1)
         .explicitGet()
       insufficientFee = TransferTransaction.selfSigned(
-          1.toByte,
-          master,
-          recipient.toAddress,
-          Waves,
-          1000000,
-          IssuedAsset(assetId),
-          sponsorTx.minSponsoredAssetFee.get - 1, ByteStr.empty,
-          ts + 2
-        )
+        1.toByte,
+        master,
+        recipient.toAddress,
+        Waves,
+        1000000,
+        IssuedAsset(assetId),
+        sponsorTx.minSponsoredAssetFee.get - 1, ByteStr.empty,
+        ts + 2
+      )
         .explicitGet()
       fee = 30000000 * sponsorTx.minSponsoredAssetFee.get
       wavesOverspend = TransferTransaction.selfSigned(1.toByte, master, recipient.toAddress, Waves, 1000000, IssuedAsset(assetId), fee, ByteStr.empty,  ts + 3)
@@ -178,15 +178,15 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
         .selfSigned(1.toByte, bob, master.toAddress, amount / 2, fee, ts + 3)
         .explicitGet()
       insufficientFee = TransferTransaction.selfSigned(
-          1.toByte,
-          alice,
-          bob.toAddress,
-          IssuedAsset(assetId),
-          issueTx.quantity / 12,
-          IssuedAsset(assetId),
-          sponsorTx.minSponsoredAssetFee.get, ByteStr.empty,
-          ts + 4
-        )
+        1.toByte,
+        alice,
+        bob.toAddress,
+        IssuedAsset(assetId),
+        issueTx.quantity / 12,
+        IssuedAsset(assetId),
+        sponsorTx.minSponsoredAssetFee.get, ByteStr.empty,
+        ts + 4
+      )
         .explicitGet()
     } yield (genesis, genesis2, issueTx, sponsorTx, transferAssetTx, leasingTx, insufficientFee, leasingToMasterTx)
 
@@ -208,29 +208,29 @@ class SponsorshipDiffTest extends PropSpec with PropertyChecks with WithState wi
       master     <- accountGen
       notSponsor <- accountGen
       ts         <- timestampGen
-      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 400000000000L, ts).explicitGet()
-      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 400000000000L, ts).explicitGet()
+      genesis1: GenesisTransaction = GenesisTransaction.create(master.toAddress, 2000000000000L, ts).explicitGet()
+      genesis2: GenesisTransaction = GenesisTransaction.create(notSponsor.toAddress, 2000000000000L, ts).explicitGet()
       (issueTx, sponsorTx, _, _) <- sponsorFeeCancelSponsorFeeGen(master)
       assetId = IssuedAsset(issueTx.id())
       senderNotIssuer = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave, ts + 1)
         .explicitGet()
       insufficientFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, notSponsor, assetId, None, 10 * Constants.UnitsInWave - 1, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, 1 * Constants.UnitsInWave - 1, ts + 1)
         .explicitGet()
       insufficientReducedFee = SponsorFeeTransaction
-        .selfSigned(1.toByte, master, assetId, None, 1.toLong, ts + 1)
+        .selfSigned(1.toByte, notSponsor, assetId, None, (0.02 * Constants.UnitsInWave).toLong - 1, ts + 1)
         .explicitGet()
-    } yield (genesis1, genesis2, issueTx, sponsorTx, senderNotIssuer, insufficientFee, insufficientReducedFee)
+    } yield (Seq(genesis1, genesis2, issueTx, sponsorTx), senderNotIssuer, insufficientFee, insufficientReducedFee)
 
     forAll(setup) {
-      case (genesis1, genesis2, issueTx, sponsorTx, senderNotIssuer, _, insufficientReducedFee) =>
-        val setupBlocks = Seq(block(Seq(genesis1, genesis2, issueTx, sponsorTx)))
+      case (preconditions, senderNotIssuer, _, insufficientReducedFee) =>
+        val setupBlocks = Seq(block(preconditions), block(Seq()))
         assertDiffEi(setupBlocks, block(Seq(senderNotIssuer)), s) { blockDiffEi =>
           blockDiffEi should produce("Asset was issued by other address")
         }
-        assertDiffEi(setupBlocks, block(Seq(insufficientReducedFee)), s) { blockDiffEi =>
-          blockDiffEi should produce("(999999999 in TN) does not exceed minimal value of 1000000000 TN")
+        assertDiffEi(Seq(block(preconditions), block(Seq())), block(Seq(insufficientReducedFee)), s) { blockDiffEi =>
+          blockDiffEi should produce("(1999999 in TN) does not exceed minimal value of 2000000 TN")
         }
     }
   }
