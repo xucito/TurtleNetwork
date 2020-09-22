@@ -78,9 +78,16 @@ trait WithState extends DBCacheSettings with Matchers with NTPTime { _: Suite =>
   ): Unit = {
     def differ(blockchain: Blockchain, b: Block) = BlockDiffer.fromBlock(blockchain, None, b, MiningConstraint.Unlimited)
 
-    preconditions.foreach { precondition =>
-      val BlockDiffer.Result(preconditionDiff, preconditionFees, totalFee, _, _) = differ(state, precondition).explicitGet()
-      state.append(preconditionDiff, preconditionFees, totalFee, None, precondition.header.generationSignature, precondition)
+    try {
+      preconditions.foreach { precondition =>
+        val BlockDiffer.Result(preconditionDiff, preconditionFees, totalFee, _, _) = differ(state, precondition).explicitGet()
+        state.append(preconditionDiff, preconditionFees, totalFee, None, precondition.header.generationSignature, precondition)
+      }
+    }
+    catch {
+      case unknown => {
+        println(unknown)
+      }
     }
     val totalDiff1 = differ(state, block)
     assertion(totalDiff1.map(_.diff))
