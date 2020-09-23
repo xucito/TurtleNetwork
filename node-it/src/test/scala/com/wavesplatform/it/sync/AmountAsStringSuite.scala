@@ -158,12 +158,12 @@ class AmountAsStringSuite extends BaseTransactionSuite {
 
   test("amount as string in sponsorfee transaction") {
     def checkSponsorshipTx(tx: Transaction): Assertion = {
-      tx.minSponsoredAssetFee shouldBe Some(10000)
+      tx.minSponsoredAssetFee shouldBe Some(200000)
       tx.fee shouldBe sponsorFee
     }
     val sponsoredAssetId = sender.issue(sender.keyPair, "sponsor", "", someAssetAmount, 8, waitForTx = true).id
     nodes.waitForHeightArise()
-    val sponsorshipTx = sender.sponsorAsset(sender.keyPair, sponsoredAssetId, 10000, sponsorFee, amountsAsStrings = true)
+    val sponsorshipTx = sender.sponsorAsset(sender.keyPair, sponsoredAssetId, 200000, sponsorFee, amountsAsStrings = true)
     checkSponsorshipTx(sponsorshipTx)
 
     checkSponsorshipTx(sender.utx(amountsAsStrings = true).head)
@@ -180,7 +180,7 @@ class AmountAsStringSuite extends BaseTransactionSuite {
     checkSponsorshipTx(sponsorshipTxBlockSeq)
 
     val sponsorshipTxInfo = sender.transactionInfo[TransactionInfo](sponsorshipTx.id)
-    sponsorshipTxInfo.minSponsoredAssetFee shouldBe Some(10000)
+    sponsorshipTxInfo.minSponsoredAssetFee shouldBe Some(200000)
     sponsorshipTxInfo.fee shouldBe sponsorFee
   }
   test("amount as string in masstransfer transaction") {
