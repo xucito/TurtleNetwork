@@ -161,7 +161,7 @@ class UtxPoolSpecification
   }
 
   private def invokeScript(sender: KeyPair, dApp: Address, time: Time) =
-    Gen.choose(500000L, 600000L).map { fee =>
+    Gen.choose(6000000L, 10000000L).map { fee =>
       InvokeScriptTransaction.selfSigned(TxVersion.V1, sender, dApp, None, Seq.empty, fee, Waves, time.getTimestamp()).explicitGet()
     }
 
