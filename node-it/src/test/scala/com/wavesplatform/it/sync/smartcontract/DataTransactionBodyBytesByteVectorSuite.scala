@@ -75,7 +75,7 @@ class DataTransactionBodyBytesByteVectorSuite extends BaseTransactionSuite {
     )
 
   private val maxDataEntriesV2 =
-    maxDataEntriesV1 :+ BinaryDataEntry("f", ByteStr.fill(12378)(1))
+    maxDataEntriesV1 :+ BinaryDataEntry("f", ByteStr.fill(12377)(1))
 
   test("filled data transaction body bytes") {
     checkByteVectorLimit(firstKeyPair, maxDataEntriesV1, scriptV3, TxVersion.V1)
@@ -93,7 +93,7 @@ class DataTransactionBodyBytesByteVectorSuite extends BaseTransactionSuite {
 
     sender.putData(address, data, version = version, fee = calcDataFee(data, version) + smartFee, waitForTx = true).id
 
-    val increasedData = data.head.copy(value = data.head.value ++ ByteStr.fromBytes(1)) :: data.tail
+    val increasedData = data.head.copy(value = data.head.value ++ ByteStr.fromBytes(1) ++ ByteStr.fromBytes(1)) :: data.tail
     assertBadRequestAndMessage(
       sender.putData(address, increasedData, version = version, fee = calcDataFee(data, version) + smartFee),
       "Too big sequences requested"
