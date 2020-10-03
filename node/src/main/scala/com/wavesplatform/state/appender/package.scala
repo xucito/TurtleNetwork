@@ -19,12 +19,10 @@ import monix.eval.Task
 import scala.util.{Left, Right}
 
 package object appender extends ScorexLogging {
-
-  private val MaxTimeDrift: Long = 100 // millis
+  val MaxTimeDrift: Long = 100 // millis
   private val scheme = AddressScheme.current
   val wrongBLocksUntil = 950000
   val wrongNetworkChainId = 76
-
 
   // Invalid blocks, that are already in blockchain
   private val exceptions = List(

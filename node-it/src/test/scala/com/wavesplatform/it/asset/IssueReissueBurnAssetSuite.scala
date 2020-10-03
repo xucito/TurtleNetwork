@@ -16,6 +16,8 @@ import com.wavesplatform.transaction.TxVersion
 import com.wavesplatform.transaction.smart.script.ScriptCompiler
 import com.wavesplatform.transaction.smart.{InvokeScriptTransaction, SetScriptTransaction}
 
+import scala.concurrent.duration._
+
 class IssueReissueBurnAssetSuite extends BaseSuite {
   override val nodeConfigs: Seq[Config] =
     com.wavesplatform.it.NodeConfigs.newBuilder
@@ -356,7 +358,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
 
     miner.transfer(sender.keyPair, address.toAddress.toString, initialWavesBalance, setScriptFee * 2, waitForTx = true)
 
-    miner.waitForHeight(nodes.waitForTransaction(
+    nodes.waitForHeightAriseAndTxPresent(
       miner
         .signedBroadcast(
           SetScriptTransaction
@@ -365,7 +367,7 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
             .json()
         )
         .id
-    ).height + 1)
+    )
 
     address
   }
@@ -428,7 +430,12 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
         payment = payments
       )
 
-    if (wait) nodes.waitForHeightAriseAndTxPresent(tx._1.id)
+    if (wait) {
+      miner.waitForTransaction(tx._1.id)
+      miner.waitFor("empty utx")(_.utxSize, (_: Int) == 0, 1 second)
+      nodes.waitForHeightArise()
+    }
+
     tx._1
   }
 
@@ -517,17 +524,17 @@ class IssueReissueBurnAssetSuite extends BaseSuite {
         }
         tx
       case _ =>
-        sender.issue(
+        val tx = sender.issue(
           account,
           data.name,
           data.description,
           data.quantity,
           data.decimals,
           reissuable = data.reissuable,
-          fee = fee,
-          waitForTx = true
+          fee = fee
         )
-
+        nodes.waitForHeightAriseAndTxPresent(tx.id)
+        tx
     }
   }
 
