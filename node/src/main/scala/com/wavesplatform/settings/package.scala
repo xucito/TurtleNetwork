@@ -68,8 +68,8 @@ package object settings {
     val withApp = external.withFallback(cmdDefaults).withFallback(ConfigFactory.defaultApplication())
 
     val networkDefaults = {
-      val network = withApp.getString("waves.blockchain.type").toLowerCase
-      withApp.getConfig(s"waves.defaults.$network")
+      val network = withApp.getString("TN.blockchain.type").toLowerCase
+      withApp.getConfig(s"TN.defaults.$network")
     }
 
     external
