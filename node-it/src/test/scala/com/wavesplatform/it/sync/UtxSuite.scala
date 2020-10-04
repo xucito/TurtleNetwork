@@ -79,8 +79,8 @@ class UtxSuite extends FunSuite with CancelAfterFailure with NodesFromDocker wit
   }
 
   test("Whitelisted transactions should be mined first of all") {
-    val minTransferFee  = 100000L
-    val minInvokeFee    = 500000L
+    val minTransferFee  = 2000000L
+    val minInvokeFee    = 6000000L
     val minSetScriptFee = 100000000L
     val higherFee       = minInvokeFee * 2
 
