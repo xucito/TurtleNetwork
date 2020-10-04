@@ -120,7 +120,8 @@ class BlockWithMaxBaseTargetTest extends FreeSpec with Matchers with WithDB with
     val minerSettings = settings0.minerSettings.copy(quorum = 0)
     val blockchainSettings0 = settings0.blockchainSettings.copy(
       functionalitySettings = settings0.blockchainSettings.functionalitySettings.copy(
-        preActivatedFeatures = Map(BlockchainFeatures.FairPoS.id -> 1)
+        preActivatedFeatures = Map(BlockchainFeatures.FairPoS.id -> 1),
+        blockVersion3AfterHeight = 1
       )
     )
     val synchronizationSettings0 = settings0.synchronizationSettings.copy(maxBaseTargetOpt = Some(1L))
