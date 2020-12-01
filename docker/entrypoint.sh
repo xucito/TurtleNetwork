@@ -7,10 +7,10 @@ if [ ! -f /etc/TN/TN.conf ]; then
   if [[ $NETWORKS == *"${WAVES_NETWORK,,}"* ]]; then
     cp /usr/share/TN/conf/TN-${WAVES_NETWORK}.conf /etc/TN/TN.conf
     sed -i 's/include "local.conf"//' /etc/TN/TN.conf
-#    for f in /etc/TN/ext/*.conf; do
-#      echo "Adding $f extension config to TN.conf";
-#      echo "include required(\"$f\")" >> /etc/TN/TN.conf
-#    done
+    for f in /etc/TN/ext/*.conf; do
+      echo "Adding $f extension config to TN.conf";
+      echo "include required(\"$f\")" >> /etc/TN/TN.conf
+    done
     echo 'include "local.conf"' >> /etc/TN/TN.conf
   else
     echo "Network '${WAVES_NETWORK,,}' not found. Exiting."
