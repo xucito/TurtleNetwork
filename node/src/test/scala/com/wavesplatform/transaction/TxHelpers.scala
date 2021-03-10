@@ -99,7 +99,7 @@ object TxHelpers {
     InvokeScriptTransaction.selfSigned(TxVersion.V1, defaultSigner, dApp, Some(fc), payments, fee, feeAssetId, timestamp).explicitGet()
   }
 
-  def lease(recipient: AddressOrAlias = secondAddress, amount: TxAmount = 10.waves): LeaseTransaction = {
+  def lease(recipient: AddressOrAlias = secondAddress, amount: TxAmount = 10.TN): LeaseTransaction = {
     LeaseTransaction.selfSigned(TxVersion.V2, defaultSigner, recipient, amount, TestValues.fee, timestamp).explicitGet()
   }
 
