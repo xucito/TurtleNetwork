@@ -22,19 +22,10 @@ RUN                                                                             
     echo "Downloading Waves '${WAVES_VERSION}' from GitHub"                 &&  \
     mkdir -p /TN/node/target                                             &&  \
     releaseUrl="https://github.com/TurtleNetwork/TurtleNetwork/releases/download"   &&  \
-    rawContentUrl="https://raw.githubusercontent.com/TurtleNetwork/TurtleNetwork"   &&  \
                                                                                 \
     echo "Downloading jar file"                                             &&  \
     curl -fL ${releaseUrl}/v${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
-        -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                &&  \
-                                                                                \
-    echo "Downloading mainnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-mainnet.conf         \
-        -o /TN/node/TN-mainnet.conf                                   &&  \
-                                                                                \
-    echo "Downloading testnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/v${WAVES_VERSION}/node/TN-testnet.conf         \
-        -o /TN/node/TN-testnet.conf                                     \
+        -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                    \
 ;} ||                                                                           \
 {                                                                               \
     echo "Downloading sbt '${SBT_VERSION}'"                                 &&  \
@@ -74,7 +65,6 @@ ENV WAVES_HEAP_SIZE=$WAVES_HEAP_SIZE
 ENV WAVES_NETWORK=$WAVES_NETWORK
 
 COPY --from=builder /TN/node/target/TN-all-*.jar /usr/share/TN/lib/
-COPY --from=builder /TN/node/TN-*.conf /usr/share/TN/conf/
 COPY entrypoint.sh /usr/share/TN/bin/
 
 RUN groupadd -g 143 TN                                                   &&  \
