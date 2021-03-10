@@ -83,8 +83,8 @@ class UtxPriorityPoolSpecification
       acc1        <- accountGen
       acc2        <- accountGen
       tx1         <- transferV2(acc, ENOUGH_AMT / 3, ntpTime)
-      nonScripted <- Gen.nonEmptyListOf(transferV2(acc1, 10000000L, ntpTime).suchThat(_.fee < tx1.fee))
-      scripted    <- Gen.nonEmptyListOf(transferV2(acc2, 10000000L, ntpTime).suchThat(_.fee < tx1.fee))
+      nonScripted <- Gen.nonEmptyListOf(transferV2(acc1, 100000000L, ntpTime).suchThat(_.fee < tx1.fee))
+      scripted    <- Gen.nonEmptyListOf(transferV2(acc2, 100000000L, ntpTime).suchThat(_.fee < tx1.fee))
     } yield (tx1, nonScripted, scripted)
 
     def createState(scripted: Address, settings: WavesSettings = WavesSettings.default(), setBalance: Boolean = true): Blockchain = {
@@ -241,7 +241,7 @@ class UtxPriorityPoolSpecification
       acc <- accountGen
       genesis  = GenesisTransaction.create(acc.toAddress, ENOUGH_AMT, ntpTime.correctedTime()).explicitGet()
       genBlock = TestBlock.create(Seq(genesis))
-      txs1 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+      txs1 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
       (block1, mbs1) = UnsafeBlocks.unsafeChainBaseAndMicro(
         genBlock.id(),
         Nil,
@@ -250,8 +250,8 @@ class UtxPriorityPoolSpecification
         Block.NgBlockVersion,
         ntpTime.correctedTime()
       )
-      txs2 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
-      txs4 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+      txs2 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
+      txs4 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
       (block2, mbs2) = UnsafeBlocks.unsafeChainBaseAndMicro(
         mbs1.head.totalResBlockSig,
         Nil,
@@ -260,7 +260,7 @@ class UtxPriorityPoolSpecification
         Block.NgBlockVersion,
         ntpTime.correctedTime()
       )
-      txs3 <- Gen.nonEmptyListOf(transferV2(acc, 10000000L, ntpTime))
+      txs3 <- Gen.nonEmptyListOf(transferV2(acc, 100000000L, ntpTime))
       block3 = UnsafeBlocks.unsafeBlock(mbs2.last.totalResBlockSig, txs3, acc, Block.NgBlockVersion, ntpTime.correctedTime())
       block4 = UnsafeBlocks.unsafeBlock(genBlock.id(), txs4, acc, Block.NgBlockVersion, ntpTime.correctedTime())
     } yield (genBlock, (block1, mbs1), (block2, mbs2), block3, block4)
