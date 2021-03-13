@@ -16,7 +16,7 @@ class BlocksApiSuite extends GrpcBaseTransactionSuite with Matchers {
   private val BlockV5Height = 5
   override protected def nodeConfigs: Seq[Config] =
     NodeConfigs.newBuilder
-      .overrideBase(_.raw(s"""waves {
+      .overrideBase(_.raw(s"""TN {
           |  miner { 
           |    quorum = 0
           |    max-transactions-in-micro-block = 1

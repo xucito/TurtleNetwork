@@ -147,7 +147,7 @@ object GenesisBlockGenerator extends App {
       }
       .mkString("\n", "\n", "")
 
-    val confBody = s"""waves {
+    val confBody = s"""TN {
          |  blockchain.custom {
          |    address-scheme-character = $chainId
          |    functionality {

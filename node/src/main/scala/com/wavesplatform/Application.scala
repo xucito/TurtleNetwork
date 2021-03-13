@@ -452,8 +452,8 @@ object Application extends ScorexLogging {
 
     maybeExternalConfig match {
       case Success(None) =>
-        val currentBlockchainType = Try(ConfigFactory.defaultOverrides().getString("waves.blockchain.type"))
-          .orElse(Try(ConfigFactory.defaultOverrides().getString("waves.defaults.blockchain.type")))
+        val currentBlockchainType = Try(ConfigFactory.defaultOverrides().getString("TN.blockchain.type"))
+          .orElse(Try(ConfigFactory.defaultOverrides().getString("TN.defaults.blockchain.type")))
           .map(_.toUpperCase)
           .getOrElse("TESTNET")
 

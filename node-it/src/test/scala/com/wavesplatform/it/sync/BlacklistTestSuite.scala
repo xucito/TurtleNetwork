@@ -16,7 +16,7 @@ class BlacklistTestSuite extends FreeSpec with Matchers with CancelAfterFailure 
       .withDefault(2)
       .buildNonConflicting()
 
-  private def primaryNode = dockerNodes().last
+  private def primaryNode"waves. = dockerNodes().last
 
   private def otherNodes = dockerNodes().init
 
