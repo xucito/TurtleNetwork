@@ -485,7 +485,7 @@ object Application extends ScorexLogging {
 
     val DisabledHash = "H6nsiifwYKYEx6YzYD7woP1XCn72RVvx6tC1zjjLXqsu"
     if (settings.restAPISettings.enable && settings.restAPISettings.apiKeyHash == DisabledHash) {
-      log.error(s"Usage of the default api key hash ($DisabledHash) is prohibited, please change it in the waves.conf")
+      log.error(s"Usage of the default api key hash ($DisabledHash) is prohibited, please change it in the TN.conf")
       forceStopApplication(Misconfiguration)
     }
 

@@ -15,7 +15,7 @@ import scala.concurrent.Future
 
 class GRPCServerExtension(context: ExtensionContext) extends Extension with ScorexLogging {
   private implicit val apiScheduler: Scheduler = Scheduler(context.actorSystem.dispatcher)
-  private val settings                         = context.settings.config.as[GRPCSettings]("waves.grpc")
+  private val settings                         = context.settings.config.as[GRPCSettings]("TN.grpc")
   private val bindAddress                      = new InetSocketAddress(settings.host, settings.port)
   private val server: Server = NettyServerBuilder
     .forAddress(bindAddress)

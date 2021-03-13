@@ -25,7 +25,7 @@ import scala.util.{Failure, Success}
 class BlockchainUpdates(private val context: Context) extends Extension with ScorexLogging with BlockchainUpdateTriggers {
   private[this] implicit val scheduler = Schedulers.fixedPool(sys.runtime.availableProcessors(), "blockchain-updates")
 
-  private[this] val settings = context.settings.config.as[BlockchainUpdatesSettings]("waves.blockchain-updates")
+  private[this] val settings = context.settings.config.as[BlockchainUpdatesSettings]("TN.blockchain-updates")
   private[this] val repo     = new UpdatesRepoImpl(s"${context.settings.directory}/blockchain-updates")
 
   private[this] var grpcServer: Server = null
