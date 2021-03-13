@@ -681,7 +681,7 @@ class TransactionsRouteSpec
             |  "id" : "${tx.id()}",
             |  "sender" : "3MtGzgmNa5fMjGCcPi5nqMTdtZkfojyWHL9",
             |  "senderPublicKey" : "9BUoYQYq7K38mkk61q8aMH9kD9fKSVL1Fib7FbH6nUkQ",
-            |  "fee" : 1000000,
+            |  "fee" : 100000000,
             |  "feeAssetId" : null,
             |  "timestamp" : ${tx.timestamp},
             |  "proofs" : [ "${tx.signature}" ],
