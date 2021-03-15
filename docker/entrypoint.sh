@@ -1,11 +1,14 @@
 #!/bin/bash
+shopt -s nullglob
 NETWORKS="mainnet testnet stagenet"
 
 mkdir -p /var/lib/TN/log
 if [ ! -f /etc/TN/TN.conf ]; then
   echo "Custom '/etc/TN/TN.conf' not found. Using a default one for '${WAVES_NETWORK,,}' network." | tee -a /var/log/TN/TN.log
   if [[ $NETWORKS == *"${WAVES_NETWORK,,}"* ]]; then
-    cp /usr/share/TN/conf/TN-${WAVES_NETWORK}.conf /etc/TN/TN.conf
+    touch /etc/TN/TN.conf
+    echo "TN.blockchain.type=${WAVES_NETWORK}" >> /etc/TN/TN.conf
+
     sed -i 's/include "local.conf"//' /etc/TN/TN.conf
     for f in /etc/TN/ext/*.conf; do
       echo "Adding $f extension config to TN.conf";
@@ -21,7 +24,7 @@ else
 fi
 
 if [ "${WAVES_VERSION}" == "latest" ]; then
-  filename=$(find /usr/share/TN/lib -name TN-all* -printf '%f\n')
+  filename=$(find /usr/share/TN/lib -name 'TN-all*' -printf '%f\n')
   export WAVES_VERSION=$(echo ${filename##*-} | cut -d\. -f1-3)
 fi
 

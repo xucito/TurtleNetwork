@@ -21,28 +21,21 @@ RUN                                                                             
 {                                                                               \
     echo "Downloading Waves '${WAVES_VERSION}' from GitHub"                 &&  \
     mkdir -p /TN/node/target                                             &&  \
-    releaseUrl="https://github.com/BlackTurtle123/TurtleNetwork/releases/download"   &&  \
-    rawContentUrl="https://raw.githubusercontent.com/BlackTurtle123/TurtleNetwork"   &&  \
+    releaseUrl="https://github.com/TurtleNetwork/TurtleNetwork/releases/download"   &&  \
                                                                                 \
     echo "Downloading jar file"                                             &&  \
-    curl -fL ${releaseUrl}/${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
-        -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                &&  \
-                                                                                \
-    echo "Downloading mainnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/${WAVES_VERSION}/node/TN-mainnet.conf         \
-        -o /TN/node/TN-mainnet.conf                                   &&  \
-                                                                                \
-    echo "Downloading testnet config"                                       &&  \
-    curl -fL ${rawContentUrl}/${WAVES_VERSION}/node/TN-testnet.conf         \
-        -o /TN/node/TN-testnet.conf                                     \
+    curl -fL ${releaseUrl}/v${WAVES_VERSION}/TN-all-${WAVES_VERSION}.jar     \
+        -o /TN/node/target/TN-all-${WAVES_VERSION}.jar                    \
 ;} ||                                                                           \
 {                                                                               \
     echo "Downloading sbt '${SBT_VERSION}'"                                 &&  \
     curl -fL -o sbt-$SBT_VERSION.deb                                            \
         https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb              &&  \
     dpkg -i sbt-$SBT_VERSION.deb && rm sbt-$SBT_VERSION.deb                 &&  \
+    echo "Cloning repo"														&&\
     git clone https://github.com/BlackTurtle123/TurtleNetwork.git                        \
         --branch $BRANCH TN && cd TN                                  &&  \
+    echo "Configure repo"												&&\
     git config --global user.name "Sbt Builder"                             &&  \
     git config --global user.email "sbt@builder.docker"                     &&  \
     git tag -a "${WAVES_VERSION}" -m "Docker build"                        &&  \
@@ -72,7 +65,6 @@ ENV WAVES_HEAP_SIZE=$WAVES_HEAP_SIZE
 ENV WAVES_NETWORK=$WAVES_NETWORK
 
 COPY --from=builder /TN/node/target/TN-all-*.jar /usr/share/TN/lib/
-COPY --from=builder /TN/node/TN-*.conf /usr/share/TN/conf/
 COPY entrypoint.sh /usr/share/TN/bin/
 
 RUN groupadd -g 143 TN                                                   &&  \

@@ -4,7 +4,6 @@ import com.typesafe.config.Config
 import com.wavesplatform.common.state.ByteStr
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
-import net.ceedubs.ficus.readers.EnumerationReader._
 import net.ceedubs.ficus.readers.ValueReader
 
 import scala.concurrent.duration._
@@ -157,7 +156,7 @@ case class GenesisSettings(
                             averageBlockDelay: FiniteDuration
                           )
 
-object GenesisSettings {
+object GenesisSettings { // TODO: Move to network-defaults.conf
   val MAINNET = GenesisSettings(
     1500635421931L,
     1500635421931L,
@@ -210,11 +209,10 @@ case class BlockchainSettings(
                                rewardsSettings: RewardsSettings
                              )
 
-object BlockchainType extends Enumeration {
-  val STAGENET = Value("STAGENET")
-  val TESTNET = Value("TESTNET")
-  val MAINNET = Value("MAINNET")
-  val CUSTOM = Value("CUSTOM")
+private[settings] object BlockchainType {
+  val STAGENET = "STAGENET"
+  val TESTNET  = "TESTNET"
+  val MAINNET  = "MAINNET"
 }
 
 object BlockchainSettings {
@@ -226,7 +224,7 @@ object BlockchainSettings {
   def fromRootConfig(config: Config): BlockchainSettings = config.as[BlockchainSettings]("TN.blockchain")
 
   private[this] def fromConfig(config: Config): BlockchainSettings = {
-    val blockchainType = config.as[BlockchainType.Value]("type")
+    val blockchainType = config.as[String]("type").toUpperCase
     val (addressSchemeCharacter, functionalitySettings, genesisSettings, rewardsSettings) = blockchainType match {
       case BlockchainType.STAGENET =>
         ('S', FunctionalitySettings.STAGENET, GenesisSettings.STAGENET, RewardsSettings.STAGENET)
@@ -234,7 +232,7 @@ object BlockchainSettings {
         ('l', FunctionalitySettings.TESTNET, GenesisSettings.TESTNET, RewardsSettings.TESTNET)
       case BlockchainType.MAINNET =>
         ('L', FunctionalitySettings.MAINNET, GenesisSettings.MAINNET, RewardsSettings.MAINNET)
-      case BlockchainType.CUSTOM =>
+      case _ => // Custom
         val networkId     = config.as[String](s"custom.address-scheme-character").charAt(0)
         val functionality = config.as[FunctionalitySettings](s"custom.functionality")
         val genesis       = config.as[GenesisSettings](s"custom.genesis")
